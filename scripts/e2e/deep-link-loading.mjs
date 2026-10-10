@@ -73,6 +73,17 @@ try {
         return image.complete && image.naturalWidth > 0 && pixels >= Math.min(256, image.getBoundingClientRect().width * devicePixelRatio);
       })).toBe(true);
     }
+    if (shell === 'macos' || shell === 'ios') {
+      expect(await page.evaluate(() => {
+        const roots = [...document.querySelectorAll('[inert][aria-hidden="true"]')].filter(el => el.className.includes('shell-platform-mark_img'));
+        return roots.length > 0 && roots.every(root => [...root.querySelectorAll('.shell-platform-mark img')].every(img => getComputedStyle(img).display === 'none'));
+      })).toBe(true);
+      await page.getByRole('button', {name: shell === 'macos' ? 'Launchpad' : 'Back to Home', exact:true}).click();
+      await expect.poll(() => page.locator('.shell-platform-mark img').evaluateAll(images => {
+        const visible = images.filter(img => { const r=img.getBoundingClientRect(); return r.width > 0 && r.height > 0 && r.top < innerHeight && r.bottom > 0; });
+        return visible.length > 3 && visible.every(img => img.complete && img.naturalWidth > 0);
+      })).toBe(true);
+    }
     expect(errors).toEqual([]);
     console.log(`PASS ${shell} DPR ${dpr}: requested Vault before artwork, no unrelated heavy engine or page error`);
     await context.close();
