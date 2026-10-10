@@ -1,3 +1,7 @@
+## 2026-10-10: Keep native Vault reading usable across tables, rotation and keyboard links
+
+QA found raw table pipes, a portrait-sized window after phone rotation, and keyboard focus returning to the shell after a note link. The inert reader now renders bounded GFM tables using its existing safe inline renderer. Short landscape viewports give only Vault the available desktop workspace with one reading pane and Back to notes, preserving stored desktop geometry. Note navigation focuses the persistent article once as loading begins and resets its scroll, so subsequent Tab navigation stays in the reader without refocusing on fetch completion. Regression fixtures cover table parsing, safe cells, keyboard links and portrait-to-landscape reader dimensions. These are local candidate changes; deployment and private vault data are outside this change.
+
 ## 2026-10-10: Keep the raw-stream fixture fully visible to security scanning
 
 Semgrep's pinned parser rejected the inline import type inside the mock loader's generic call. The fixture now applies the same module type to the awaited import result. All thirteen real-file stream tests and strict scanner coverage remain required; no rule or file is excluded.

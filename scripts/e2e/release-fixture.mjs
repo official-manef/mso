@@ -35,7 +35,7 @@ export async function releaseFixture({ live = false, surfaceApps = [], publicOri
   await mkdir(fixtureProject, { recursive: true });
   await writeFile(path.join(fixtureProject, "package.json"), JSON.stringify({ name: "fixture-project", version: "1.0.0", private: true }), { mode: 0o600 });
   await mkdir(path.join(fixtureProject, "wiki", "agents"), { recursive: true, mode: 0o700 });
-  await writeFile(path.join(fixtureProject, "wiki", "agents", "worker.md"), "# Fixture worker\n\nResponsible for verifying fixture tasks.\n", { mode: 0o600 });
+  await writeFile(path.join(fixtureProject, "wiki", "agents", "worker.md"), "# Fixture worker\n\nResponsible for verifying fixture tasks.\n\n| Field | Value |\n|---|---|\n| Hermes profile | `default` |\n| Tier | **admiral** |\n", { mode: 0o600 });
   await writeFile(path.join(fixtureProject, "wiki", "log.md"), "# Fixture progress\n\nFirst verified repository update.\n", { mode: 0o600 });
   await writeFile(path.join(dir, "infra.json"), JSON.stringify({
     version: 2, instanceId: randomUUID(), defaultUser: "fixture", bindings: [],

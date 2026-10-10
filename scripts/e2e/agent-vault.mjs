@@ -24,8 +24,13 @@ export async function agentVaultJourney(page, fixture) {
   expect(connectionReads).toBe(1);
   await backlinks.getByRole("button", { name: "Agent progress", exact: true }).click();
   const reader = page.getByRole("region", { name: "Note reader" });
-  await reader.getByRole("button", { name: "Fixture worker", exact: true }).click();
+  await reader.getByRole("button", { name: "Fixture worker", exact: true }).press("Enter");
   await expect(page.getByRole("heading", { name: "Fixture worker", exact: true })).toBeVisible();
+  await expect(reader.locator("article")).toBeFocused();
+  await page.keyboard.press("Tab");
+  expect(await reader.evaluate(el => el.contains(document.activeElement))).toBe(true);
+  await expect(reader.getByRole("columnheader", { name: "Field", exact: true })).toBeVisible();
+  await expect(reader.getByRole("cell", { name: "default", exact: true })).toBeVisible();
   expect(connectionReads).toBe(1);
   await writeFile(path.join(fixture.vaultProject, "wiki/log.md"), "# Fixture progress\n\nSecond verified repository update.\n", { mode: 0o600 });
   await page.getByRole("button", { name: "Refresh snapshot", exact: true }).click();
@@ -69,7 +74,10 @@ export async function agentVaultJourney(page, fixture) {
     await page.getByRole("button", { name: /^Fixture worker/ }).click();
     await expect(page.getByRole("heading", { name: "Fixture worker", exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
-    if (viewport.width < 640) {
+    const articleBox = await reader.locator("article").boundingBox();
+    expect(articleBox.width).toBeGreaterThan(viewport.width - 80);
+    expect(articleBox.height).toBeGreaterThan(viewport.height * 0.35);
+    {
       await expect(page.getByRole("complementary", { name: "Vault navigation" })).toBeHidden();
       await page.getByRole("button", { name: "Back to notes", exact: true }).click();
       await expect(page.getByLabel("Search vault notes", { exact: true })).toBeVisible();
