@@ -4500,3 +4500,5 @@ Screenshot evidence previously lived in unrelated scratch directories or only in
 - The browser route and embedded MCP Page now share a responsive service rail, real connection-readiness summary, compact account cards, and contextual setup/actions. Setup guides and maintenance controls use progressive disclosure; account switching remains explicit.
 - Integration snapshots no longer repeat the complete provider catalog, which is already embedded in the shared manager. The explicit catalog query remains available; compact snapshots prevent bounded MCP responses from truncating the Page.
 - Validation: 26 browser assertions at 320/390/768/1440/1920 px in light/dark themes, account isolation, service search, setup focus, auto identifiers and Verify feedback; full verify passes.
+
+- Covered Home/closed Launchpad keep layout and state, but hide platform-mark images until visible; native lazy loading then avoids competing with the first note. Official brand sources remain unchanged. Cold deep-link checks exercise reopening and decoding.
