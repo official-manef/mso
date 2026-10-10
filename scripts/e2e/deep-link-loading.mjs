@@ -20,7 +20,7 @@ try {
   browser = await chromium.launch({ headless: true });
   for (const shell of ['macos', 'windows', 'dashboard', 'ios', 'android']) {
     const mobile = ['ios', 'android'].includes(shell);
-    const context = await browser.newContext({ viewport: mobile ? { width: 390, height: 844 } : { width: 1280, height: 900 }, serviceWorkers: 'block' });
+    const context = await browser.newContext({ viewport: mobile ? { width: 390, height: 844 } : { width: 1280, height: 900 }, serviceWorkers: 'block', deviceScaleFactor: shell === 'windows' ? 2 : shell === 'android' ? 3 : 1 });
     await context.addCookies([{ name: 'session', value: cookie, url: fixture.base, sameSite: 'Strict' }]);
     await context.addInitScript(({ shell, mobile, device }) => {
       localStorage.setItem('mso.device.id', device);
@@ -40,6 +40,8 @@ try {
     expect(vaultIndex).toBeGreaterThan(-1);
     expect(vaultIndex).toBeLessThan(requests.findIndex(url => url.startsWith('/app-icons/')));
     expect(requests.filter(url => heavy.some(marker => chunks.get(url.split('/').at(-1))?.includes(marker)))).toEqual([]);
+    const small = !['windows', 'android'].includes(shell);
+    await expect.poll(() => page.locator('.shell-platform-mark img').evaluateAll((images, small) => images.length > 0 && images.every(image => image.complete && image.naturalWidth === (small ? 128 : 256) && image.currentSrc.endsWith(small ? '-128.webp' : '.webp') && (small || !image.currentSrc.endsWith('-128.webp'))), small)).toBe(true);
     expect(errors).toEqual([]);
     console.log(`PASS ${shell}: requested Vault before artwork, no unrelated heavy engine or page error`);
     await context.close();

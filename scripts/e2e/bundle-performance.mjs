@@ -34,7 +34,7 @@ try {
     page.on('request', request => {
       if (isScript(request)) { pendingScripts.add(request); requestedScripts.add(new URL(request.url()).pathname.split('/').at(-1)); lastScriptAt = Date.now(); }
       const pathname = new URL(request.url()).pathname;
-      if (/^\/app-icons\/(?:macos\/|windows\/)?(?:files|code|terminal|claude|studio|reel|viewer|store|create|monitor|assistant|settings|links|docs)\.webp$/.test(pathname)) requestedArtwork.add(pathname);
+      if (/^\/app-icons\/(?:macos\/|windows\/)?(?:files|code|terminal|claude|studio|reel|viewer|store|create|monitor|assistant|settings|links|docs)(?:-128)?\.webp$/.test(pathname)) requestedArtwork.add(pathname);
     });
     const settled = request => { if (isScript(request)) { pendingScripts.delete(request); lastScriptAt = Date.now(); } };
     page.on('requestfinished', settled); page.on('requestfailed', settled);

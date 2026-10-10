@@ -22,13 +22,13 @@ function officialMark(src: string): AppIconComponent {
 function platformMark(fallback: string, macos: string, windows: string): AppIconComponent {
   const Mark: AppIconComponent = ({ className: cls }) => {
     const { id } = useActiveShell();
-    // Hidden image elements still download; choose only the visible artwork.
+    // Small chrome uses 128px art; higher-density screens retain the original.
     const src = id === "macos" || id === "ios" ? macos : id === "windows" || id === "android" ? windows : fallback;
     const size = cls ?? "size-full";
     return (
       <span className={`shell-platform-mark relative block ${size}`} aria-hidden>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={src} alt="" className="shell-artwork" draggable={false} decoding="async" />
+        <img src={src} srcSet={`${src.replace(".webp", "-128.webp")} 1x, ${src} 2x`} alt="" className="shell-artwork" draggable={false} decoding="async" />
       </span>
     );
   };

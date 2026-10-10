@@ -1,3 +1,5 @@
+import { statSync } from "node:fs";
+import sharp from "sharp";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { ActiveShellProvider, type ShellId } from "@/features/appshell";
@@ -31,7 +33,23 @@ describe("third-party official app marks", () => {
   ] as const)("renders only the active %s artwork", (shell, src) => {
     const html = markup("files-manager", shell);
     expect(html.match(/<img\b/g)).toHaveLength(1);
+    expect(html).toContain(`srcSet="${src.replace(".webp", "-128.webp")} 1x, ${src} 2x"`);
     expect(html).toContain(`src="${src}"`);
     for (const other of ["/app-icons/macos/files.webp", "/app-icons/windows/files.webp", "/app-icons/files.webp"].filter(path => path !== src)) expect(html).not.toContain(other);
   });
+});
+
+it("includes smaller WebP companions for every public platform artwork", async () => {
+  const sources = new Set<string>();
+  for (const shell of ["macos", "windows", "dashboard"] as const) for (const id of Object.keys(APP_MARKS)) {
+    const src = markup(id, shell).match(/<img[^>]*\bsrc="([^"]+)"/)?.[1];
+    if (src?.startsWith("/app-icons/")) sources.add(src);
+  }
+  expect(sources.size).toBe(42);
+  for (const src of sources) {
+    const full = `public${src}`, small = full.replace(".webp", "-128.webp");
+    expect(statSync(small).size).toBeLessThan(statSync(full).size);
+    const metadata = await sharp(small).metadata();
+    expect([metadata.format, metadata.width, metadata.height]).toEqual(["webp", 128, 128]);
+  }
 });
