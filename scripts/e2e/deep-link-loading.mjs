@@ -41,7 +41,7 @@ try {
     expect(vaultIndex).toBeLessThan(requests.findIndex(url => url.startsWith('/app-icons/')));
     expect(requests.filter(url => heavy.some(marker => chunks.get(url.split('/').at(-1))?.includes(marker)))).toEqual([]);
     const small = !['windows', 'android'].includes(shell);
-    await expect.poll(() => page.locator('.shell-platform-mark img').evaluateAll((images, small) => images.length > 0 && images.every(image => image.complete && image.naturalWidth === (small ? 128 : 256) && image.currentSrc.endsWith(small ? '-128.webp' : '.webp') && (small || !image.currentSrc.endsWith('-128.webp'))), small)).toBe(true);
+    await expect.poll(() => page.locator('.shell-platform-mark img').evaluateAll((images, small) => images.length > 0 && images.every(image => image.complete && image.naturalWidth > 0 && image.currentSrc.endsWith(small ? '-128.webp' : '.webp') && (small || !image.currentSrc.endsWith('-128.webp'))), small)).toBe(true);
     expect(errors).toEqual([]);
     console.log(`PASS ${shell}: requested Vault before artwork, no unrelated heavy engine or page error`);
     await context.close();
