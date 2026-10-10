@@ -54,6 +54,7 @@ describe("private vault response encoding", () => {
     expect(mocks.get).toHaveBeenCalledWith("fixture", undefined);
   });
   it("keeps tiny responses and unauthorized errors as identity JSON", async () => {
+    mocks.get.mockResolvedValue({ state: {}, note: { content: "Generated tiny note." } });
     expect((await GET(encodedRequest("gzip"))).headers.get("Content-Encoding")).toBeNull();
     mocks.auth.mockResolvedValue(null); mocks.get.mockClear();
     const response = await GET(encodedRequest("gzip"));
