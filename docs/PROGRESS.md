@@ -4502,3 +4502,5 @@ Screenshot evidence previously lived in unrelated scratch directories or only in
 - Validation: 26 browser assertions at 320/390/768/1440/1920 px in light/dark themes, account isolation, service search, setup focus, auto identifiers and Verify feedback; full verify passes.
 
 - Covered Home/closed Launchpad keep layout and state, but hide platform-mark images until visible; native lazy loading then avoids competing with the first note. Official brand sources remain unchanged. Cold deep-link checks exercise reopening and decoding.
+
+- The two built-in dock artworks also use dense-screen AVIF with original WebP fallback; they were the remaining first-read transfer competitors in landscape.

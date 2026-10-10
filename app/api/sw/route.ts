@@ -32,6 +32,7 @@ const PLATFORM_APP_ICON_ASSETS = [
 
 const FIRST_PARTY_PLATFORM_ASSETS = PLATFORM_APP_ICON_ASSETS.filter((asset) => !/\/(?:camoufox|hermes|openclaw)\.webp$/.test(asset));
 const RESPONSIVE_ICON_ASSETS = [
+  "/app-icons/launchpad.avif", "/app-icons/mission-control.avif",
   ...FIRST_PARTY_PLATFORM_ASSETS.flatMap((asset) => [asset.replace(".webp", "-128.webp"), asset.replace(".webp", ".avif")]),
   ...APP_ICON_ASSETS.filter((asset) => !/\/(?:camoufox|hermes|openclaw|launchpad|mission-control)\.webp$/.test(asset)).map((asset) => asset.replace(".webp", "-128.webp")),
 ];

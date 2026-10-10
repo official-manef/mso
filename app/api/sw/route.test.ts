@@ -48,7 +48,7 @@ describe("public artwork service worker", () => {
 
   it("allows only existing public icons and the manifest, including every responsive variant", async () => {
     const sw = await worker();
-    expect(sw.assetPaths.filter(asset => asset.endsWith(".avif"))).toHaveLength(28);
+    expect(sw.assetPaths.filter(asset => asset.endsWith(".avif"))).toHaveLength(30);
     expect(sw.assetPaths.filter(asset => asset.endsWith("-128.webp"))).toHaveLength(42);
     for (const asset of sw.assetPaths) {
       if (asset === "/manifest.webmanifest") continue;
@@ -57,7 +57,7 @@ describe("public artwork service worker", () => {
     }
   });
 
-  it.each(["/app-icons/macos/files.avif", "/app-icons/macos/files.webp", "/app-icons/macos/files-128.webp"])("caches %s on first use and serves a subsequent hit", async asset => {
+  it.each(["/app-icons/launchpad.avif", "/app-icons/mission-control.avif", "/app-icons/macos/files.avif", "/app-icons/macos/files.webp", "/app-icons/macos/files-128.webp"])("caches %s on first use and serves a subsequent hit", async asset => {
     const sw = await worker();
     expect(await (await sw.request(asset))?.text()).toBe("synthetic public icon");
     expect(await (await sw.request(asset))?.text()).toBe("synthetic public icon");
