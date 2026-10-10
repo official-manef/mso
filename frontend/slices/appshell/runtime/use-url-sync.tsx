@@ -102,6 +102,8 @@ export function UrlSync({ apps }: { apps: AppDescriptor[] }) {
   useEffect(() => {
     const target = urlToApp(apps, pathname);
     if (!target || target.app.id === visibleAppId()) return;
+    // Start the requested app before shell artwork; WindowContent owns load-error recovery.
+    void target.app.load().catch(() => undefined);
     // Focus an existing window rather than spawn one — else a `multi` app (Files)
     // would open a duplicate on every back/forward (focusApp also restores a
     // minimized one, so back from "/" onto a dismissed app's slug reopens it).

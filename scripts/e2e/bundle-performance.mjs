@@ -60,7 +60,6 @@ try {
     expect(requestedArtwork.size).toBeGreaterThan(0);
     for (const pathname of requestedArtwork) expect(pathname).toMatch(new RegExp(`^/app-icons/${family}[^/]+\\.webp$`));
     expect(await page.locator('.shell-platform-mark').evaluateAll(marks => marks.every(mark => mark.querySelectorAll('img').length === 1))).toBe(true);
-    expect(await page.locator('.shell-platform-mark img, img[src^="/brand/official/"]').evaluateAll(images => images.every(image => image.fetchPriority === 'low'))).toBe(true);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
     if (output) await page.screenshot({ path: path.join(output, `${shell}-cold.png`) });
     const search = page.getByRole('combobox', { name: 'Spotlight search' });
@@ -136,3 +135,5 @@ try {
   await fixture.close();
 }
 console.log('bundle performance E2E: all five shells passed');
+
+await import('./deep-link-loading.mjs');

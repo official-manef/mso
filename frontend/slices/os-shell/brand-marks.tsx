@@ -12,7 +12,7 @@ function officialMark(src: string): AppIconComponent {
   const Mark: AppIconComponent = ({ className: cls }) => (
     // Small fixed local brand asset; image optimization adds no value here.
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt="" aria-hidden className={cls ?? "size-full object-contain"} draggable={false} decoding="async" fetchPriority="low" />
+    <img src={src} alt="" aria-hidden className={cls ?? "size-full object-contain"} draggable={false} decoding="async" />
   );
   Mark.displayName = `OfficialArtwork(${src})`;
   return Mark;
@@ -22,13 +22,13 @@ function officialMark(src: string): AppIconComponent {
 function platformMark(fallback: string, macos: string, windows: string): AppIconComponent {
   const Mark: AppIconComponent = ({ className: cls }) => {
     const { id } = useActiveShell();
-    // Shell artwork must not compete with the opened app; keep its fetch priority low.
+    // Hidden image elements still download; choose only the visible artwork.
     const src = id === "macos" || id === "ios" ? macos : id === "windows" || id === "android" ? windows : fallback;
     const size = cls ?? "size-full";
     return (
       <span className={`shell-platform-mark relative block ${size}`} aria-hidden>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={src} alt="" className="shell-artwork" draggable={false} decoding="async" fetchPriority="low" />
+        <img src={src} alt="" className="shell-artwork" draggable={false} decoding="async" />
       </span>
     );
   };
