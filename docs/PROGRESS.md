@@ -4504,3 +4504,5 @@ Screenshot evidence previously lived in unrelated scratch directories or only in
 - Covered Home/closed Launchpad keep layout and state, but hide platform-mark images until visible; native lazy loading then avoids competing with the first note. Official brand sources remain unchanged. Cold deep-link checks exercise reopening and decoding.
 
 - The two built-in dock artworks also use dense-screen AVIF with original WebP fallback; they were the remaining first-read transfer competitors in landscape.
+
+- A synthetic 49-note control exposed first-read contention from the repeated manifest. Private Vault GET JSON now uses standard async gzip above 1 KiB for explicit unweighted gzip clients; owner/rate checks, JSON shape and private no-store remain intact. Weighted/custom headers keep the previous identity response.
