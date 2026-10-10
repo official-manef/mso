@@ -81,7 +81,6 @@ export function Dock({ onMissionControl }: { onMissionControl?: () => void }) {
       node: (
         <picture className="block size-full">
           <source media="(resolution > 2dppx)" type="image/avif" srcSet="/app-icons/launchpad.avif" />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/app-icons/launchpad.webp" alt="" aria-hidden className="size-full" draggable={false} decoding="async" fetchPriority="low" />
         </picture>
       ),
@@ -90,11 +89,10 @@ export function Dock({ onMissionControl }: { onMissionControl?: () => void }) {
       ? [{
           kind: "plain", id: "mission-control", label: "Mission Control", onClick: onMissionControl,
           node: (
-                <picture className="block size-full">
-          <source media="(resolution > 2dppx)" type="image/avif" srcSet="/app-icons/mission-control.avif" />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/app-icons/mission-control.webp" alt="" aria-hidden className="size-full" draggable={false} decoding="async" fetchPriority="low" />
-        </picture>
+            <picture className="block size-full">
+              <source media="(resolution > 2dppx)" type="image/avif" srcSet="/app-icons/mission-control.avif" />
+              <img src="/app-icons/mission-control.webp" alt="" aria-hidden className="size-full" draggable={false} decoding="async" fetchPriority="low" />
+            </picture>
           ),
         } as Slot]
       : []),
