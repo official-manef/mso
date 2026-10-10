@@ -18,9 +18,9 @@ try {
   const cookie = /(?:^|,\s*)session=([^;]+)/.exec(response.headers.get('set-cookie') ?? '')?.[1];
   expect(cookie).toBeTruthy();
   browser = await chromium.launch({ headless: true });
-  for (const shell of ['macos', 'windows', 'dashboard', 'ios', 'android']) {
+  for (const [shell, dpr] of [['macos', 2], ['windows', 2], ['dashboard', 1], ['ios', 3], ['android', 3], ['ios', 4]]) {
     const mobile = ['ios', 'android'].includes(shell);
-    const context = await browser.newContext({ viewport: mobile ? { width: 390, height: 844 } : { width: 1280, height: 900 }, serviceWorkers: 'block', deviceScaleFactor: mobile ? 3 : shell === 'dashboard' ? 1 : 2 });
+    const context = await browser.newContext({ viewport: mobile ? { width: 390, height: 844 } : { width: 1280, height: 900 }, serviceWorkers: 'block', deviceScaleFactor: dpr });
     await context.addCookies([{ name: 'session', value: cookie, url: fixture.base, sameSite: 'Strict' }]);
     await context.addInitScript(({ shell, mobile, device }) => {
       localStorage.setItem('mso.device.id', device);
@@ -51,6 +51,7 @@ try {
     })).toBe(true);
     if (!mobile && shell !== 'dashboard') await expect.poll(() => page.locator('.shell-platform-mark img').evaluateAll(images => images.some(image => image.getBoundingClientRect().width > 0 && image.currentSrc.endsWith('-128.webp') && image.complete))).toBe(true);
     if (mobile) expect(requests.filter(url => url.startsWith('/app-icons/') && url.endsWith('-128.webp'))).toEqual([]);
+    if (dpr > 3) expect(requests.filter(url => url.startsWith('/app-icons/') && url.endsWith('-192.webp'))).toEqual([]);
     // Exercise the shared mark at larger sizes and the conservative fallback for browsers without auto sizing.
     await page.evaluate(() => {
       const mark = document.querySelector('.shell-platform-mark').cloneNode(true);
@@ -71,7 +72,7 @@ try {
       })).toBe(true);
     }
     expect(errors).toEqual([]);
-    console.log(`PASS ${shell}: requested Vault before artwork, no unrelated heavy engine or page error`);
+    console.log(`PASS ${shell} DPR ${dpr}: requested Vault before artwork, no unrelated heavy engine or page error`);
     await context.close();
   }
 } finally { await browser?.close(); await fixture.close(); }

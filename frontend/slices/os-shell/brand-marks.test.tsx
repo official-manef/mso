@@ -40,6 +40,7 @@ describe("third-party official app marks", () => {
     expect(html).toContain(`srcSet="${src.replace(".webp", "-128.webp")} 128w, ${src} ${width}w"`);
     expect(html).toContain(`width="${width}" height="${width}" loading="lazy"`);
     expect(html).toContain('sizes="auto, 256px"');
+    expect(html).toContain(`<source media="(resolution &gt; 3dppx)" srcSet="${src}"/>`);
     const dense = width === 256 ? `${src.replace(".webp", "-192.webp")} 192w, ${src} 256w` : src;
     expect(html).toContain(`<source media="(resolution &gt; 2dppx)" srcSet="${dense}" sizes="auto, 256px"/>`);
     expect(html).toContain(`src="${src}"`);

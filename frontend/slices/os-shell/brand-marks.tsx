@@ -30,6 +30,7 @@ function platformMark(fallback: string, macos: string, windows: string): AppIcon
       <span className={`shell-platform-mark relative block ${size}`} aria-hidden>
         <picture>
           {/* Dense screens share a 192px minimum; large icons still select the original. */}
+          <source media="(resolution > 3dppx)" srcSet={src} />
           <source media="(resolution > 2dppx)" srcSet={width === 256 ? `${src.replace(".webp", "-192.webp")} 192w, ${src} 256w` : src} sizes="auto, 256px" />
           <img src={src} srcSet={`${src.replace(".webp", "-128.webp")} 128w, ${src} ${width}w`} sizes="auto, 256px" width={width} height={width} loading="lazy" alt="" className="shell-artwork" draggable={false} decoding="async" fetchPriority="low" />
         </picture>
