@@ -22,6 +22,8 @@ describe("third-party official app marks", () => {
     expect(html).toContain(`src="${src}"`);
     expect(html).not.toContain("shell-artwork-macos");
     expect(html).not.toContain("shell-artwork-windows");
+    expect(html).not.toContain("srcSet=");
+    expect(html).not.toContain("loading=");
   });
 
   it.each([
@@ -33,7 +35,10 @@ describe("third-party official app marks", () => {
   ] as const)("renders only the active %s artwork", (shell, src) => {
     const html = markup("files-manager", shell);
     expect(html.match(/<img\b/g)).toHaveLength(1);
-    expect(html).toContain(`srcSet="${src.replace(".webp", "-128.webp")} 1x, ${src} 2x"`);
+    const width = shell === "dashboard" ? 192 : 256;
+    expect(html).toContain(`srcSet="${src.replace(".webp", "-128.webp")} 128w, ${src} ${width}w"`);
+    expect(html).toContain(`width="${width}" height="${width}" loading="lazy"`);
+    expect(html).toContain('sizes="auto, 256px"');
     expect(html).toContain(`src="${src}"`);
     for (const other of ["/app-icons/macos/files.webp", "/app-icons/windows/files.webp", "/app-icons/files.webp"].filter(path => path !== src)) expect(html).not.toContain(other);
   });
@@ -49,6 +54,9 @@ it("includes smaller WebP companions for every public platform artwork", async (
   for (const src of sources) {
     const full = `public${src}`, small = full.replace(".webp", "-128.webp");
     expect(statSync(small).size).toBeLessThan(statSync(full).size);
+    const original = await sharp(full).metadata();
+    const width = src.startsWith("/app-icons/macos/") || src.startsWith("/app-icons/windows/") ? 256 : 192;
+    expect([original.width, original.height]).toEqual([width, width]);
     const metadata = await sharp(small).metadata();
     expect([metadata.format, metadata.width, metadata.height]).toEqual(["webp", 128, 128]);
   }

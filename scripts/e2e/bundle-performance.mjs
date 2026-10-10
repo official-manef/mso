@@ -119,7 +119,11 @@ try {
     await page.getByRole('option', { name: new RegExp(`Switch ${mobile ? 'mobile' : 'desktop'} shell:.*${target}`, 'i') }).click();
     await expect(page.locator(`#main-content[data-shell="${target}"]`)).toBeVisible();
     const switchedFamily = ['macos', 'ios'].includes(target) ? '/app-icons/macos/' : '/app-icons/windows/';
-    await expect.poll(() => page.locator('.shell-platform-mark img').evaluateAll((images, prefix) => images.length > 0 && images.every(image => new URL(image.src).pathname.startsWith(prefix) && image.complete && image.naturalWidth > 0), switchedFamily)).toBe(true);
+    await expect.poll(() => page.locator('.shell-platform-mark img').evaluateAll((images, prefix) => images.length > 0 && images.every(image => {
+      const r = image.getBoundingClientRect();
+      const visible = r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth && getComputedStyle(image).visibility !== 'hidden';
+      return new URL(image.src).pathname.startsWith(prefix) && (!visible || (image.complete && image.naturalWidth > 0));
+    }), switchedFamily)).toBe(true);
     expect(errors).toEqual([]);
     results.push({ shell, viewport, coldJsRequests: resources.length,
       coldJsDecodedBytes: resources.reduce((n, row) => n + row.decodedBytes, 0),
