@@ -50,6 +50,7 @@ try {
       });
     })).toBe(true);
     if (!mobile && shell !== 'dashboard') await expect.poll(() => page.locator('.shell-platform-mark img').evaluateAll(images => images.some(image => image.getBoundingClientRect().width > 0 && image.currentSrc.endsWith('-128.webp') && image.complete))).toBe(true);
+    if (mobile) expect(requests.filter(url => url.startsWith('/app-icons/') && url.endsWith('-128.webp'))).toEqual([]);
     // Exercise the shared mark at larger sizes and the conservative fallback for browsers without auto sizing.
     await page.evaluate(() => {
       const mark = document.querySelector('.shell-platform-mark').cloneNode(true);

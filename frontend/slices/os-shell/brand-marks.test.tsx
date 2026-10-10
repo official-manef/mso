@@ -39,6 +39,7 @@ describe("third-party official app marks", () => {
     expect(html).toContain(`srcSet="${src.replace(".webp", "-128.webp")} 128w, ${src} ${width}w"`);
     expect(html).toContain(`width="${width}" height="${width}" loading="lazy"`);
     expect(html).toContain('sizes="auto, 256px"');
+    expect(html).toContain(`<source media="(resolution &gt; 2dppx)" srcSet="${src}"/>`);
     expect(html).toContain(`src="${src}"`);
     for (const other of ["/app-icons/macos/files.webp", "/app-icons/windows/files.webp", "/app-icons/files.webp"].filter(path => path !== src)) expect(html).not.toContain(other);
   });

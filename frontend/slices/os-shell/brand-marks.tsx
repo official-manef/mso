@@ -28,8 +28,11 @@ function platformMark(fallback: string, macos: string, windows: string): AppIcon
     const size = cls ?? "size-full";
     return (
       <span className={`shell-platform-mark relative block ${size}`} aria-hidden>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={src} srcSet={`${src.replace(".webp", "-128.webp")} 128w, ${src} ${width}w`} sizes="auto, 256px" width={width} height={width} loading="lazy" alt="" className="shell-artwork" draggable={false} decoding="async" />
+        <picture>
+          {/* Dense screens share full art to avoid downloading both sizes across chrome surfaces. */}
+          <source media="(resolution > 2dppx)" srcSet={src} />
+          <img src={src} srcSet={`${src.replace(".webp", "-128.webp")} 128w, ${src} ${width}w`} sizes="auto, 256px" width={width} height={width} loading="lazy" alt="" className="shell-artwork" draggable={false} decoding="async" />
+        </picture>
       </span>
     );
   };
