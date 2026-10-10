@@ -40,7 +40,8 @@ describe("third-party official app marks", () => {
     expect(html).toContain(`srcSet="${src.replace(".webp", "-128.webp")} 128w, ${src} ${width}w"`);
     expect(html).toContain(`width="${width}" height="${width}" loading="lazy"`);
     expect(html).toContain('sizes="auto, 256px"');
-    expect(html).toContain(`<source media="(resolution &gt; 2dppx)" srcSet="${src}"/>`);
+    const dense = width === 256 ? `${src.replace(".webp", "-192.webp")} 192w, ${src} 256w` : src;
+    expect(html).toContain(`<source media="(resolution &gt; 2dppx)" srcSet="${dense}" sizes="auto, 256px"/>`);
     expect(html).toContain(`src="${src}"`);
     expect(html).toContain('fetchPriority="low"');
     for (const other of ["/app-icons/macos/files.webp", "/app-icons/windows/files.webp", "/app-icons/files.webp"].filter(path => path !== src)) expect(html).not.toContain(other);
@@ -62,5 +63,11 @@ it("includes smaller WebP companions for every public platform artwork", async (
     expect([original.width, original.height]).toEqual([width, width]);
     const metadata = await sharp(small).metadata();
     expect([metadata.format, metadata.width, metadata.height]).toEqual(["webp", 128, 128]);
+    if (width === 256) {
+      const dense = full.replace(".webp", "-192.webp");
+      expect(statSync(dense).size).toBeLessThan(statSync(full).size);
+      const info = await sharp(dense).metadata();
+      expect([info.format, info.width, info.height]).toEqual(["webp", 192, 192]);
+    }
   }
 });

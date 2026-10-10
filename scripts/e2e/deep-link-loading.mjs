@@ -45,7 +45,7 @@ try {
       const visible = images.filter(image => { const r = image.getBoundingClientRect(); return r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth && getComputedStyle(image).visibility !== 'hidden'; });
       return visible.length > 0 && visible.every(image => {
         const full = image.src.includes('/macos/') || image.src.includes('/windows/') ? 256 : 192;
-        const pixels = image.currentSrc.endsWith('-128.webp') ? 128 : full;
+        const pixels = image.currentSrc.endsWith('-128.webp') ? 128 : image.currentSrc.endsWith('-192.webp') ? 192 : full;
         return image.complete && image.naturalWidth > 0 && pixels >= Math.min(full, image.getBoundingClientRect().width * devicePixelRatio);
       });
     })).toBe(true);
@@ -58,9 +58,9 @@ try {
       document.body.appendChild(mark);
     });
     const enlarged = page.locator('#qa-artwork-size img');
-    await expect.poll(() => enlarged.evaluate(image => image.complete && image.naturalWidth > 0 && !image.currentSrc.endsWith('-128.webp'))).toBe(true);
-    await enlarged.evaluate(image => { image.parentElement.style.width = '24px'; image.parentElement.style.height = '24px'; image.sizes = '256px'; });
-    await expect.poll(() => enlarged.evaluate(image => image.complete && image.naturalWidth > 0 && !image.currentSrc.endsWith('-128.webp'))).toBe(true);
+    await expect.poll(() => enlarged.evaluate(image => image.complete && image.naturalWidth > 0 && !/-\d+\.webp$/.test(image.currentSrc))).toBe(true);
+    await enlarged.evaluate(image => { image.parentElement.style.width = '24px'; image.parentElement.style.height = '24px'; image.sizes = '256px'; image.parentElement.querySelectorAll('source').forEach(source => { source.sizes = '256px'; }); });
+    await expect.poll(() => enlarged.evaluate(image => image.complete && image.naturalWidth > 0 && !/-\d+\.webp$/.test(image.currentSrc))).toBe(true);
     await page.locator('#qa-artwork-size').evaluate(mark => mark.remove());
     if (shell === 'macos') {
       const dockIcon = page.locator('a[href="/files"].relative.block').filter({ has: page.locator('.shell-platform-mark') });
