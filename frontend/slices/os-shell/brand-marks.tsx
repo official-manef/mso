@@ -12,7 +12,7 @@ function officialMark(src: string): AppIconComponent {
   const Mark: AppIconComponent = ({ className: cls }) => (
     // Small fixed local brand asset; image optimization adds no value here.
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt="" aria-hidden className={cls ?? "size-full object-contain"} draggable={false} decoding="async" />
+    <img src={src} alt="" aria-hidden className={cls ?? "size-full object-contain"} draggable={false} decoding="async" fetchPriority="low" />
   );
   Mark.displayName = `OfficialArtwork(${src})`;
   return Mark;
@@ -22,7 +22,7 @@ function officialMark(src: string): AppIconComponent {
 function platformMark(fallback: string, macos: string, windows: string): AppIconComponent {
   const Mark: AppIconComponent = ({ className: cls }) => {
     const { id } = useActiveShell();
-    // Let the browser match artwork to its rendered width, including dock magnification.
+    // Decorative artwork yields network priority to app code and authenticated reads.
     const src = id === "macos" || id === "ios" ? macos : id === "windows" || id === "android" ? windows : fallback;
     const width = src === fallback ? 192 : 256;
     const size = cls ?? "size-full";
@@ -31,7 +31,7 @@ function platformMark(fallback: string, macos: string, windows: string): AppIcon
         <picture>
           {/* Dense screens share full art to avoid downloading both sizes across chrome surfaces. */}
           <source media="(resolution > 2dppx)" srcSet={src} />
-          <img src={src} srcSet={`${src.replace(".webp", "-128.webp")} 128w, ${src} ${width}w`} sizes="auto, 256px" width={width} height={width} loading="lazy" alt="" className="shell-artwork" draggable={false} decoding="async" />
+          <img src={src} srcSet={`${src.replace(".webp", "-128.webp")} 128w, ${src} ${width}w`} sizes="auto, 256px" width={width} height={width} loading="lazy" alt="" className="shell-artwork" draggable={false} decoding="async" fetchPriority="low" />
         </picture>
       </span>
     );

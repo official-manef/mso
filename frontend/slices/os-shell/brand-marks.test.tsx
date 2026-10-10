@@ -20,6 +20,7 @@ describe("third-party official app marks", () => {
   ])("keeps %s shell-invariant and official", (id, src) => {
     const html = markup(id);
     expect(html).toContain(`src="${src}"`);
+    expect(html).toContain('fetchPriority="low"');
     expect(html).not.toContain("shell-artwork-macos");
     expect(html).not.toContain("shell-artwork-windows");
     expect(html).not.toContain("srcSet=");
@@ -41,6 +42,7 @@ describe("third-party official app marks", () => {
     expect(html).toContain('sizes="auto, 256px"');
     expect(html).toContain(`<source media="(resolution &gt; 2dppx)" srcSet="${src}"/>`);
     expect(html).toContain(`src="${src}"`);
+    expect(html).toContain('fetchPriority="low"');
     for (const other of ["/app-icons/macos/files.webp", "/app-icons/windows/files.webp", "/app-icons/files.webp"].filter(path => path !== src)) expect(html).not.toContain(other);
   });
 });
