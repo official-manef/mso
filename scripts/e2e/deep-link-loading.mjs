@@ -62,7 +62,7 @@ try {
     await expect.poll(() => enlarged.evaluate(image => image.complete && image.naturalWidth > 0 && !image.currentSrc.endsWith('-128.webp'))).toBe(true);
     await page.locator('#qa-artwork-size').evaluate(mark => mark.remove());
     if (shell === 'macos') {
-      const dockIcon = page.locator('a[href="/files"]').filter({ has: page.locator('.shell-platform-mark') }).first();
+      const dockIcon = page.locator('a[href="/files"].relative.block').filter({ has: page.locator('.shell-platform-mark') });
       await dockIcon.hover();
       await expect.poll(() => dockIcon.locator('img').evaluate(image => {
         const pixels = image.currentSrc.endsWith('-128.webp') ? 128 : 256;
