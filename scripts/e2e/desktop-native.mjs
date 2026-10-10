@@ -70,8 +70,8 @@ try {
         assert.equal(await nativeFiles.count(), 1, "Taskbar must restore the same Files window");
       }
       // Resizing via the shared window handle must reveal the sidebar drawer affordance.
+      await nativeFiles.locator(".cursor-nwse-resize").hover();
       const box = await nativeFiles.boundingBox();
-      await page.mouse.move(box.x + box.width - 10, box.y + box.height - 10);
       await page.mouse.down();
       await page.mouse.move(box.x + 520, box.y + box.height - 10, { steps: 12 });
       await page.mouse.up();
@@ -92,10 +92,11 @@ try {
       await nativeSettings.getByText("No settings found.", { exact: true }).waitFor();
       await search.fill("");
       const nav = nativeSettings.getByRole("navigation", { name: "Settings sections" });
-      assert.equal(await nav.getByRole("button").count(), 11);
+      assert.deepEqual(await nav.getByRole("button").allTextContents(), ["Account", "Appearance", "Theme", "AI", "Quicklink", "MCP", "A2A", "Server", "Cleanup", "Backup"]);
+      await nativeSettings.locator('[data-slot="settings-update-footer"]').getByRole("button", { name: "Update MSO", exact: true }).waitFor();
       await nav.getByRole("button", { name: "Appearance", exact: true }).click();
+      await nativeSettings.locator(".cursor-nwse-resize").hover();
       const b = await nativeSettings.boundingBox();
-      await page.mouse.move(b.x + b.width - 10, b.y + b.height - 10);
       await page.mouse.down();
       await page.mouse.move(b.x + 520, b.y + b.height - 10, { steps: 12 });
       await page.mouse.up();

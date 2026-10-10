@@ -24,11 +24,11 @@ describe("native Markdown reader", () => {
     }
   });
   it("renders GFM tables with alignment, inline formatting and inert source content", () => {
-    const content = "Intro\nField | Value | State\n:--- | :---: | ---:\nHermes | `default` | **admiral**\n<script> | [[Worker\\|Task]] | [Run](javascript:alert)\nshort | row\nextra | cells | stay | bounded\n\nAfter";
+    const content = "Intro\nField | Value | State\n:--- | :---: | ---:\nFixture | `synthetic` | **isolated**\n<script> | [[Worker\\|Task]] | [Run](javascript:alert)\nshort | row\nextra | cells | stay | bounded\n\nAfter";
     const html = renderToStaticMarkup(<NotePreview content={content} resolve={target => target === "Worker" ? "worker.md" : undefined} onOpen={() => {}} />);
     expect(html).toContain("<table"); expect(html).toContain('<th scope="col"');
     expect(html).toContain('text-align:center'); expect(html).toContain('text-align:right');
-    expect(html).toContain("<strong>admiral</strong>"); expect(html).toContain("&lt;script&gt;");
+    expect(html).toContain("<strong>isolated</strong>"); expect(html).toContain("&lt;script&gt;");
     expect(html).toContain(">Task</button>"); expect(html).not.toContain("<script"); expect(html).not.toContain("<a ");
     expect((html.match(/<td /g) || []).length).toBe(12); expect(html).not.toContain("bounded");
     expect(html).toContain(">Intro</p>"); expect(html).toContain(">After</p>");

@@ -30,7 +30,7 @@ export async function agentVaultJourney(page, fixture) {
   await page.keyboard.press("Tab");
   expect(await reader.evaluate(el => el.contains(document.activeElement))).toBe(true);
   await expect(reader.getByRole("columnheader", { name: "Field", exact: true })).toBeVisible();
-  await expect(reader.getByRole("cell", { name: "default", exact: true })).toBeVisible();
+  await expect(reader.getByRole("cell", { name: "synthetic", exact: true })).toBeVisible();
   expect(connectionReads).toBe(1);
   await writeFile(path.join(fixture.vaultProject, "wiki/log.md"), "# Fixture progress\n\nSecond verified repository update.\n", { mode: 0o600 });
   await page.getByRole("button", { name: "Refresh snapshot", exact: true }).click();
@@ -91,6 +91,15 @@ export async function agentVaultJourney(page, fixture) {
   });
   expect(denied).toEqual([403, 403]);
   await fixture.setRole("owner");
+  const publicContext = await page.context().browser().newContext();
+  try {
+    const publicPage = await publicContext.newPage();
+    await publicPage.goto(fixture.base + "/agent-vault");
+    await expect(publicPage.getByText("Owner access is required to open private repository notes.", { exact: true })).toBeVisible();
+    expect(await publicPage.evaluate(async () => (await fetch("/api/v1/agent-vault")).status)).toBe(401);
+    const publicText = await publicPage.locator("body").innerText();
+    expect(publicText).not.toContain("Fixture worker"); expect(publicText).not.toContain(fixture.vaultProject);
+  } finally { await publicContext.close(); }
   page.off("request", countReads);
   await page.setViewportSize({ width: 1280, height: 900 });
 }

@@ -143,6 +143,8 @@ try {
   expect(exec.status).toBe(200); expect(exec.body.cwd).toBe(fixture.dir);
   expect((await call("/api/v1/exec/run", { cmd: "exit 0", cwd: fixture.dir + "/missing" })).status).not.toBe(200);
   expect((await call("/api/v1/fs/list?path=" + encodeURIComponent(fixture.dir))).status).toBe(200);
+  const home = await call("/api/v1/fs/list?path=~");
+  expect(home.status).toBe(200); expect(home.body.path).toBe(fixture.dir + "/home");
   await camoufoxConnectionJourney(page, fixture);
   await mcpOwnerJourneys(page, fixture);
   await oauthRegistrationJourney(page, fixture);

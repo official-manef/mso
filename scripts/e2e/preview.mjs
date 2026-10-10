@@ -47,7 +47,7 @@ function fixtures() {
   writeFileSync(path.join(DIR, "sample.png"), Buffer.from(PNG_B64, "base64"));
   writeFileSync(path.join(DIR, "logo.svg"), '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" fill="#10ac84"/></svg>');
   writeFileSync(path.join(DIR, "notes.md"), "# Preview test\n\nThis file checks the **Markdown** renderer.\n\n- one\n- two\n");
-  writeFileSync(path.join(DIR, "rows.csv"), 'name,role\nRahman,owner\nClaude,"assistant, occasionally wrong"\n');
+  writeFileSync(path.join(DIR, "rows.csv"), 'name,role\nFixture owner,owner\nFixture assistant,"test, fixture"\n');
   // The script tag is the point: it must NOT run inside the sandboxed frame.
   writeFileSync(path.join(DIR, "page.html"), "<!doctype html><html><body><h1>HTML renders sandboxed</h1><script>document.body.innerHTML+='SCRIPT RAN'</script></body></html>");
   writeFileSync(path.join(DIR, "server.log"), "boot ok\nlistening on 4005\n");
@@ -184,7 +184,7 @@ const run = async () => {
   await open("rows.csv");
   win = scope(page, "rows.csv");
   check((await win.locator("table tr").count()) >= 3, "CSV rendered as a table");
-  check(/assistant, occasionally wrong/.test(await win.innerText()), "CSV quoted field kept its comma");
+  check(/test, fixture/.test(await win.innerText()), "CSV quoted field kept its comma");
 
   await open("page.html");
   const frame = scope(page, "page.html").locator("iframe");
