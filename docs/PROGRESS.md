@@ -1,6 +1,6 @@
 ## 2026-10-10: Avoid background version checks exhausting the update action quota
 
-Extended Preview acceptance reproduced HTTP 429 after repeated file deep-link reloads: shell and Settings badges requested a remote check on every mount. Both badges now share one in-flight request and a one-minute per-tab cache containing only the boolean result and timestamp. Explicit panel checks remain fresh and the server quota is unchanged. Regression tests cover concurrent badges, full reload reuse, expiration, manual bypass, failure retry and unavailable storage; the notice journey clears only its synthetic badge cache before mocked status assertions.
+Extended Preview acceptance reproduced HTTP 429 after repeated file deep-link reloads: shell and Settings badges requested a remote check on every mount. Both badges now share one in-flight request and a one-minute per-tab cache containing only the boolean result and timestamp. Explicit panel checks remain fresh and the server quota is unchanged. Regression tests cover concurrent badges, full reload reuse, expiration, manual bypass, failure retry and unavailable storage; the notice journey clears only its synthetic badge cache before mocked status assertions. Preview acceptance also verifies the honest unverified headline and refusal reason for its archive without Git, instead of demanding an up-to-date claim.
 
 ## 2026-10-10: Isolate release fixtures from operator home defaults
 

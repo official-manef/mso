@@ -209,10 +209,10 @@ const run = async () => {
   await page.waitForTimeout(3500);
   const settings = await (MOBILE ? page.locator("#main-content") : page.locator("[data-window]").last()).innerText();
   check(/Software update/i.test(settings), "Settings → Update MSO shows the update panel");
-  check(/Up to date|available|build is pending/i.test(settings), "Update panel reported a state");
+  check(/Up to date|available|build is pending|Update status not verified/i.test(settings), "Update panel reported a state");
   const update = await page.evaluate(async () => (await fetch("/api/v1/sys/update?check=0")).json());
   if (update.supported === false) {
-    check(typeof update.reason === "string" && settings.includes(update.reason), "Isolated fixture explains why self-update is unavailable");
+    check(update.remoteChecked === false && settings.includes("Update status not verified") && typeof update.reason === "string" && settings.includes(update.reason), "Isolated fixture explains why self-update is unavailable");
     check(!/Update to .* and restart/.test(settings), "Isolated fixture offers no deployment action");
   } else check(/Release notes and docs/i.test(settings), "Release notes + docs row present");
 
