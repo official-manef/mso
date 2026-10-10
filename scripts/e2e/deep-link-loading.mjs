@@ -45,13 +45,13 @@ try {
       const visible = images.filter(image => { const r = image.getBoundingClientRect(); return r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth && getComputedStyle(image).visibility !== 'hidden'; });
       return visible.length > 0 && visible.every(image => {
         const full = image.src.includes('/macos/') || image.src.includes('/windows/') ? 256 : 192;
-        const pixels = image.currentSrc.endsWith('-128.webp') ? 128 : image.currentSrc.endsWith('-192.webp') ? 192 : full;
+        const pixels = image.currentSrc.endsWith('-128.webp') ? 128 : full;
         return image.complete && image.naturalWidth > 0 && pixels >= Math.min(full, image.getBoundingClientRect().width * devicePixelRatio);
       });
     })).toBe(true);
     if (!mobile && shell !== 'dashboard') await expect.poll(() => page.locator('.shell-platform-mark img').evaluateAll(images => images.some(image => image.getBoundingClientRect().width > 0 && image.currentSrc.endsWith('-128.webp') && image.complete))).toBe(true);
     if (mobile) expect(requests.filter(url => url.startsWith('/app-icons/') && url.endsWith('-128.webp'))).toEqual([]);
-    if (dpr > 3) expect(requests.filter(url => url.startsWith('/app-icons/') && url.endsWith('-192.webp'))).toEqual([]);
+    if (mobile) expect(requests.filter(url => /\/app-icons\/(macos|windows)\/.+\.avif$/.test(url)).length).toBeGreaterThan(0);
     // Exercise the shared mark at larger sizes and the conservative fallback for browsers without auto sizing.
     await page.evaluate(() => {
       const mark = document.querySelector('.shell-platform-mark').cloneNode(true);
@@ -59,9 +59,11 @@ try {
       document.body.appendChild(mark);
     });
     const enlarged = page.locator('#qa-artwork-size img');
-    await expect.poll(() => enlarged.evaluate(image => image.complete && image.naturalWidth > 0 && !/-\d+\.webp$/.test(image.currentSrc))).toBe(true);
-    await enlarged.evaluate(image => { image.parentElement.style.width = '24px'; image.parentElement.style.height = '24px'; image.sizes = '256px'; image.parentElement.querySelectorAll('source').forEach(source => { source.sizes = '256px'; }); });
-    await expect.poll(() => enlarged.evaluate(image => image.complete && image.naturalWidth > 0 && !/-\d+\.webp$/.test(image.currentSrc))).toBe(true);
+    await expect.poll(() => enlarged.evaluate(image => image.complete && image.naturalWidth > 0 && !image.currentSrc.endsWith('-128.webp'))).toBe(true);
+    await enlarged.evaluate(image => { image.parentElement.style.width = '24px'; image.parentElement.style.height = '24px'; image.sizes = '256px'; });
+    await expect.poll(() => enlarged.evaluate(image => image.complete && image.naturalWidth > 0 && !image.currentSrc.endsWith('-128.webp'))).toBe(true);
+    await enlarged.evaluate(image => image.parentElement.querySelectorAll('[type="image/avif"]').forEach(source => { source.type = 'image/qa-unsupported'; }));
+    await expect.poll(() => enlarged.evaluate(image => image.complete && image.naturalWidth > 0 && image.currentSrc.endsWith('.webp') && !image.currentSrc.endsWith('-128.webp'))).toBe(true);
     await page.locator('#qa-artwork-size').evaluate(mark => mark.remove());
     if (shell === 'macos') {
       const dockIcon = page.locator('a[href="/files"].relative.block').filter({ has: page.locator('.shell-platform-mark') });
