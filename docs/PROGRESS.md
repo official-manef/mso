@@ -1,6 +1,6 @@
 ## 2026-10-11: Keep decorative app artwork behind requested app reads
 
-Cold DPR 3 Vault traces showed full icon downloads competing with the small authenticated index response, producing variable phone startup. The shared first-party and official artwork factories now explicitly request low fetch priority using native HTML. Source selection, intrinsic size, lazy sizing and the dense-screen single-source guard stay unchanged; no timers, private prefetch or new dependencies are introduced. Local production archives and synthetic fixtures separate shell visibility, Vault readiness and note reading. This is an undeployed candidate; measurement and regression evidence remain required.
+Cold DPR 3 Vault traces showed full icon downloads competing with the small authenticated index response, producing variable phone startup. The shared first-party and official artwork factories, plus the two built-in dock images, now explicitly request low fetch priority using native HTML. Source selection, intrinsic size, lazy sizing and the dense-screen single-source guard stay unchanged; no timers, private prefetch or new dependencies are introduced. Local production archives and synthetic fixtures separate shell visibility, Vault readiness and note reading. This is an undeployed candidate; measurement and regression evidence remain required.
 
 ## 2026-10-11: Size shell artwork by its rendered width
 

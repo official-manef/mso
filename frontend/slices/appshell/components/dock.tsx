@@ -80,7 +80,7 @@ export function Dock({ onMissionControl }: { onMissionControl?: () => void }) {
       kind: "plain", id: "launchpad", label: "Launchpad", onClick: () => setLauncherOpen(true),
       node: (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src="/app-icons/launchpad.webp" alt="" aria-hidden className="size-full" draggable={false} decoding="async" />
+        <img src="/app-icons/launchpad.webp" alt="" aria-hidden className="size-full" draggable={false} decoding="async" fetchPriority="low" />
       ),
     },
     ...(onMissionControl
@@ -88,7 +88,7 @@ export function Dock({ onMissionControl }: { onMissionControl?: () => void }) {
           kind: "plain", id: "mission-control", label: "Mission Control", onClick: onMissionControl,
           node: (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src="/app-icons/mission-control.webp" alt="" aria-hidden className="size-full" draggable={false} decoding="async" />
+            <img src="/app-icons/mission-control.webp" alt="" aria-hidden className="size-full" draggable={false} decoding="async" fetchPriority="low" />
           ),
         } as Slot]
       : []),
