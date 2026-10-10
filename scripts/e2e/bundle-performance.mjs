@@ -28,10 +28,13 @@ try {
     const errors = [];
     const pendingScripts = new Set();
     const requestedScripts = new Set();
+    const requestedArtwork = new Set();
     let lastScriptAt = Date.now();
     const isScript = request => /\/_next\/static\/.*\.js(?:\?|$)/.test(request.url());
     page.on('request', request => {
       if (isScript(request)) { pendingScripts.add(request); requestedScripts.add(new URL(request.url()).pathname.split('/').at(-1)); lastScriptAt = Date.now(); }
+      const pathname = new URL(request.url()).pathname;
+      if (/^\/app-icons\/(?:macos\/|windows\/)?(?:files|code|terminal|claude|studio|reel|viewer|store|create|monitor|assistant|settings|links|docs)\.webp$/.test(pathname)) requestedArtwork.add(pathname);
     });
     const settled = request => { if (isScript(request)) { pendingScripts.delete(request); lastScriptAt = Date.now(); } };
     page.on('requestfinished', settled); page.on('requestfailed', settled);
@@ -53,6 +56,10 @@ try {
       .map(entry => ({ file: new URL(entry.name).pathname.split('/').at(-1), decodedBytes: entry.decodedBodySize, transferBytes: entry.transferSize })));
     const heavy = [...requestedScripts].filter(file => heavyMarkers.some(marker => chunks.get(file)?.includes(marker)));
     expect(heavy).toEqual([]);
+    const family = ['macos', 'ios'].includes(shell) ? 'macos/' : ['windows', 'android'].includes(shell) ? 'windows/' : '';
+    expect(requestedArtwork.size).toBeGreaterThan(0);
+    for (const pathname of requestedArtwork) expect(pathname).toMatch(new RegExp(`^/app-icons/${family}[^/]+\\.webp$`));
+    expect(await page.locator('.shell-platform-mark').evaluateAll(marks => marks.every(mark => mark.querySelectorAll('img').length === 1))).toBe(true);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
     if (output) await page.screenshot({ path: path.join(output, `${shell}-cold.png`) });
     const search = page.getByRole('combobox', { name: 'Spotlight search' });
@@ -105,14 +112,22 @@ try {
       const close = page.getByRole('button', { name: 'Close Alfa', exact: true });
       await expect(close).toBeVisible(); await close.click(); await expect(close).not.toBeVisible();
     }
+    // Artwork follows a live shell switch without remounting the session.
+    const target = mobile ? (shell === 'ios' ? 'android' : 'ios') : (shell === 'windows' ? 'macos' : 'windows');
+    await page.keyboard.press('Control+k');
+    await expect(search).toBeVisible(); await search.fill(target);
+    await page.getByRole('option', { name: new RegExp(`Switch ${mobile ? 'mobile' : 'desktop'} shell:.*${target}`, 'i') }).click();
+    await expect(page.locator(`#main-content[data-shell="${target}"]`)).toBeVisible();
+    const switchedFamily = ['macos', 'ios'].includes(target) ? '/app-icons/macos/' : '/app-icons/windows/';
+    await expect.poll(() => page.locator('.shell-platform-mark img').evaluateAll((images, prefix) => images.length > 0 && images.every(image => new URL(image.src).pathname.startsWith(prefix) && image.complete && image.naturalWidth > 0), switchedFamily)).toBe(true);
     expect(errors).toEqual([]);
     results.push({ shell, viewport, coldJsRequests: resources.length,
       coldJsDecodedBytes: resources.reduce((n, row) => n + row.decodedBytes, 0),
       coldJsTransferBytes: resources.reduce((n, row) => n + row.transferBytes, 0),
       heavyEnginesLoadedOnColdStart: heavy.length, pageErrors: errors.length,
-      firstOpenSearch: 'pass', eagerClipboardCapture: 'pass', resources });
+      firstOpenSearch: 'pass', eagerClipboardCapture: 'pass', activeArtworkOnly: 'pass', liveShellSwitch: 'pass', resources });
     await context.close();
-    console.log(`PASS ${shell}: no cold graph/editor/terminal/ONNX engines, deferred search, clipboard and inspector lifecycle`);
+    console.log(`PASS ${shell}: no cold heavy engines, active artwork only, live shell switch, search/clipboard/inspector lifecycle`);
   }
   if (output) fs.writeFileSync(path.join(output, 'browser-report.json'), JSON.stringify({ synthetic: true, results }, null, 2));
 } finally {
