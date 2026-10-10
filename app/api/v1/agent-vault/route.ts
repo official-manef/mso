@@ -20,7 +20,8 @@ export async function GET(req: NextRequest) {
   try {
     const result = await getAgentVault(req.nextUrl.searchParams.get("project") ?? undefined, req.nextUrl.searchParams.get("note") ?? undefined);
     // shortcut: weighted gzip requests keep the existing identity response; expand negotiation if custom clients need them.
-    if (req.headers.get("Accept-Encoding")?.split(",").some(value => value.trim().toLowerCase() === "gzip")) {
+    // Note reads repeat the manifest; keep index timing unchanged while shrinking that second transfer.
+    if (result.note && req.headers.get("Accept-Encoding")?.split(",").some(value => value.trim().toLowerCase() === "gzip")) {
       const body = JSON.stringify(result);
       if (Buffer.byteLength(body) >= 1024) return new NextResponse(new Uint8Array(await compress(body)), { headers: { ...headers, "Content-Type": "application/json; charset=utf-8", "Content-Encoding": "gzip" } });
     }

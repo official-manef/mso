@@ -47,6 +47,12 @@ describe("private vault response encoding", () => {
     expect(response.headers.get("Content-Encoding")).toBeNull(); expect(response.headers.get("Cache-Control")).toBe("private, no-store");
     expect(await response.json()).toEqual(value);
   });
+  it("keeps metadata index responses as identity JSON even for 49 synthetic notes", async () => {
+    const value = { state: large().state }; mocks.get.mockResolvedValue(value);
+    const response = await GET(new NextRequest("http://localhost/api/v1/agent-vault?project=fixture", { headers: { "Accept-Encoding": "gzip" } }));
+    expect(response.headers.get("Content-Encoding")).toBeNull(); expect(await response.json()).toEqual(value);
+    expect(mocks.get).toHaveBeenCalledWith("fixture", undefined);
+  });
   it("keeps tiny responses and unauthorized errors as identity JSON", async () => {
     expect((await GET(encodedRequest("gzip"))).headers.get("Content-Encoding")).toBeNull();
     mocks.auth.mockResolvedValue(null); mocks.get.mockClear();

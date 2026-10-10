@@ -4505,4 +4505,4 @@ Screenshot evidence previously lived in unrelated scratch directories or only in
 
 - The two built-in dock artworks also use dense-screen AVIF with original WebP fallback; they were the remaining first-read transfer competitors in landscape.
 
-- A synthetic 49-note control exposed first-read contention from the repeated manifest. Private Vault GET JSON now uses standard async gzip above 1 KiB for explicit unweighted gzip clients; owner/rate checks, JSON shape and private no-store remain intact. Weighted/custom headers keep the previous identity response.
+- A synthetic 49-note control exposed first-read contention from the repeated manifest. Private Vault note GET JSON now uses standard async gzip above 1 KiB for explicit unweighted gzip clients; index timing, owner/rate checks, JSON shape and private no-store remain intact. Weighted/custom headers keep the previous identity response.
