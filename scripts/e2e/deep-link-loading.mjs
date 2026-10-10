@@ -35,6 +35,14 @@ try {
     await page.goto(fixture.base + '/agent-vault', { waitUntil: 'domcontentloaded' });
     await expect(page.locator(`#main-content[data-shell="${shell}"]`)).toBeVisible();
     await expect(page.locator('[data-slot="native-vault"]')).toBeVisible();
+    if (shell === 'ios') {
+      expect(requests.filter(url => url.startsWith('/app-icons/'))).toEqual([]);
+      expect(await page.evaluate(() => {
+        const home = [...document.querySelectorAll('[inert][aria-hidden="true"]')].find(el => el.className.includes('shell-platform-mark_img'));
+        return home && [...home.querySelectorAll('.shell-platform-mark img')].every(img => getComputedStyle(img).display === 'none');
+      })).toBe(true);
+      await page.getByRole('button', {name:'Back to Home',exact:true}).click();
+    }
     await expect.poll(() => requests.findIndex(url => url.startsWith('/app-icons/'))).toBeGreaterThan(-1);
     const vaultIndex = requests.findIndex(url => vaultFiles.has(url.split('/').at(-1)));
     expect(vaultIndex).toBeGreaterThan(-1);
@@ -73,7 +81,7 @@ try {
         return image.complete && image.naturalWidth > 0 && pixels >= Math.min(256, image.getBoundingClientRect().width * devicePixelRatio);
       })).toBe(true);
     }
-    if (shell === 'macos' || shell === 'ios') {
+    if (shell === 'macos') {
       expect(await page.evaluate(() => {
         const roots = [...document.querySelectorAll('[inert][aria-hidden="true"]')].filter(el => el.className.includes('shell-platform-mark_img'));
         return roots.length > 0 && roots.every(root => [...root.querySelectorAll('.shell-platform-mark img')].every(img => getComputedStyle(img).display === 'none'));
