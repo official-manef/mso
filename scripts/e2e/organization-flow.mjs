@@ -18,7 +18,7 @@ try {
   await context.addCookies([{ name: "session", value: cookie, url: fixture.base, httpOnly: true, sameSite: "Lax" }]);
   const page = await context.newPage(), errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  await page.goto(fixture.base + "/organization");
+  await page.goto(fixture.base + "/organization"); await page.getByRole("button",{name:"Edit organization",exact:true}).click();
   const call = async (body) => page.evaluate(async (body) => {
     const response = await fetch("/api/v1/organization", body ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : {});
     return { status: response.status, body: await response.json() };
@@ -29,7 +29,7 @@ try {
     expect(result.status).toBe(200); chart = result.body.chart;
   }
   const open = async () => {
-    await page.goto(fixture.base + "/organization");
+    await page.goto(fixture.base + "/organization"); await page.getByRole("button",{name:"Edit organization",exact:true}).click();
     const directory = page.locator('[data-slot="organization-unit-directory"]');
     await expect(directory).toBeVisible();
     const card = directory.getByRole("button", { name: /Flow Workspace/ });
