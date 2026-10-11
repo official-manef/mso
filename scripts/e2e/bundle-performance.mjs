@@ -57,7 +57,10 @@ try {
     const heavy = [...requestedScripts].filter(file => heavyMarkers.some(marker => chunks.get(file)?.includes(marker)));
     expect(heavy).toEqual([]);
     const family = ['macos', 'ios'].includes(shell) ? 'macos/' : ['windows', 'android'].includes(shell) ? 'windows/' : '';
-    expect(requestedArtwork.size).toBeGreaterThan(0);
+    // Lazy artwork is scheduled separately from startup JavaScript.
+    await expect.poll(() => requestedArtwork.size).toBeGreaterThan(0);
+    await expect.poll(() => page.locator(".shell-platform-mark img").evaluateAll(images =>
+      images.some(image => image.complete && image.naturalWidth > 0))).toBe(true);
     for (const pathname of requestedArtwork) expect(pathname).toMatch(new RegExp(`^/app-icons/${family}[^/]+\\.(?:webp|avif)$`));
     expect(await page.locator('.shell-platform-mark').evaluateAll(marks => marks.every(mark => mark.querySelectorAll('img').length === 1))).toBe(true);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);

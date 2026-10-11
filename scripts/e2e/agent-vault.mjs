@@ -1,8 +1,14 @@
 import { expect } from "@playwright/test";
 import { readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 
 export async function agentVaultJourney(page, fixture) {
+  // Git evidence is generated inside the same private project, never borrowed.
+  const git = (...args) => promisify(execFile)("git", ["-C", fixture.vaultProject, ...args]);
+  await git("init", "-q"); await git("add", ".");
+  await git("-c", "user.name=QA Fixture", "-c", "user.email=qa@example.invalid", "-c", "commit.gpgsign=false", "commit", "-qm", "Synthetic QA repository history");
   let connectionReads = 0;
   const countReads = request => { if (request.url().includes("/api/v1/memory-graph")) connectionReads++; };
   page.on("request", countReads);
@@ -16,8 +22,12 @@ export async function agentVaultJourney(page, fixture) {
   const state = await page.evaluate(async () => (await (await fetch("/api/v1/agent-vault")).json()).state);
   expect(state.root.startsWith(path.join(fixture.dir, "vault-data"))).toBe(true);
   expect(state.root.startsWith(fixture.vaultProject + path.sep)).toBe(false);
+  await page.getByRole("button", { name: /^Repository changes/ }).click();
+  await expect(page.getByRole("region", { name: "Note reader" })).toContainText("Synthetic QA repository history");
+  expect(state.snapshots[0].warnings).not.toContain("Git history unavailable");
   const previous = state.current;
   expect(connectionReads).toBe(0);
+  await page.getByRole("button", { name: /^Fixture worker/ }).click();
   await page.getByRole("button", { name: "Backlinks", exact: true }).click();
   const backlinks = page.getByRole("region", { name: "Note backlinks" });
   await expect(backlinks.getByRole("button", { name: "Agent progress", exact: true })).toBeVisible();
@@ -46,6 +56,16 @@ export async function agentVaultJourney(page, fixture) {
   const relationView=page.locator('[data-slot="workspace-graph-view"]');
   const workerNode=relationView.getByRole("button",{name:"Fixture worker",exact:true});
   await expect(workerNode).toBeVisible();
+  const graphSvg = relationView.getByRole("application", { name: "Memory graph" });
+  const labelSize = () => graphSvg.evaluate(svg => Math.min(...[...svg.querySelectorAll("text")].map(text => parseFloat(getComputedStyle(text).fontSize) * text.getScreenCTM().a)));
+  expect(await labelSize()).toBeGreaterThanOrEqual(11.9);
+  await relationView.getByRole("button", { name: "Zoom in graph", exact: true }).click();
+  expect(await labelSize()).toBeGreaterThanOrEqual(14);
+  await relationView.getByRole("button", { name: "Reset zoom", exact: true }).click();
+  await workerNode.focus();
+  const label = await workerNode.locator("text").boundingBox(), viewport = await graphSvg.locator("..").boundingBox();
+  expect(label.x).toBeGreaterThanOrEqual(viewport.x - 1);
+  expect(label.x + label.width).toBeLessThanOrEqual(viewport.x + viewport.width + 1);
   const identity=await workerNode.getAttribute("data-node-id");
   const modelRoot=await page.locator('[data-slot="knowledge-workspace"]').getAttribute("data-model-root");
   expect(modelRoot).toBe(`${state.root}/Snapshots/${previous}`);

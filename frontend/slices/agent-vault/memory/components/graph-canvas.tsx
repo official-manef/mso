@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 import type { MemoryGraphEdge, MemoryGraphNode } from "@/lib/memory-graph/types";
 import { groupColor, placeNodes, type GraphLayoutName } from "../lib/layout";
 
@@ -43,13 +44,20 @@ function GraphStage({
   const [view, setView] = useState(bounds);
   const drag = useRef<{ x: number; y: number; vx: number; vy: number } | null>(null);
   return (
+    <div className="relative h-full min-h-0 overflow-auto bg-background">
+      <div className="sticky left-0 top-0 z-10 flex w-fit gap-1 bg-background/90 p-1">
+        <Button size="sm" variant="outline" aria-label="Zoom in graph" onClick={() => setView(current => ({ ...current, w: current.w * 0.8, h: current.h * 0.8 }))}>+</Button>
+        <Button size="sm" variant="outline" aria-label="Zoom out graph" onClick={() => setView(current => ({ ...current, w: current.w * 1.25, h: current.h * 1.25 }))}>-</Button>
+        <Button size="sm" variant="outline" onClick={() => setView(bounds)}>Reset zoom</Button>
+      </div>
     <svg
-      className="h-full w-full touch-none bg-background"
+      className="block min-h-full min-w-full"
+      style={{ width: bounds.w * 12 / 11, height: bounds.h * 12 / 11 }}
       viewBox={`${view.x} ${view.y} ${view.w} ${view.h}`}
       role="application"
       aria-label="Memory graph"
       onPointerDown={(event) => {
-        if (event.target !== event.currentTarget) return;
+        if (event.target !== event.currentTarget || event.pointerType === "touch") return;
         drag.current = { x: event.clientX, y: event.clientY, vx: view.x, vy: view.y };
         event.currentTarget.setPointerCapture(event.pointerId);
       }}
@@ -60,7 +68,9 @@ function GraphStage({
         setView((current) => ({ ...current, x: drag.current!.vx - (event.clientX - drag.current!.x) * scale, y: drag.current!.vy - (event.clientY - drag.current!.y) * scale }));
       }}
       onPointerUp={() => { drag.current = null; }}
+      onPointerCancel={() => { drag.current = null; }}
       onWheel={(event) => {
+        if (!event.ctrlKey && !event.metaKey) return;
         event.preventDefault();
         const factor = event.deltaY > 0 ? 1.08 : 0.92;
         setView((current) => ({ ...current, w: current.w * factor, h: current.h * factor }));
@@ -79,6 +89,7 @@ function GraphStage({
         return (
           <g key={node.id} data-node-id={node.id} transform={`translate(${point.x} ${point.y})`} role="button" tabIndex={0}
             aria-pressed={selected === node.id} aria-label={node.title}
+            onFocus={(event) => event.currentTarget.scrollIntoView({ block: "nearest", inline: "nearest" })}
             onClick={() => onSelect(node.id)}
             onDoubleClick={() => onOpen(node)}
             onKeyDown={(event) => { if (event.key === "Enter") onOpen(node); }}
@@ -91,5 +102,6 @@ function GraphStage({
         );
       })}
     </svg>
+    </div>
   );
 }
