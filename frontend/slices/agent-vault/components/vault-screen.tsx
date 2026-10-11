@@ -41,7 +41,7 @@ export function VaultScreen({workspace, active, mobileReader, setMobileReader}: 
       <div className="min-w-0 flex-1"><h2 className="truncate text-sm font-semibold">{state?.project.name || "Agent Vault"}</h2><p className="truncate text-xs text-muted-foreground">{snapshot ? `${snapshot.notes.length} notes · ${new Date(snapshot.capturedAt).toLocaleString()}` : "Repository knowledge and recorded progress"}</p></div>
       <Button size="sm" disabled={busy} onClick={() => { setMobileReader(false); void vault.load(state?.project.path || vault.project, true); }}><RefreshCw className={`size-4 ${busy ? "animate-spin" : ""}`} /><span>{busy ? "Loading…" : "Refresh snapshot"}</span></Button>
     </header>
-    <details className="shrink-0 border-b px-3 py-1 text-xs text-muted-foreground">
+    <details className={`${mobileReader ? "[@media(max-height:520px)]:hidden" : ""} shrink-0 border-b px-3 py-1 text-xs text-muted-foreground`}>
       <summary className="cursor-pointer">Repository &amp; storage{snapshot?.truncated ? " · partial snapshot" : ""}</summary>
       <form className="flex min-w-0 gap-2 py-2" onSubmit={e => { e.preventDefault(); setMobileReader(false); void vault.load(vault.project); }}>
         <Input aria-label="Repository" placeholder="Repository name, id or path" value={vault.project} onChange={e => vault.setProject(e.target.value)} className="min-w-0 flex-1" />
