@@ -17,10 +17,10 @@ import "@/features/os-shell/integrations";
 
 import { AuthGate, SessionProvider, useSession, type DeviceRole, type SessionStatus } from "@/features/auth";
 import { appAllowedForRole } from "@/lib/auth/app-access";
-import { useInstalledApps, useEnabledOverrides, isAppEnabled, useExternalApps, ShellAppsProvider } from "@/features/app-store";
+import { useRuntimeApps, useEnabledOverrides, isAppEnabled, useExternalApps, ShellAppsProvider } from "@/features/app-store";
 
 function Shell() {
-  const dynamic = useInstalledApps();
+  const dynamic = useRuntimeApps();
   const external = useExternalApps();
   const enabled = useEnabledOverrides();
   const { status, role } = useSession();

@@ -13,7 +13,7 @@ export const appStoreApp: AppDescriptor = {
 };
 
 // The dynamic half of the registry — installed/created apps as descriptors.
-export { useInstalledApps } from "./lib/use-installed-apps";
+export { useRuntimeApps } from "./lib/use-runtime-apps";
 export { useApps, setInstalled, createApp, type AppRow } from "./lib/apps-store";
 // Shared native app / shell feature install state, independent of presentation.
 export { useEnabledOverrides, isAppEnabled, setEnabled } from "./lib/enabled-store";

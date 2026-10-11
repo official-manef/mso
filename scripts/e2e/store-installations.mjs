@@ -98,6 +98,7 @@ try {
   await writeFile(draftFile,originalDraft,{mode:0o600});
   const context=await browser.newContext({viewport:{width:1363,height:936},serviceWorkers:'block'});
   await context.addCookies([{name:'session',value:cookie,url:fixture.base,sameSite:'Strict'}]);
+  await context.addInitScript(()=>{if (['http:','https:'].includes(location.protocol) && window===window.top) localStorage.setItem('mso:onboarding:v1','done');});
   const editor=await context.newPage();await editor.goto(fixture.base+'/store');
   await card(editor,'Code').getByRole('button',{name:'Install',exact:true}).click();
   await editor.goto(fixture.base+'/code'+draftFile);const textarea=editor.locator('textarea').first();
@@ -111,5 +112,25 @@ try {
   await expect.poll(()=>readFile(draftFile,'utf8')).toBe(draft);
   await editor.reload();await expect(editor.getByText('Code is not installed.',{exact:true})).toBeVisible();
   await context.close();results.push({engine,crossTabDraft:'PASS',saveAfterMenuRemoval:'PASS',newMountRequiresInstall:'PASS'});
+  const runtimeContext=await browser.newContext({viewport:{width:1363,height:936},serviceWorkers:'block'});
+  await runtimeContext.addCookies([{name:'session',value:cookie,url:fixture.base,sameSite:'Strict'}]);
+  const runtimeEntry='<html><body><label>Generated draft<input aria-label="Generated draft"></label></body></html>';
+  await runtimeContext.addInitScript(entry=>{
+    if (window!==window.top || !['http:','https:'].includes(location.protocol) || localStorage.getItem('mso:apps')) return;
+    localStorage.setItem('mso:onboarding:v1','done');
+    localStorage.setItem('mso:apps',JSON.stringify([{appId:'synthetic-runtime',title:'Synthetic runtime',glyph:'code',gradient:'gray',runtime:'html',entry,source:'custom',installed:true}]));
+  },runtimeEntry);
+  const running=await runtimeContext.newPage();await running.goto(fixture.base+'/synthetic-runtime');
+  const input=running.frameLocator('iframe').getByLabel('Generated draft');await input.fill('Generated unsaved value');
+  const store=await runtimeContext.newPage();await store.goto(fixture.base+'/store');
+  await store.getByRole('button',{name:'Featured',exact:true}).click();
+  const runtimeCard=store.locator('[data-slot="card"]').filter({has:store.getByText('Synthetic runtime',{exact:true})});
+  await installed(runtimeCard).click();await store.getByRole('dialog').getByRole('button',{name:'Uninstall',exact:true}).click();
+  await expect.poll(()=>running.evaluate(()=>JSON.parse(localStorage.getItem('mso:apps'))[0].installed)).toBe(false);
+  await expect(input).toHaveValue('Generated unsaved value');
+  expect(await running.evaluate(()=>JSON.parse(localStorage.getItem('mso:apps'))[0].entry)).toBe(runtimeEntry);
+  await screenshot(running,'runtime-draft-preserved');await running.reload();
+  await expect(running.getByText('Synthetic runtime is not installed.',{exact:true})).toBeVisible();
+  await runtimeContext.close();results.push({engine,runtimeCrossTab:'PASS',runtimeDraft:'PASS',runtimeSourcePreserved:'PASS'});
   if (output) await writeFile(path.join(output,`${engine}-store-results.json`),JSON.stringify({synthetic:true,results},null,2),{mode:0o600});
 } finally {await browser?.close();await fixture.close();}

@@ -25,7 +25,7 @@ export function WindowContent({ app, payload, winId }: { app: string; payload?: 
   const Comp = loaded?.key === app ? loaded.Comp : null;
 
   useEffect(() => {
-    if (!descriptor || descriptor.installed === false) return;
+    if (!descriptor || descriptor.installed === false || Comp) return;
     let alive = true;
     descriptor
       .load()
@@ -42,7 +42,7 @@ export function WindowContent({ app, payload, winId }: { app: string; payload?: 
     return () => {
       alive = false;
     };
-  }, [descriptor, app]);
+  }, [descriptor, app, Comp]);
 
   if (!descriptor) {
     return (

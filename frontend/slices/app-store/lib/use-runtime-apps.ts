@@ -6,15 +6,14 @@ import { glyphIcon } from "./glyph";
 import { RuntimeApp, type AppManifest } from "../components/runtime-app";
 import { useApps } from "./apps-store";
 
-// Turns the owner's installed runtime apps (localStorage) into AppDescriptors
-// the shell can mount — merged with the built-in slices by the app layer. This
-// is the "dynamic" half of the registry: create/install an app → it appears live.
-export function useInstalledApps(): AppDescriptor[] {
-  const apps = useApps().filter((a) => a.installed);
+// Retains runtime app metadata so a menu removal never discards an open window.
+// Menus use the descriptor's installed flag; all shells share these rows.
+export function useRuntimeApps(): AppDescriptor[] {
+  const apps = useApps();
   // Stable signature so descriptors (and their lazy components) only change
   // when the underlying app data actually changes — no remount churn.
   const sig = apps
-    .map((a) => `${a.appId}:${a.title}:${a.glyph}:${a.gradient}:${a.runtime}:${a.entry}`)
+    .map((a) => `${a.appId}:${a.title}:${a.glyph}:${a.gradient}:${a.runtime}:${a.entry}:${a.installed}`)
     .join("|");
 
   return useMemo(() => {
@@ -30,6 +29,7 @@ export function useInstalledApps(): AppDescriptor[] {
       return {
         id: a.appId,
         title: a.title,
+        installed: a.installed,
         icon: glyphIcon(a.glyph),
         gradient: a.gradient,
         load: () => Promise.resolve({ default: Comp }),
