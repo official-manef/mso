@@ -1,5 +1,13 @@
 ## 2026-10-11: Keep dense-screen Vault opening consistent without shifting the wait to reading
 
+
+## 2026-10-11 — Knowledge workspace candidate (not deployed)
+
+- Vault, Memory and Organization now share one feature, lazy app entry and node/edge view model. Legacy app identities/URLs remain compatibility entries; source editors and guarded backend stores remain authoritative, without migrating or deleting private data.
+- Snapshot metadata seeds the document immediately. Backlinks and both graph presentations share one lazy, context-keyed Memory request; changing capture invalidates connections. Vault reads one selected note, and Organization edits refresh the common projection on return.
+- Organization unit containment and scoped seats/reporting are included in the bounded owner graph. Structure and relations use the same entity IDs, source paths and selection; the existing Organization editor remains available, including its Assistant embedding.
+- Browser QA uses only generated notes, sessions and media in isolated archives. WebKit/Firefox regression and DPR3/400kbps measurements are recorded outside source; no deployment is authorized for this candidate.
+
 Cold DPR 3 traces showed artwork promoted to the same priority as the small authenticated index. Low native fetch priority makes opening faster, but alone still queued the first note behind full images. 192px WebP experiments reduced bytes but left landscape reading contention. The final candidate instead keeps one full-resolution 256px AVIF source on dense screens, generated from the 28 public platform originals, with the existing full WebP source as a native format fallback. Originals, official marks and desktop 128px selection remain intact; unused 192px experiments are removed. No timers, private prefetch or dependencies are added.
 
 The service worker also pre-cached every platform image at hydration regardless of the requested app. Install now fetches only its three bootstrap assets; the exact public-artwork allowlist is cached on first use, including AVIF and existing 128px companions. HTML, chunks, authenticated APIs and user notes remain outside Cache Storage. Update/waiting/reload semantics stay unchanged. Browser evidence must cover DPR 1/2/3/4, unsupported-format fallback, cold 400 kbps runs with and without a service worker, and separate shell/index/reading timers. This is an undeployed local candidate and all fixtures are synthetic.

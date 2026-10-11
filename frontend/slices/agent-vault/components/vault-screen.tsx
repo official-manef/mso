@@ -1,36 +1,37 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, FolderOpen, Network, RefreshCw, Users } from "lucide-react";
+import { ArrowLeft, FolderOpen, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { openWindow } from "@/features/appshell";
 import { useSession } from "@/features/auth";
 import { resolveNoteLink } from "../lib/note-links";
-import { useVault } from "../lib/use-vault";
+import type { useWorkspace } from "../lib/use-workspace";
 import { NotePreview } from "./note-preview";
 import { VaultConnections } from "./vault-connections";
 import { VaultHistory } from "./vault-history";
 import { PersonalNotes } from "./personal-notes";
 import styles from "./vault-screen.module.css";
 
-export function VaultScreen() {
-  const vault = useVault();
-  const reader = useRef<HTMLElement>(null), focusReader = useRef(false);
+export function VaultScreen({workspace, active, mobileReader, setMobileReader}: {workspace:ReturnType<typeof useWorkspace>; active:boolean; mobileReader:boolean; setMobileReader:(value:boolean)=>void}) {
+  const {vault, document} = workspace;
+  const reader = useRef<HTMLElement>(null), focusReader = useRef(false), wasActive = useRef(active);
   const { state, snapshotId, note, selectedPath, busy, noteBusy, error, select } = vault;
   const { status, role } = useSession();
   const [filter, setFilter] = useState(""), [kind, setKind] = useState("all");
-  const [mobileReader, setMobileReader] = useState(false), [history, setHistory] = useState(false);
+  const [history, setHistory] = useState(false);
   const [personal, setPersonal] = useState(false);
   const snapshot = state?.snapshots.find(s => s.id === snapshotId);
-  const notes = useMemo(() => snapshot?.notes.filter(n => (kind === "all" || n.kind === kind) && `${n.title} ${n.kind} ${n.source}`.toLowerCase().includes(filter.toLowerCase())) || [], [snapshot, filter, kind]);
+  const notes = useMemo(() => document.nodes.flatMap(node => node.note ? [node.note] : []).filter(n => (kind === "all" || n.kind === kind) && `${n.title} ${n.kind} ${n.source}`.toLowerCase().includes(filter.toLowerCase())) || [], [document.nodes, filter, kind]);
   const selected = snapshot?.notes.find(n => n.path === selectedPath);
   const graphRoot = state && snapshot ? `${state.root}/Snapshots/${snapshot.id}` : "";
-  const openNote = useCallback((path: string) => { setPersonal(false); setMobileReader(true); focusReader.current = true; void select(path); }, [select]);
+  const openNote = useCallback((path: string) => { setPersonal(false); setMobileReader(true); focusReader.current = true; void select(path); }, [select, setMobileReader]);
   useEffect(() => {
-    if (focusReader.current && mobileReader && reader.current) {
+    if (active && (focusReader.current || !wasActive.current) && mobileReader && reader.current) {
       focusReader.current = false; reader.current.focus({ preventScroll: true }); reader.current.scrollTop = 0;
     }
-  }, [selectedPath, noteBusy, mobileReader]);
+    wasActive.current = active;
+  }, [selectedPath, noteBusy, mobileReader, active]);
   const resolveLink = useCallback((target: string, wiki: boolean) => resolveNoteLink(snapshot?.notes || [], note?.path || "", target, wiki)?.path, [snapshot, note?.path]);
   function chooseSnapshot(id: string) { setPersonal(false); setMobileReader(false); setHistory(false); vault.chooseSnapshot(id); }
 
@@ -38,8 +39,6 @@ export function VaultScreen() {
   return <div data-slot="native-vault" className="flex h-full min-h-0 min-w-0 flex-col">
     <header className={`${styles.header} flex min-w-0 shrink-0 items-center gap-2 border-b px-3 py-2`}>
       <div className="min-w-0 flex-1"><h2 className="truncate text-sm font-semibold">{state?.project.name || "Agent Vault"}</h2><p className="truncate text-xs text-muted-foreground">{snapshot ? `${snapshot.notes.length} notes · ${new Date(snapshot.capturedAt).toLocaleString()}` : "Repository knowledge and recorded progress"}</p></div>
-      <Button size="sm" variant="outline" aria-label="Open Memory graph" disabled={!snapshot || busy} onClick={() => openWindow("memory-graph", "Memory", undefined, { root: graphRoot, project: state!.project.path })}><Network className="size-4" /><span className="hidden @min-[480px]:inline">Memory</span></Button>
-      <Button size="sm" variant="outline" aria-label="Open Organization" onClick={() => openWindow("organization", "Organization")}><Users className="size-4" /><span className="hidden @min-[480px]:inline">Organization</span></Button>
       <Button size="sm" disabled={busy} onClick={() => { setMobileReader(false); void vault.load(state?.project.path || vault.project, true); }}><RefreshCw className={`size-4 ${busy ? "animate-spin" : ""}`} /><span>{busy ? "Loading…" : "Refresh snapshot"}</span></Button>
     </header>
     <details className="shrink-0 border-b px-3 py-1 text-xs text-muted-foreground">
@@ -78,7 +77,7 @@ export function VaultScreen() {
               <p className="mb-4 break-all text-xs text-muted-foreground">Source: {selected?.source}</p>
               <NotePreview content={note.content} resolve={resolveLink} onOpen={openNote} />
             </> : <p className="text-sm text-muted-foreground">Choose an agent, project or progress note. Use History to browse earlier captures.</p>}
-            {!personal && selectedPath ? <VaultConnections key={graphRoot} root={graphRoot} project={state!.project.path} notes={snapshot.notes} selectedPath={selectedPath} vaultRoot={state!.root} onOpen={openNote} /> : null}
+            {!personal && selectedPath ? <VaultConnections key={graphRoot} graph={workspace.graph} error={workspace.graphError} onLoad={workspace.loadGraph} notes={snapshot.notes} selectedPath={selectedPath} vaultRoot={state!.root} onOpen={openNote} /> : null}
             {snapshot.warnings.length ? <p className="mt-6 text-xs text-muted-foreground">{snapshot.warnings.join(" · ")}</p> : null}
           </div>
         </article>

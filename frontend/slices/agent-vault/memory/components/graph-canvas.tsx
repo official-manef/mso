@@ -77,7 +77,7 @@ function GraphStage({
         const radius = node.kind === "folder" ? 16 : 8 + Math.min(node.degree, 8) * 1.6;
         const fill = node.kind === "ghost" ? "var(--muted-foreground)" : groupColor(node.group, groups);
         return (
-          <g key={node.id} transform={`translate(${point.x} ${point.y})`} role="button" tabIndex={0}
+          <g key={node.id} data-node-id={node.id} transform={`translate(${point.x} ${point.y})`} role="button" tabIndex={0}
             aria-pressed={selected === node.id} aria-label={node.title}
             onClick={() => onSelect(node.id)}
             onDoubleClick={() => onOpen(node)}

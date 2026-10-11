@@ -41,6 +41,25 @@ export async function agentVaultJourney(page, fixture) {
   await page.getByRole("button", { name: /^Fixture progress/ }).click();
   await expect(page.getByText("First verified repository update.", { exact: true })).toBeVisible();
   expect(await readFile(path.join(fixture.vaultProject, "wiki/log.md"), "utf8")).toContain("Second verified");
+  const views=page.getByRole("navigation",{name:"Knowledge views"});
+  await views.getByRole("button",{name:"Memory",exact:true}).click();
+  const relationView=page.locator('[data-slot="workspace-graph-view"]');
+  const workerNode=relationView.getByRole("button",{name:"Fixture worker",exact:true});
+  await expect(workerNode).toBeVisible();
+  const identity=await workerNode.getAttribute("data-node-id");
+  const modelRoot=await page.locator('[data-slot="knowledge-workspace"]').getAttribute("data-model-root");
+  expect(modelRoot).toBe(`${state.root}/Snapshots/${previous}`);
+  const loadedConnections=connectionReads;
+  await views.getByRole("button",{name:"Organization",exact:true}).click();
+  await expect(page.getByLabel("Knowledge structure")).toBeVisible();
+  const structureNode=page.locator('[data-node-id]').filter({hasText:"Fixture worker"});
+  await expect(structureNode).toHaveCount(1);
+  expect(await structureNode.getAttribute("data-node-id")).toBe(identity);
+  expect(connectionReads).toBe(loadedConnections);
+  await structureNode.dblclick();
+  await expect(page.getByRole("heading",{name:"Fixture worker",exact:true})).toBeVisible();
+  expect(await page.locator('[data-slot="knowledge-workspace"]').getAttribute("data-model-root")).toBe(modelRoot);
+
   await page.getByLabel("Search vault notes", { exact: true }).fill("worker");
   await expect(page.getByRole("button", { name: /^Fixture worker/ })).toBeVisible();
   await expect(page.getByRole("button", { name: /^Fixture progress/ })).toHaveCount(0);
