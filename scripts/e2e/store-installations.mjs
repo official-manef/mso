@@ -130,8 +130,9 @@ try {
   const input=running.frameLocator('iframe').getByLabel('Generated draft');await input.fill('Generated unsaved value');
   const store=await runtimeContext.newPage();await store.goto(fixture.base+'/store');
   await store.getByRole('button',{name:'Featured',exact:true}).click();
-  const runtimeCard=store.locator('[data-slot="card"]').filter({has:store.getByText('SiteForge',{exact:true})});
-  await installed(runtimeCard).click();await store.getByRole('dialog').getByRole('button',{name:'Uninstall',exact:true}).click();
+  const runtimePanel=store.getByRole('tabpanel');
+  await expect(runtimePanel.getByText('SiteForge',{exact:true})).toHaveCount(2);
+  await installed(runtimePanel).last().click();await store.getByRole('dialog').getByRole('button',{name:'Uninstall',exact:true}).click();
   await expect.poll(()=>running.evaluate(()=>JSON.parse(localStorage.getItem('mso:apps'))[0].installed)).toBe(false);
   await expect(input).toHaveValue('Generated unsaved value');
   expect(await running.evaluate(()=>JSON.parse(localStorage.getItem('mso:apps'))[0].entry)).toBe(runtimeEntry);
