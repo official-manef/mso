@@ -4543,3 +4543,7 @@ Screenshot evidence previously lived in unrelated scratch directories or only in
 - A synthetic 49-note control exposed first-read contention from the repeated manifest. Private Vault note GET JSON now uses standard async gzip above 1 KiB for explicit unweighted gzip clients; index timing, owner/rate checks, JSON shape and private no-store remain intact. Weighted/custom headers keep the previous identity response.
 
 The shared install model keeps catalog lookup for routes and running-window controls in all five shells; launch menus still use only installed entries. Native draft retention is tested per shell. The runtime resolver signature includes source metadata, and the historical audit link follows its renamed file.
+
+Android deep links now defer covered Home artwork from the URL-derived Home state,
+matching iOS. An installed Vault can hydrate after the catalog preference; hidden
+icons must not take its initial request slot. Home return restores normal artwork.

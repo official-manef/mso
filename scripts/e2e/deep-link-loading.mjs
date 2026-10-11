@@ -36,7 +36,7 @@ try {
     await page.goto(fixture.base + '/agent-vault', { waitUntil: 'domcontentloaded' });
     await expect(page.locator(`#main-content[data-shell="${shell}"]`)).toBeVisible();
     await expect(page.locator('[data-slot="native-vault"]')).toBeVisible();
-    if (shell === 'ios') {
+    if (mobile) {
       expect(requests.filter(url => url.startsWith('/app-icons/'))).toEqual([]);
       expect(await page.evaluate(() => {
         const home = [...document.querySelectorAll('[inert][aria-hidden="true"]')].find(el => el.className.includes('shell-platform-mark_img'));

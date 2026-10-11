@@ -150,7 +150,7 @@ function AndroidShell() {
         {/* HOME (always mounted; app overlays it — inert while covered so its
             grid + NavBar drop out of tab/AT order under the z-20 app layer).
             Pull down → Control Center; clock+date live on the wallpaper. */}
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-1" inert={showApp} aria-hidden={showApp} onPointerDown={pullDown} onContextMenu={onHomeContext} style={{ paddingTop: "var(--sai-top, 0px)", paddingBottom: showSystemNav ? undefined : "var(--sai-bottom)" }}>
+        <div className={`flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-1 ${!home ? "[&_.shell-platform-mark_img]:hidden" : ""}`} inert={!home} aria-hidden={!home} onPointerDown={pullDown} onContextMenu={onHomeContext} style={{ paddingTop: "var(--sai-top, 0px)", paddingBottom: showSystemNav ? undefined : "var(--sai-bottom)" }}>
           {/* Same reason as the app labels: the clock sits on the wallpaper, so it
               needs its own light-on-dark treatment rather than the theme foreground. */}
           {/* `[&_div]:text-white/80` targets Clock mode="date", which hard-codes
