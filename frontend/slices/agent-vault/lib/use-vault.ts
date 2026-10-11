@@ -9,7 +9,7 @@ export async function vaultRequest(project: string, signal: AbortSignal, sync = 
   if (note) params.set("note", note);
   const response = await fetch(`/api/v1/agent-vault?${params}`, sync ? {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(project.trim() ? { project: project.trim() } : {}), signal,
-  } : { cache: "no-store", priority: "high", signal });
+  } : { cache: "no-store", signal });
   const result = await response.json();
   if (!response.ok) throw new Error(result.error || `Request failed (${response.status})`);
   return result as AgentVaultView;

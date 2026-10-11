@@ -44,7 +44,7 @@ export function AppLauncher() {
     <div
       className={cn(
         "glass absolute inset-0 z-[var(--z-launcher)] flex flex-col items-center justify-center bg-black/30 transition-opacity",
-        open ? "opacity-100" : "pointer-events-none opacity-0 [&_.shell-platform-mark_img]:hidden",
+        open ? "opacity-100" : "hidden",
       )}
       inert={!open}
       aria-hidden={!open}
