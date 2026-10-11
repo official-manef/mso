@@ -34,6 +34,24 @@ describe("memory graph view", () => {
     expect(placeNodes(graph.nodes, graph.edges, "web")).toEqual(web);
   });
 
+  it("keeps dense labels and nodes apart in every layout without changing inputs", () => {
+    const nodes = Array.from({ length: 24 }, (_, i) => ({ id: `note:${i}`, title: "W".repeat(28), kind: "note" as const, group: "synthetic", degree: i === 0 ? 23 : 1 }));
+    const edges = nodes.slice(1).map(node => ({ source: nodes[0]!.id, target: node.id, kind: "wikilink" as const, resolved: true }));
+    const original = structuredClone({ nodes, edges });
+    for (const layout of ["web", "radial", "layered"] as const) {
+      const points = [...placeNodes(nodes, edges, layout).values()];
+      expect(points).toHaveLength(nodes.length);
+      for (let i = 0; i < points.length; i++) for (let j = i + 1; j < points.length; j++) {
+        const a = points[i]!, b = points[j]!;
+        // Wide glyphs at 11px and the complete node + label height must fit.
+        expect(Math.abs(a.x - b.x) >= 308 || Math.abs(a.y - b.y) >= 60).toBe(true);
+      }
+      expect(placeNodes(nodes, edges, layout)).toEqual(placeNodes(nodes, edges, layout));
+    }
+    expect({ nodes, edges }).toEqual(original);
+    expect(placeNodes([], [], "web").size).toBe(0);
+  });
+
   it("hides ghosts and tags, and keeps a one-hop local neighbourhood", () => {
     const hidden = viewGraph(graph, { ...base, showGhosts: false });
     expect(hidden.nodes.map((node) => node.kind).sort()).toEqual(["note", "note"]);

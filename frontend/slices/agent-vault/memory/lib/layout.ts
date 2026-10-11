@@ -101,9 +101,16 @@ function placeWeb(nodes: MemoryGraphNode[], edges: MemoryGraphEdge[]): Map<strin
 }
 
 export function placeNodes(nodes: MemoryGraphNode[], edges: MemoryGraphEdge[], layout: GraphLayoutName): Map<string, Point> {
-  if (layout === "radial") return placeRadial(nodes, edges);
-  if (layout === "layered") return placeLayered(nodes, edges);
-  return placeWeb(nodes, edges);
+  const points = layout === "radial" ? placeRadial(nodes, edges) : layout === "layered" ? placeLayered(nodes, edges) : placeWeb(nodes, edges);
+  const widths = new Map(nodes.map(node => [node.id, Math.max(44, Math.min(node.title.length, 28) * 11) / 2 + 6]));
+  const placed: { id: string; x: number; y: number }[] = [];
+  // Reserve the full node and label, including wide glyphs, after the force layout settles.
+  for (const [id, point] of [...points].sort((a, b) => a[1].y - b[1].y || a[0].localeCompare(b[0]))) {
+    const neighbours = placed.filter(other => Math.abs(point.x - other.x) < widths.get(id)! + widths.get(other.id)!).sort((a, b) => a.y - b.y);
+    for (const other of neighbours) if (Math.abs(point.y - other.y) < 68) point.y = other.y + 68;
+    placed.push({ id, ...point });
+  }
+  return points;
 }
 
 export function groupColor(group: string, groups: string[]): string {

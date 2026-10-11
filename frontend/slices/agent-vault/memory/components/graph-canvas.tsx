@@ -20,8 +20,8 @@ export function GraphCanvas({
     const values = [...points.values()];
     if (!values.length) return { x: 0, y: 0, w: 200, h: 200 };
     const xs = values.map((point) => point.x), ys = values.map((point) => point.y);
-    const minX = Math.min(...xs) - 80, minY = Math.min(...ys) - 60;
-    return { x: minX, y: minY, w: Math.max(...xs) - minX + 160, h: Math.max(...ys) - minY + 140 };
+    const minX = Math.min(...xs) - 164, minY = Math.min(...ys) - 60;
+    return { x: minX, y: minY, w: Math.max(...xs) - minX + 164, h: Math.max(...ys) - minY + 140 };
   }, [points]);
   return (
     <GraphStage key={`${layout}:${nodes.map((node) => node.id).join("\n")}`} bounds={bounds} points={points} groups={groups} nodes={nodes} edges={edges} selected={selected} onSelect={onSelect} onOpen={onOpen} />
