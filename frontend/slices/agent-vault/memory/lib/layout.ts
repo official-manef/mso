@@ -103,12 +103,29 @@ function placeWeb(nodes: MemoryGraphNode[], edges: MemoryGraphEdge[]): Map<strin
 export function placeNodes(nodes: MemoryGraphNode[], edges: MemoryGraphEdge[], layout: GraphLayoutName): Map<string, Point> {
   const points = layout === "radial" ? placeRadial(nodes, edges) : layout === "layered" ? placeLayered(nodes, edges) : placeWeb(nodes, edges);
   const widths = new Map(nodes.map(node => [node.id, Math.max(44, Math.min(node.title.length, 28) * 11) / 2 + 6]));
-  const placed: { id: string; x: number; y: number }[] = [];
-  // Reserve the full node and label, including wide glyphs, after the force layout settles.
+  const ordered = [...points];
+  // Reserve node + label bounds and move apart along their existing direction.
+  for (let pass = 0; pass < 60; pass++) {
+    let moved = false;
+    for (let i = 0; i < ordered.length; i++) for (let j = i + 1; j < ordered.length; j++) {
+      const [aId, a] = ordered[i]!, [bId, b] = ordered[j]!;
+      let dx = a.x - b.x; const dy = a.y - b.y;
+      const width = widths.get(aId)! + widths.get(bId)!;
+      if (Math.abs(dx) >= width || Math.abs(dy) >= 68) continue;
+      if (!dx && !dy) dx = 1;
+      const stretch = (Math.min(width / Math.max(Math.abs(dx), 0.01), 68 / Math.max(Math.abs(dy), 0.01)) - 1) / 2 + 0.01;
+      a.x += dx * stretch; a.y += dy * stretch;
+      b.x -= dx * stretch; b.y -= dy * stretch;
+      moved = true;
+    }
+    if (!moved) break;
+  }
+  // Finish crowded rows if the bounded relaxation has not separated every label.
+  const settled = new Map<string, Point>();
   for (const [id, point] of [...points].sort((a, b) => a[1].y - b[1].y || a[0].localeCompare(b[0]))) {
-    const neighbours = placed.filter(other => Math.abs(point.x - other.x) < widths.get(id)! + widths.get(other.id)!).sort((a, b) => a.y - b.y);
-    for (const other of neighbours) if (Math.abs(point.y - other.y) < 68) point.y = other.y + 68;
-    placed.push({ id, ...point });
+    const neighbours = [...settled].filter(([otherId, other]) => Math.abs(point.x - other.x) < widths.get(id)! + widths.get(otherId)!).sort((a, b) => a[1].y - b[1].y);
+    for (const [, other] of neighbours) if (Math.abs(point.y - other.y) < 68) point.y = other.y + 68;
+    settled.set(id, point);
   }
   return points;
 }

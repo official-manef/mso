@@ -34,8 +34,8 @@ describe("memory graph view", () => {
     expect(placeNodes(graph.nodes, graph.edges, "web")).toEqual(web);
   });
 
-  it("keeps dense labels and nodes apart in every layout without changing inputs", () => {
-    const nodes = Array.from({ length: 24 }, (_, i) => ({ id: `note:${i}`, title: "W".repeat(28), kind: "note" as const, group: "synthetic", degree: i === 0 ? 23 : 1 }));
+  it.each([24, 160])("keeps %i dense labels and nodes apart without changing inputs", count => {
+    const nodes = Array.from({ length: count }, (_, i) => ({ id: `note:${i}`, title: "W".repeat(28), kind: "note" as const, group: "synthetic", degree: i === 0 ? count - 1 : 1 }));
     const edges = nodes.slice(1).map(node => ({ source: nodes[0]!.id, target: node.id, kind: "wikilink" as const, resolved: true }));
     const original = structuredClone({ nodes, edges });
     for (const layout of ["web", "radial", "layered"] as const) {
@@ -50,6 +50,15 @@ describe("memory graph view", () => {
     }
     expect({ nodes, edges }).toEqual(original);
     expect(placeNodes([], [], "web").size).toBe(0);
+  });
+
+  it("keeps a web map compact rather than fitting a long column of tiny labels", () => {
+    const nodes = Array.from({ length: 12 }, (_, i) => ({ id: `node:${i}`, title: `Node ${i}`, kind: "note" as const, group: "synthetic", degree: i === 0 ? 11 : 1 }));
+    const edges = nodes.slice(1).map(node => ({ source: nodes[0]!.id, target: node.id, kind: "wikilink" as const, resolved: true }));
+    const points = [...placeNodes(nodes, edges, "web").values()];
+    const width = Math.max(...points.map(p => p.x)) - Math.min(...points.map(p => p.x));
+    const height = Math.max(...points.map(p => p.y)) - Math.min(...points.map(p => p.y));
+    expect(height).toBeLessThan(width * 2.5);
   });
 
   it("hides ghosts and tags, and keeps a one-hop local neighbourhood", () => {
