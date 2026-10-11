@@ -12,6 +12,11 @@ if (!['chromium', 'firefox', 'webkit'].includes(engine)) throw new Error('Unknow
 const output = process.env.MSO_SCREENSHOT_DIR;
 const fixture = await releaseFixture({live:true});
 const results = []; let browser;
+// Wait for this fixture's requests; unrelated favicon hosts cannot block navigation.
+const pending = new WeakMap();
+async function settle(page) {
+  await expect.poll(() => pending.get(page)?.size ?? 0).toBe(0);
+}
 const shells = ['macos', 'windows', 'dashboard', 'ios', 'android'];
 const mobile = shell => ['ios', 'android'].includes(shell);
 const viewport = shell => mobile(shell) ? {width:390,height:844} : {width:1363,height:936};
@@ -22,10 +27,18 @@ async function screenshot(page, name) {
   await mkdir(output, {recursive:true, mode:0o700});
   await page.screenshot({path:path.join(output,`${engine}-${name}.png`),animations:'disabled'});
 }
+function track(context) {
+  context.on('page', page => {
+    const active = new Set(); pending.set(page, active);
+    page.on('request', request => { if (request.url().startsWith(fixture.base + '/')) active.add(request); });
+    page.on('requestfinished', request => active.delete(request));
+    page.on('requestfailed', request => active.delete(request));
+  });
+}
 async function switchShell(page, shell) {
   await page.setViewportSize(viewport(shell));
   await page.evaluate(({shell, isMobile}) => localStorage.setItem('sv:shell',JSON.stringify({desktop:isMobile?'macos':shell,mobile:isMobile?shell:'ios'})), {shell,isMobile:mobile(shell)});
-  await page.waitForLoadState('networkidle',{timeout:15000});await page.reload();
+  await settle(page);await page.reload();
   await expect(page.locator(`[data-shell="${shell}"]`)).toBeVisible();
 }
 try {
@@ -36,7 +49,8 @@ try {
   const sentinel=path.join(fixture.dir,'fixture.txt'), original=await readFile(sentinel,'utf8');
   for (const initialShell of shells) {
     const context=await browser.newContext({viewport:viewport(initialShell),deviceScaleFactor:mobile(initialShell)?3:2,hasTouch:mobile(initialShell),serviceWorkers:'block'});
-    await context.addCookies([{name:'session',value:cookie,url:fixture.base,sameSite:'Strict'}]);
+    track(context);
+  await context.addCookies([{name:'session',value:cookie,url:fixture.base,sameSite:'Strict'}]);
     await context.addInitScript(({shell,isMobile})=>{
       if (window !== window.top || !["http:", "https:"].includes(location.protocol)) return;
       if (!localStorage.getItem('sv:shell')) localStorage.setItem('sv:shell',JSON.stringify({desktop:isMobile?'macos':shell,mobile:isMobile?shell:'ios'}));
@@ -44,13 +58,13 @@ try {
     },{shell:initialShell,isMobile:mobile(initialShell)});
     const page=await context.newPage(), errors=[];
     context.on('page', p=>p.on('pageerror',error=>errors.push(error.message))); page.on('pageerror',error=>errors.push(error.message));
-    await page.waitForLoadState('networkidle',{timeout:15000});await page.goto(fixture.base);await expect(page.locator(`[data-shell="${initialShell}"]`)).toBeVisible();
+    await settle(page);await page.goto(fixture.base);await expect(page.locator(`[data-shell="${initialShell}"]`)).toBeVisible();
     await screenshot(page,`${initialShell}-essentials-home`);
     await page.keyboard.press('Control+k');
     await page.getByRole('combobox',{name:'Spotlight search'}).fill('Agent Vault');
     await expect(page.getByRole('option').filter({hasText:'Agent Vault'})).toHaveCount(0);
     await page.keyboard.press('Escape');
-    await page.waitForLoadState('networkidle',{timeout:15000});await page.goto(fixture.base+'/store');
+    await settle(page);await page.goto(fixture.base+'/store');
     await expect(page.getByRole('tab',{name:'Apps',exact:true})).toHaveAttribute('aria-selected','true');
     const panel=page.getByRole('tabpanel'), cards=panel.getByRole('article');
     await expect(cards).toHaveCount(27);
@@ -72,26 +86,26 @@ try {
       expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('mso:enabled:v1')).n8n)).toBe(true);
       expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
     }
-    await page.setViewportSize({width:844,height:390});await page.waitForLoadState('networkidle',{timeout:15000});await page.reload();
+    await page.setViewportSize({width:844,height:390});await settle(page);await page.reload();
     await expect(installed(card(page,'n8n'))).toBeVisible();await screenshot(page,`${initialShell}-shared-landscape`);
-    const other=await context.newPage();await other.waitForLoadState('networkidle',{timeout:15000});await other.goto(fixture.base+'/store');await expect(installed(card(other,'n8n'))).toBeVisible();
+    const other=await context.newPage();await settle(other);await other.goto(fixture.base+'/store');await expect(installed(card(other,'n8n'))).toBeVisible();
     await installed(card(page,'n8n')).click();
     const confirm=page.getByRole('dialog');await expect(confirm.getByText('Your data stays on disk. You can reinstall any time.')).toBeVisible();
     await confirm.getByRole('button',{name:'Cancel',exact:true}).click();await expect(installed(card(page,'n8n'))).toBeVisible();
     await installed(card(page,'n8n')).click();await confirm.getByRole('button',{name:'Uninstall',exact:true}).click();
     await expect(card(other,'n8n').getByRole('button',{name:'Install',exact:true})).toBeVisible();
-    expect(await readFile(sentinel,'utf8')).toBe(original);await other.close();
-    await page.waitForLoadState('networkidle',{timeout:15000});await page.reload();await expect(card(page,'n8n').getByRole('button',{name:'Install',exact:true})).toBeVisible();
+    expect(await readFile(sentinel,'utf8')).toBe(original);await settle(other);await other.close();
+    await settle(page);await page.reload();await expect(card(page,'n8n').getByRole('button',{name:'Install',exact:true})).toBeVisible();
     await switchShell(page,initialShell);
     // Replacing a document with pending telemetry can produce native WebKit diagnostics; keep raw stress evidence separately.
     const requests=[];page.on('request',r=>requests.push(new URL(r.url()).pathname));
-    await page.waitForLoadState('networkidle',{timeout:15000});await page.goto(fixture.base+'/n8n');await expect(page.getByText('n8n is not installed.',{exact:true})).toBeVisible();
+    await settle(page);await page.goto(fixture.base+'/n8n');await expect(page.getByText('n8n is not installed.',{exact:true})).toBeVisible();
     await expect(page.locator('[data-slot="n8n-feature"]')).toHaveCount(0);expect(requests.includes('/api/v1/workflow-embeds')).toBe(false);
     await screenshot(page,`${initialShell}-uninstalled-deep-link`);
     await page.getByRole('button',{name:'Open App Store',exact:true}).click();
     await expect(page.getByPlaceholder('Search apps')).toHaveValue('n8n');
     await card(page,'n8n').getByRole('button',{name:'Install',exact:true}).click();
-    await page.waitForLoadState('networkidle',{timeout:15000});await page.goto(fixture.base+'/n8n');await expect(page.locator('[data-slot="n8n-feature"]')).toBeVisible();
+    await settle(page);await page.goto(fixture.base+'/n8n');await expect(page.locator('[data-slot="n8n-feature"]')).toBeVisible();
     expect(errors).toEqual([]);await context.close();
     results.push({engine,initialShell,dpr:mobile(initialShell)?3:2,freshEssentials:7,catalog:27,switches:5,crossTab:'PASS',reload:'PASS',keyboard:'PASS',landscape:'PASS',uninstalledLazyLoad:'PASS',a11y:'PASS',sentinel:'PASS'});
     console.log(`PASS ${engine}/${initialShell}: seven defaults, complete catalog, all-shell install, cross-tab/reload, guarded removal, lazy deep link and accessibility`);
@@ -102,23 +116,25 @@ try {
   for (const draftShell of shells) {
   await writeFile(draftFile,originalDraft,{mode:0o600});
   const context=await browser.newContext({viewport:viewport(draftShell),deviceScaleFactor:mobile(draftShell)?3:2,serviceWorkers:'block'});
+  track(context);
   await context.addCookies([{name:'session',value:cookie,url:fixture.base,sameSite:'Strict'}]);
   await context.addInitScript(()=>{if (['http:','https:'].includes(location.protocol) && window===window.top) localStorage.setItem('mso:onboarding:v1','done');});
-  const editor=await context.newPage();await editor.waitForLoadState('networkidle',{timeout:15000});await editor.goto(fixture.base+'/store');await switchShell(editor,draftShell);
+  const editor=await context.newPage();await settle(editor);await editor.goto(fixture.base+'/store');await switchShell(editor,draftShell);
   await card(editor,'Code').getByRole('button',{name:'Install',exact:true}).click();
-  await editor.waitForLoadState('networkidle',{timeout:15000});await editor.goto(fixture.base+'/code'+draftFile);const textarea=editor.locator('textarea').first();
+  await settle(editor);await editor.goto(fixture.base+'/code'+draftFile);const textarea=editor.locator('textarea').first();
   await expect(textarea).toHaveValue(originalDraft);await textarea.fill(draft);
-  const remote=await context.newPage();await remote.waitForLoadState('networkidle',{timeout:15000});await remote.goto(fixture.base+'/store');
+  const remote=await context.newPage();await settle(remote);await remote.goto(fixture.base+'/store');
   await installed(card(remote,'Code')).click();await remote.getByRole('dialog').getByRole('button',{name:'Uninstall',exact:true}).click();
   await expect.poll(()=>editor.evaluate(()=>JSON.parse(localStorage.getItem('mso:enabled:v1'))['code-editor'])).toBe(false);
   await expect(textarea).toHaveValue(draft);expect(await readFile(draftFile,'utf8')).toBe(originalDraft);
   await screenshot(editor,`${draftShell}-cross-tab-draft-preserved`);
   await textarea.focus();await textarea.press('Control+s');
   await expect.poll(()=>readFile(draftFile,'utf8')).toBe(draft);
-  await editor.waitForLoadState('networkidle',{timeout:15000});await editor.reload();await expect(editor.getByText('Code is not installed.',{exact:true})).toBeVisible();
+  await settle(editor);await editor.reload();await expect(editor.getByText('Code is not installed.',{exact:true})).toBeVisible();
   await context.close();results.push({engine,draftShell,crossTabDraft:'PASS',saveAfterMenuRemoval:'PASS',newMountRequiresInstall:'PASS'});
   }
   const runtimeContext=await browser.newContext({viewport:{width:1363,height:936},serviceWorkers:'block'});
+  track(runtimeContext);
   await runtimeContext.addCookies([{name:'session',value:cookie,url:fixture.base,sameSite:'Strict'}]);
   const runtimeEntry='https://excalidraw.com';
   await writeFile(path.join(fixture.dir,'surface-apps.json'),JSON.stringify([{id:'synthetic-connection',title:'Synthetic connection',description:'Generated reviewed fixture',origin:'https://excalidraw.com',startPath:'/',renderer:'iframe',presentation:'inline',environment:'production',placements:['shell'],sandbox:'allow-scripts allow-same-origin allow-forms'}]),{mode:0o600});
@@ -128,9 +144,9 @@ try {
     localStorage.setItem('mso:onboarding:v1','done');
     localStorage.setItem('mso:apps',JSON.stringify([{appId:'siteforge',title:'SiteForge',glyph:'code',gradient:'gray',runtime:'html',entry,source:'store',installed:true}]));
   },runtimeEntry);
-  const running=await runtimeContext.newPage();await running.waitForLoadState('networkidle',{timeout:15000});await running.goto(fixture.base+'/siteforge');
+  const running=await runtimeContext.newPage();await settle(running);await running.goto(fixture.base+'/siteforge');
   const input=running.frameLocator('iframe').getByLabel('Generated draft');await input.fill('Generated unsaved value');
-  const store=await runtimeContext.newPage();await store.waitForLoadState('networkidle',{timeout:15000});await store.goto(fixture.base+'/store');
+  const store=await runtimeContext.newPage();await settle(store);await store.goto(fixture.base+'/store');
   await store.getByRole('button',{name:'Featured',exact:true}).click();
   const runtimePanel=store.getByRole('tabpanel');
   await expect(runtimePanel.getByText('SiteForge',{exact:true})).toHaveCount(2);
@@ -138,7 +154,7 @@ try {
   await expect.poll(()=>running.evaluate(()=>JSON.parse(localStorage.getItem('mso:apps'))[0].installed)).toBe(false);
   await expect(input).toHaveValue('Generated unsaved value');
   expect(await running.evaluate(()=>JSON.parse(localStorage.getItem('mso:apps'))[0].entry)).toBe(runtimeEntry);
-  await screenshot(running,'runtime-draft-preserved');await running.waitForLoadState('networkidle',{timeout:15000});await running.reload();
+  await screenshot(running,'runtime-draft-preserved');await settle(running);await running.reload();
   await expect(running.getByText('SiteForge is not installed.',{exact:true})).toBeVisible();
   await runtimeContext.close();results.push({engine,runtimeCrossTab:'PASS',runtimeDraft:'PASS',runtimeSourcePreserved:'PASS'});
   if (output) await writeFile(path.join(output,`${engine}-store-results.json`),JSON.stringify({synthetic:true,results},null,2),{mode:0o600});
