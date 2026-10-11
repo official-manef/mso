@@ -190,6 +190,7 @@ export { ShellUIProvider, useShellUI } from "./registry/shell-ui";
 export type { ShellUI } from "./registry/shell-ui";
 export { ShellConfigProvider, useShellConfig } from "./registry/shell-config";
 export type { ShellConfig } from "./registry/shell-config";
+export { useIntentPrefetch } from "./hooks/use-intent-prefetch";
 export { UrlSync } from "./runtime/use-url-sync";
 export {
   CapabilitiesProvider,

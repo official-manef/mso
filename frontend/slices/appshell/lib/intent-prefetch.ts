@@ -1,6 +1,6 @@
 import type { AppDescriptor } from "./types";
 
-type PrefetchApp = Pick<AppDescriptor, "load" | "prefetch">;
+type PrefetchApp = Pick<AppDescriptor, "prefetch"> & {load: () => Promise<unknown>};
 export type PrefetchEnvironment = { hidden?: boolean; online?: boolean; saveData?: boolean; effectiveType?: string };
 export const PREFETCH_INTENT_MS = 250;
 const warmed = new WeakSet<PrefetchApp["load"]>();
