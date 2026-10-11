@@ -1,3 +1,4 @@
+import { installFixtureApps } from "./release-fixture.mjs";
 import { expect } from "@playwright/test";
 import { readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -157,6 +158,7 @@ export async function agentVaultJourney(page, fixture) {
   expect(denied).toEqual([403, 403]);
   await fixture.setRole("owner");
   const publicContext = await page.context().browser().newContext();
+  await installFixtureApps(publicContext, ["agent-vault"]);
   try {
     const publicPage = await publicContext.newPage();
     await publicPage.goto(fixture.base + "/agent-vault");
