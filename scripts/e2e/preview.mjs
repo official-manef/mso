@@ -19,7 +19,7 @@
 // the shell renders for signed-out visitors too (backed by mocks) — a run that
 // quietly tested fakes would report green forever.
 import { chromium } from "@playwright/test";
-import { releaseFixture } from "./release-fixture.mjs";
+import { releaseFixture, installFixtureApps } from "./release-fixture.mjs";
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, writeFileSync, copyFileSync } from "node:fs";
 import path from "node:path";
@@ -98,6 +98,7 @@ const run = async () => {
     hasTouch: MOBILE,
     isMobile: MOBILE,
   });
+    await installFixtureApps(ctx);
   const errors = [];
   ctx.on("console", (m) => {
     const t = m.text();

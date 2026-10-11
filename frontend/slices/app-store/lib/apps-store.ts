@@ -49,10 +49,18 @@ function commit(next: AppRow[]) {
   subs.forEach((f) => f());
 }
 
+function changed(event: StorageEvent) {
+  if (event.key !== KEY && event.key !== null) return;
+  rows = load();
+  subs.forEach(f => f());
+}
+
 function subscribe(cb: () => void) {
+  if (subs.size === 0) window.addEventListener("storage", changed);
   subs.add(cb);
   return () => {
     subs.delete(cb);
+    if (subs.size === 0) window.removeEventListener("storage", changed);
   };
 }
 

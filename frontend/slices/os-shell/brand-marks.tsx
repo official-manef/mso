@@ -94,6 +94,7 @@ export const APP_MARKS: Record<string, AppIconComponent> = {
     "/app-icons/windows/docs.webp",
   ),
   hermes: officialMark("/brand/official/hermes.webp"),
+  n8n: officialMark("/brand/official/n8n.svg"),
   openclaw: officialMark("/brand/official/openclaw.webp"),
   "9router": officialMark("/brand/official/9router.webp"),
 };

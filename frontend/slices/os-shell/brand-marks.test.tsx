@@ -15,6 +15,7 @@ describe("third-party official app marks", () => {
   it.each([
     ["camoufox-browser", "/brand/official/camoufox.webp"],
     ["hermes", "/brand/official/hermes.webp"],
+    ["n8n", "/brand/official/n8n.svg"],
     ["openclaw", "/brand/official/openclaw.webp"],
     ["9router", "/brand/official/9router.webp"],
   ])("keeps %s shell-invariant and official", (id, src) => {

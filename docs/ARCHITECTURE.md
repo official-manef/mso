@@ -56,6 +56,16 @@ under `~/.mso/` plus the independent state directories owned by managed applicat
 Window layout and several shell preferences are browser-local or synchronized through the
 existing preference store.
 
+Native app menus default to Files/Finder, Camoufox, Terminal, App Store, Alfa, Hermes and
+Settings. Optional apps are installed from the shared App Store catalog. All five shells
+read one browser-local installation record; switching presentation does not fork app data.
+Install/removal propagates to open tabs of the same origin and survives reload. Legacy
+opt-outs and custom/runtime apps are retained; removing a menu does not uninstall a host
+service or delete app files. The generic registry keeps role-allowed catalog entries
+addressable while menus list installed entries only. Uninstalled deep links open a Store
+prompt without loading the app bundle. Cross-device native-menu synchronization is not
+part of this browser-local contract; connected app records remain server-owned.
+
 ### Gateway lifecycle boundary
 
 **MSO Gateway is deployment-agnostic, supervisor-agnostic, and provider-agnostic by design.** The core classifies local/public/provider/process health plus ownership and supervisor independently; provider-specific launch details remain adapters. A verified public route with no MSO-owned provider process is `external-running`, not `stopped`, and external processes are never auto-adopted or mutated. Cloudflare remains the current managed/default adapter rather than a core architecture assumption. See [`docs/GATEWAY.md`](./GATEWAY.md) for state semantics, provider capabilities, systemd/s6/container/Kubernetes examples and the foreground-supervision decision.

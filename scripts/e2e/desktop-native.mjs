@@ -3,7 +3,7 @@
 // Uses a built app with disposable credentials; E2E_BASE_URL is demo-only.
 import assert from "node:assert/strict";
 import { chromium } from "@playwright/test";
-import { releaseFixture } from "./release-fixture.mjs";
+import { releaseFixture, installFixtureApps } from "./release-fixture.mjs";
 import { mkdirSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -28,6 +28,7 @@ try {
   browser = await chromium.launch({ headless: true });
   for (const shell of ["windows", "macos"]) {
     const ctx = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+    await installFixtureApps(ctx);
     if (cookie) await ctx.addCookies([{ name: "session", value: cookie, url: base, sameSite: "Strict" }]);
     await ctx.addInitScript(({ shell, device }) => {
       localStorage.setItem("sv:shell", JSON.stringify({ desktop: shell, mobile: "ios" }));

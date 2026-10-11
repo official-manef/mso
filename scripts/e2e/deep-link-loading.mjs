@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { chromium, expect as assertion } from '@playwright/test';
-import { releaseFixture } from './release-fixture.mjs';
+import { releaseFixture, installFixtureApps } from './release-fixture.mjs';
 const expect = assertion.configure({ timeout: 15000 });
 const chunks = new Map(fs.readdirSync('.next/static/chunks').filter(file => file.endsWith('.js'))
   .map(file => [file, fs.readFileSync(path.join('.next/static/chunks', file), 'utf8')]));
@@ -21,6 +21,7 @@ try {
   for (const [shell, dpr] of [['macos', 2], ['windows', 2], ['dashboard', 1], ['ios', 3], ['android', 3], ['ios', 4]]) {
     const mobile = ['ios', 'android'].includes(shell);
     const context = await browser.newContext({ viewport: mobile ? { width: 390, height: 844 } : { width: 1280, height: 900 }, serviceWorkers: 'block', deviceScaleFactor: dpr });
+    await installFixtureApps(context, ["agent-vault"]);
     await context.addCookies([{ name: 'session', value: cookie, url: fixture.base, sameSite: 'Strict' }]);
     await context.addInitScript(({ shell, mobile, device }) => {
       localStorage.setItem('mso.device.id', device);
