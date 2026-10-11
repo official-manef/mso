@@ -24,7 +24,7 @@ export function VaultScreen({workspace, active, mobileReader, setMobileReader, p
   const notes = useMemo(() => document.nodes.flatMap(node => node.note ? [node.note] : []).filter(n => (kind === "all" || n.kind === kind) && `${n.title} ${n.kind} ${n.source}`.toLowerCase().includes(filter.toLowerCase())) || [], [document.nodes, filter, kind]);
   const selected = snapshot?.notes.find(n => n.path === selectedPath);
   const graphRoot = state && snapshot ? `${state.root}/Snapshots/${snapshot.id}` : "";
-  const openNote = useCallback((path: string) => { setPersonal(false); setMobileReader(true); focusReader.current = true; void select(path); }, [select, setMobileReader]);
+  const openNote = useCallback((path: string) => { setPersonal(false); setMobileReader(true); focusReader.current = true; void select(path); }, [select, setMobileReader, setPersonal]);
   useEffect(() => {
     if (active && (focusReader.current || !wasActive.current) && mobileReader && reader.current) {
       focusReader.current = false; reader.current.focus({ preventScroll: true }); reader.current.scrollTop = 0;
