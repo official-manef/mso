@@ -161,8 +161,8 @@ try {
     const focusedNodes = denseCanvas.locator(".react-flow__node");
     await expect.poll(async () => focusedNodes.count()).toBeGreaterThan(0);
     expect(await focusedNodes.count()).toBeLessThan(36);
-    const focusedBox = await focusedNodes.first().boundingBox();
-    expect(focusedBox?.width ?? 0).toBeGreaterThan(viewport.width < 700 ? 120 : 145);
+    console.log("DENSE_LAYOUT",JSON.stringify({viewport,nodes:await focusedNodes.count(),canvas:await denseCanvas.boundingBox(),window:await page.locator('[data-window]').last().boundingBox().catch(()=>null),feature:await feature.boundingBox(),node:await focusedNodes.first().boundingBox()}));
+    await expect.poll(async () => (await focusedNodes.first().boundingBox())?.width ?? 0).toBeGreaterThan(viewport.width < 700 ? 120 : 145);
 
     if (process.env.MSO_SCREENSHOT_DIR) {
       await mkdir(process.env.MSO_SCREENSHOT_DIR, { recursive: true });

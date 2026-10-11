@@ -13,14 +13,13 @@ import { VaultHistory } from "./vault-history";
 import { PersonalNotes } from "./personal-notes";
 import styles from "./vault-screen.module.css";
 
-export function VaultScreen({workspace, active, mobileReader, setMobileReader}: {workspace:ReturnType<typeof useWorkspace>; active:boolean; mobileReader:boolean; setMobileReader:(value:boolean)=>void}) {
+export function VaultScreen({workspace, active, mobileReader, setMobileReader, personal, setPersonal}: {workspace:ReturnType<typeof useWorkspace>; active:boolean; mobileReader:boolean; setMobileReader:(value:boolean)=>void; personal:boolean; setPersonal:(value:boolean)=>void}) {
   const {vault, document} = workspace;
   const reader = useRef<HTMLElement>(null), focusReader = useRef(false), wasActive = useRef(active);
   const { state, snapshotId, note, selectedPath, busy, noteBusy, error, select } = vault;
   const { status, role } = useSession();
   const [filter, setFilter] = useState(""), [kind, setKind] = useState("all");
   const [history, setHistory] = useState(false);
-  const [personal, setPersonal] = useState(false);
   const snapshot = state?.snapshots.find(s => s.id === snapshotId);
   const notes = useMemo(() => document.nodes.flatMap(node => node.note ? [node.note] : []).filter(n => (kind === "all" || n.kind === kind) && `${n.title} ${n.kind} ${n.source}`.toLowerCase().includes(filter.toLowerCase())) || [], [document.nodes, filter, kind]);
   const selected = snapshot?.notes.find(n => n.path === selectedPath);

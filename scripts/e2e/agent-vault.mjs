@@ -95,6 +95,12 @@ export async function agentVaultJourney(page, fixture) {
   await views.getByRole("button",{name:"Memory",exact:true}).click();
   await expect(page.locator(`[data-node-id="${personalIdentity}"]`)).toBeVisible();
   await views.getByRole("button",{name:"Vault",exact:true}).click();
+  await page.getByRole("button",{name:"Personal notes",exact:true}).click();
+  await expect(page.getByLabel("New note title",{exact:true})).toBeVisible();
+  await views.getByRole("button",{name:"Memory",exact:true}).click();
+  await page.locator('[data-slot="workspace-graph-view"]').getByRole("button",{name:"Fixture worker",exact:true}).press("Enter");
+  await expect(page.getByText("Responsible for verifying fixture tasks.",{exact:true})).toBeVisible();
+  await expect(reader.locator("article")).toBeFocused();
   await page.getByRole("button",{name:"Refresh snapshot",exact:true}).click();
   await expect.poll(()=>readFile(personalFile,"utf8")).toContain("Saved in the native editor.");
 

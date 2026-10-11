@@ -15,7 +15,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 type Draft = { kind: "unit"; item?: OrganizationUnit } | { kind: "seat"; item?: OrganizationSeat; unitId?: string } | null;
 type CanvasMode = "directory" | "map";
 
-export function OrganizationView() {
+export function OrganizationView({onClose}: {onClose?:()=>void} = {}) {
   const [data, setData] = useState<OrganizationPayload | null>(null);
   const [selectedUnit, setSelectedUnit] = useState("__all__");
   const [tab, setTab] = useState("projects");
@@ -81,7 +81,7 @@ export function OrganizationView() {
     <div data-slot="organization-feature" className="@container grid h-full min-h-0 min-w-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden @min-[760px]:grid-cols-[236px_minmax(0,1fr)] @min-[760px]:grid-rows-1">
       <aside className="min-w-0 border-b bg-card/25 @min-[760px]:flex @min-[760px]:min-h-0 @min-[760px]:flex-col @min-[760px]:border-b-0 @min-[760px]:border-r">
         <div className="flex min-w-0 items-center gap-2 border-b/0 px-3 py-2.5 @min-[760px]:py-3">
-          <div className="min-w-0 flex-1"><div className="truncate font-semibold">Organization</div><div className="text-[11px] text-muted-foreground">{data.chart.units.length} units · {data.chart.seats.length} seats</div></div>
+          <div className="min-w-0 flex-1"><div className="truncate font-semibold">{onClose ? <button type="button" className="flex items-center gap-1 text-xs" onClick={onClose}><ArrowLeft className="size-3.5"/>Back to structure</button> : "Organization"}</div><div className="text-[11px] text-muted-foreground">{data.chart.units.length} units · {data.chart.seats.length} seats</div></div>
           <Button size="icon" variant="ghost" className="size-8 shrink-0" onClick={() => void load()} aria-label="Refresh organization"><RefreshCw className="size-3.5"/></Button>
           <Button size="icon" className="size-8 shrink-0" onClick={() => setDraft({ kind: "unit" })} aria-label="New organization unit"><Plus className="size-3.5"/></Button>
         </div>
