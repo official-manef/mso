@@ -4547,3 +4547,5 @@ The shared install model keeps catalog lookup for routes and running-window cont
 Android deep links now defer covered Home artwork from the URL-derived Home state,
 matching iOS. An installed Vault can hydrate after the catalog preference; hidden
 icons must not take its initial request slot. Home return restores normal artwork.
+
+- Fresh menus also start without the built-in GitHub website shortcut. Existing cached/server Quicklinks retain their original restore path; a provider SSR test covers empty fresh state and generated cached records are checked in all-shell editor journeys, and all-shell Store checks assert empty fresh shortcuts.

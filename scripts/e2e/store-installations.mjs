@@ -67,6 +67,7 @@ try {
     const page=await context.newPage(), errors=[];
     context.on('page', p=>p.on('pageerror',error=>errors.push(error.message))); page.on('pageerror',error=>errors.push(error.message));
     await settle(page);await page.goto(fixture.base);await expect(page.locator(`[data-shell="${initialShell}"]`)).toBeVisible();
+    await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("mso:quicklinks") ?? "null"))).toEqual([]);
     await screenshot(page,`${initialShell}-essentials-home`);
     await page.keyboard.press('Control+k');
     await page.getByRole('combobox',{name:'Spotlight search'}).fill('Agent Vault');
@@ -116,7 +117,7 @@ try {
     await settle(page);await page.goto(fixture.base+'/n8n');await expect(page.locator('[data-slot="n8n-feature"]')).toBeVisible();
     // Keep the observing tab alive through reload; forced driver-close diagnostics are audited separately.
     await expect(installed(card(other,'n8n'))).toBeVisible();expect(errors).toEqual([]);await context.close();
-    results.push({engine,initialShell,dpr:mobile(initialShell)?3:2,freshEssentials:7,catalog:27,switches:5,crossTab:'PASS',reload:'PASS',keyboard:'PASS',landscape:'PASS',uninstalledLazyLoad:'PASS',a11y:'PASS',sentinel:'PASS'});
+    results.push({engine,initialShell,dpr:mobile(initialShell)?3:2,freshEssentials:7,freshQuicklinks:0,catalog:27,switches:5,crossTab:'PASS',reload:'PASS',keyboard:'PASS',landscape:'PASS',uninstalledLazyLoad:'PASS',a11y:'PASS',sentinel:'PASS'});
     console.log(`PASS ${engine}/${initialShell}: seven defaults, complete catalog, all-shell install, cross-tab/reload, guarded removal, lazy deep link and accessibility`);
   }
   // A remote menu removal preserves a running editor until its draft is saved.
@@ -125,12 +126,19 @@ try {
   for (const draftShell of shells) {
   await writeFile(draftFile,originalDraft,{mode:0o600});
   const context=await browser.newContext({viewport:viewport(draftShell),deviceScaleFactor:mobile(draftShell)?3:2,serviceWorkers:'block'});
+  const savedLinks=[{id:'generated',title:'Generated cached shortcut',url:'about:blank'}];
+  await context.addInitScript(links=>{
+    if (window===window.top && ['http:','https:'].includes(location.protocol) && !localStorage.getItem('mso:quicklinks')) localStorage.setItem('mso:quicklinks',JSON.stringify(links));
+  },savedLinks);
+  // Omit the server section to exercise the unchanged cached-shortcut restore path.
+  await context.route('**/api/prefs',route=>route.request().method()==='GET'?route.fulfill({json:{}}):route.continue());
   await track(context);
   await context.addCookies([{name:'session',value:cookie,url:fixture.base,sameSite:'Strict'}]);
   await context.addInitScript(()=>{if (['http:','https:'].includes(location.protocol) && window===window.top) localStorage.setItem('mso:onboarding:v1','done');});
   const editor=await context.newPage();await settle(editor);await editor.goto(fixture.base+'/store');await switchShell(editor,draftShell);
   await card(editor,'Code').getByRole('button',{name:'Install',exact:true}).click();
   await settle(editor);await editor.goto(fixture.base+'/code'+draftFile);const textarea=editor.locator('textarea').first();
+  await expect.poll(()=>editor.evaluate(()=>JSON.parse(localStorage.getItem('mso:quicklinks')))).toEqual(savedLinks);
   await expect(textarea).toHaveValue(originalDraft);await textarea.fill(draft);
   const remote=await context.newPage();await settle(remote);await remote.goto(fixture.base+'/store');
   await installed(card(remote,'Code')).click();await remote.getByRole('dialog').getByRole('button',{name:'Uninstall',exact:true}).click();
@@ -140,7 +148,8 @@ try {
   await textarea.focus();await textarea.press('Control+s');
   await expect.poll(()=>readFile(draftFile,'utf8')).toBe(draft);
   await settle(editor);await editor.reload();await expect(editor.getByText('Code is not installed.',{exact:true})).toBeVisible();
-  await context.close();results.push({engine,draftShell,crossTabDraft:'PASS',saveAfterMenuRemoval:'PASS',newMountRequiresInstall:'PASS'});
+  expect(await editor.evaluate(()=>JSON.parse(localStorage.getItem('mso:quicklinks')))).toEqual(savedLinks);
+  await context.close();results.push({engine,draftShell,cachedShortcuts:'PASS',crossTabDraft:'PASS',saveAfterMenuRemoval:'PASS',newMountRequiresInstall:'PASS'});
   }
   const runtimeContext=await browser.newContext({viewport:{width:1363,height:936},serviceWorkers:'block'});
   await track(runtimeContext);
