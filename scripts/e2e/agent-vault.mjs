@@ -58,6 +58,13 @@ export async function agentVaultJourney(page, fixture) {
   const workerNode=relationView.getByRole("button",{name:"Fixture worker",exact:true});
   await expect(workerNode).toBeVisible();
   const graphSvg = relationView.getByRole("application", { name: "Memory graph" });
+  await expect.poll(() => graphSvg.evaluate(svg => {
+    const pane = svg.parentElement.getBoundingClientRect();
+    return [...svg.querySelectorAll("text")].some(text => {
+      const label = text.getBoundingClientRect();
+      return label.x >= pane.x && label.right <= pane.right && label.y >= pane.y + 44 && label.bottom <= pane.bottom;
+    });
+  })).toBe(true);
   const labelSize = () => graphSvg.evaluate(svg => Math.min(...[...svg.querySelectorAll("text")].map(text => parseFloat(getComputedStyle(text).fontSize) * text.getScreenCTM().a)));
   expect(await labelSize()).toBeGreaterThanOrEqual(11.9);
   await relationView.getByRole("button", { name: "Zoom in graph", exact: true }).click();
