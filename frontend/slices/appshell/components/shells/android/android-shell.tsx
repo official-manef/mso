@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { useCallback, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useUrlHome } from "../../../hooks/use-url-home";
 import { Search } from "lucide-react";
-import { useApps } from "../../../lib/registry";
+import { useApps, useAppCatalog } from "../../../lib/registry";
 import { usePullDown } from "../../../hooks/use-pull-down";
 import { useWindowOrder, useFocused, useWindow } from "../../../hooks/use-shell";
 import { shellStore, openWindow, focusApp, minimizeWindow, restoreWindow, toggleSpotlight, toggleInspector } from "../../../lib/store";
@@ -34,6 +34,7 @@ import { AndroidFeatureHeader } from "./android-feature-header";
 
 function AndroidShell() {
   const apps = useApps();
+  const catalog = useAppCatalog();
   const responsive = useResponsive();
   const showSystemNav = responsive.vw >= 768; // only the desktop PhoneFrame preview draws fake Android system buttons
   const order = useWindowOrder();
@@ -47,7 +48,7 @@ function AndroidShell() {
   // URL → surface (same derivation as the iOS shell): a pathname naming an app slug
   // shows the app pane (UrlSync opens/focuses its window); user gestures override,
   // keyed to the pathname made at — deep links AND back/forward, no effect setState.
-  const { home, setHome } = useUrlHome(apps);
+  const { home, setHome } = useUrlHome(catalog);
 
   const dockable = useMemo(() => apps.filter((a) => !a.noDock), [apps]);
   const pinned = useMemo(() => dockable.filter((a) => a.pinned), [dockable]);
@@ -57,7 +58,7 @@ function AndroidShell() {
       : ([...order].reverse().find((id) => !shellStore.getWindow(id)?.minimized) ?? null);
   const top = useWindow(topId ?? "__none__"); // reactive: re-renders on the active window's own payload/title changes
   const showApp = !home && !!top;
-  const activeApp = top ? apps.find((a) => a.id === top.app) : null;
+  const activeApp = top ? catalog.find((a) => a.id === top.app) : null;
   const mobileNav = useMobileNavigationInfo(activeApp?.id);
 
   const launch = useCallback(

@@ -81,6 +81,7 @@ try {
     await expect(card(other,'n8n').getByRole('button',{name:'Install',exact:true})).toBeVisible();
     expect(await readFile(sentinel,'utf8')).toBe(original);await other.close();
     await page.reload();await expect(card(page,'n8n').getByRole('button',{name:'Install',exact:true})).toBeVisible();
+    await switchShell(page,initialShell);
     const requests=[];page.on('request',r=>requests.push(new URL(r.url()).pathname));
     await page.goto(fixture.base+'/n8n');await expect(page.getByText('n8n is not installed.',{exact:true})).toBeVisible();
     await expect(page.locator('[data-slot="n8n-feature"]')).toHaveCount(0);expect(requests.includes('/api/v1/workflow-embeds')).toBe(false);
@@ -96,10 +97,12 @@ try {
   // A remote menu removal preserves a running editor until its draft is saved.
   const draftFile=path.join(fixture.dir,'synthetic-draft.txt'), originalDraft='Generated draft fixture.\n', draft='Generated edited draft, no user content.\n';
   await writeFile(draftFile,originalDraft,{mode:0o600});
-  const context=await browser.newContext({viewport:{width:1363,height:936},serviceWorkers:'block'});
+  for (const draftShell of shells) {
+  await writeFile(draftFile,originalDraft,{mode:0o600});
+  const context=await browser.newContext({viewport:viewport(draftShell),deviceScaleFactor:mobile(draftShell)?3:2,serviceWorkers:'block'});
   await context.addCookies([{name:'session',value:cookie,url:fixture.base,sameSite:'Strict'}]);
   await context.addInitScript(()=>{if (['http:','https:'].includes(location.protocol) && window===window.top) localStorage.setItem('mso:onboarding:v1','done');});
-  const editor=await context.newPage();await editor.goto(fixture.base+'/store');
+  const editor=await context.newPage();await editor.goto(fixture.base+'/store');await switchShell(editor,draftShell);
   await card(editor,'Code').getByRole('button',{name:'Install',exact:true}).click();
   await editor.goto(fixture.base+'/code'+draftFile);const textarea=editor.locator('textarea').first();
   await expect(textarea).toHaveValue(originalDraft);await textarea.fill(draft);
@@ -107,14 +110,17 @@ try {
   await installed(card(remote,'Code')).click();await remote.getByRole('dialog').getByRole('button',{name:'Uninstall',exact:true}).click();
   await expect.poll(()=>editor.evaluate(()=>JSON.parse(localStorage.getItem('mso:enabled:v1'))['code-editor'])).toBe(false);
   await expect(textarea).toHaveValue(draft);expect(await readFile(draftFile,'utf8')).toBe(originalDraft);
-  await screenshot(editor,'cross-tab-draft-preserved');
+  await screenshot(editor,`${draftShell}-cross-tab-draft-preserved`);
   await textarea.focus();await textarea.press('Control+s');
   await expect.poll(()=>readFile(draftFile,'utf8')).toBe(draft);
   await editor.reload();await expect(editor.getByText('Code is not installed.',{exact:true})).toBeVisible();
-  await context.close();results.push({engine,crossTabDraft:'PASS',saveAfterMenuRemoval:'PASS',newMountRequiresInstall:'PASS'});
+  await context.close();results.push({engine,draftShell,crossTabDraft:'PASS',saveAfterMenuRemoval:'PASS',newMountRequiresInstall:'PASS'});
+  }
   const runtimeContext=await browser.newContext({viewport:{width:1363,height:936},serviceWorkers:'block'});
   await runtimeContext.addCookies([{name:'session',value:cookie,url:fixture.base,sameSite:'Strict'}]);
-  const runtimeEntry='<html><body><label>Generated draft<input aria-label="Generated draft"></label></body></html>';
+  const runtimeEntry='https://runtime.example.test/editor';
+  await writeFile(path.join(fixture.dir,'surface-apps.json'),JSON.stringify([{id:'synthetic-connection',title:'Synthetic connection',description:'Generated reviewed fixture',origin:'https://runtime.example.test',startPath:'/editor',renderer:'iframe',presentation:'inline',environment:'production',placements:['shell'],sandbox:'allow-scripts allow-same-origin allow-forms'}]),{mode:0o600});
+  await runtimeContext.route('https://runtime.example.test/**',route=>route.fulfill({contentType:'text/html',body:'<!doctype html><html><body><label>Generated draft<input aria-label="Generated draft"></label></body></html>'}));
   await runtimeContext.addInitScript(entry=>{
     if (window!==window.top || !['http:','https:'].includes(location.protocol) || localStorage.getItem('mso:apps')) return;
     localStorage.setItem('mso:onboarding:v1','done');

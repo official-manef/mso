@@ -13,7 +13,7 @@ export function useRuntimeApps(): AppDescriptor[] {
   // Stable signature so descriptors (and their lazy components) only change
   // when the underlying app data actually changes — no remount churn.
   const sig = apps
-    .map((a) => `${a.appId}:${a.title}:${a.glyph}:${a.gradient}:${a.runtime}:${a.entry}:${a.installed}`)
+    .map((a) => `${a.appId}:${a.title}:${a.glyph}:${a.gradient}:${a.runtime}:${a.entry}:${a.source}:${a.installed}`)
     .join("|");
 
   return useMemo(() => {
