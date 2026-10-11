@@ -56,7 +56,8 @@ export function WindowContent({ app, payload, winId }: { app: string; payload?: 
     );
   }
 
-  if (descriptor.installed === false) {
+  // A menu removal in another tab must not discard an already-open draft.
+  if (descriptor.installed === false && !Comp) {
     return <div className="grid h-full place-items-center p-6 text-center text-sm">
       <div className="space-y-3"><p>{descriptor.title} is not installed.</p>
         <p className="text-muted-foreground">Install it in the App Store to use it in every shell.</p>

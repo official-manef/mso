@@ -108,7 +108,7 @@ export async function releaseFixture({ live = false, surfaceApps = [], publicOri
 // Fresh seven-app defaults and real Store installs are covered separately.
 export async function installFixtureApps(context, ids = ["code-editor", "claude-code", "media-studio", "reel-editor", "media-viewer", "system-monitor", "openclaw", "9router", "integrations", "channels", "workflows", "n8n", "memory-graph", "organization", "dokploy", "cloudflare", "docs", "agent-vault", "quicklinks", "create-app"]) {
   await context.addInitScript(ids => {
-    if (window !== window.top || localStorage.getItem("mso:enabled:v1") !== null) return;
+    if (window !== window.top || !["http:", "https:"].includes(location.protocol) || localStorage.getItem("mso:enabled:v1") !== null) return;
     localStorage.setItem("mso:enabled:v1", JSON.stringify(Object.fromEntries(ids.map(id => [id, true]))));
   }, ids);
 }

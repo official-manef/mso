@@ -10,7 +10,7 @@ const expect = assertion.configure({ timeout: 15000 });
 const engine = process.argv[2] ?? 'chromium';
 if (!['chromium', 'firefox', 'webkit'].includes(engine)) throw new Error('Unknown browser');
 const output = process.env.MSO_SCREENSHOT_DIR;
-const fixture = await releaseFixture();
+const fixture = await releaseFixture({live:true});
 const results = []; let browser;
 const shells = ['macos', 'windows', 'dashboard', 'ios', 'android'];
 const mobile = shell => ['ios', 'android'].includes(shell);
@@ -32,13 +32,13 @@ try {
   const response=await fetch(fixture.base+'/api/auth/login',{method:'POST',headers:{origin:fixture.base,'content-type':'application/json'},body:JSON.stringify({password:fixture.password,deviceId:fixture.device,deviceLabel:'Synthetic Store QA'})});
   expect(response.ok).toBe(true);
   const cookie=/(?:^|,\s*)session=([^;]+)/.exec(response.headers.get('set-cookie')??'')?.[1]; expect(cookie).toBeTruthy();
-  browser=await ({chromium,firefox,webkit})[engine].launch({headless:true, ...(engine==='webkit' && process.env.QA_WEBKIT_EXECUTABLE ? {executablePath:process.env.QA_WEBKIT_EXECUTABLE} : {})});
+  browser=await ({chromium,firefox,webkit})[engine].launch({headless:true});
   const sentinel=path.join(fixture.dir,'fixture.txt'), original=await readFile(sentinel,'utf8');
   for (const initialShell of shells) {
     const context=await browser.newContext({viewport:viewport(initialShell),deviceScaleFactor:mobile(initialShell)?3:2,hasTouch:mobile(initialShell),serviceWorkers:'block'});
     await context.addCookies([{name:'session',value:cookie,url:fixture.base,sameSite:'Strict'}]);
     await context.addInitScript(({shell,isMobile})=>{
-      if (window !== window.top) return;
+      if (window !== window.top || !["http:", "https:"].includes(location.protocol)) return;
       if (!localStorage.getItem('sv:shell')) localStorage.setItem('sv:shell',JSON.stringify({desktop:isMobile?'macos':shell,mobile:isMobile?shell:'ios'}));
       localStorage.setItem('mso:onboarding:v1','done');
     },{shell:initialShell,isMobile:mobile(initialShell)});
@@ -93,5 +93,23 @@ try {
     results.push({engine,initialShell,dpr:mobile(initialShell)?3:2,freshEssentials:7,catalog:27,switches:5,crossTab:'PASS',reload:'PASS',keyboard:'PASS',landscape:'PASS',uninstalledLazyLoad:'PASS',a11y:'PASS',sentinel:'PASS'});
     console.log(`PASS ${engine}/${initialShell}: seven defaults, complete catalog, all-shell install, cross-tab/reload, guarded removal, lazy deep link and accessibility`);
   }
+  // A remote menu removal preserves a running editor until its draft is saved.
+  const draftFile=path.join(fixture.dir,'synthetic-draft.txt'), originalDraft='Generated draft fixture.\n', draft='Generated edited draft, no user content.\n';
+  await writeFile(draftFile,originalDraft,{mode:0o600});
+  const context=await browser.newContext({viewport:{width:1363,height:936},serviceWorkers:'block'});
+  await context.addCookies([{name:'session',value:cookie,url:fixture.base,sameSite:'Strict'}]);
+  const editor=await context.newPage();await editor.goto(fixture.base+'/store');
+  await card(editor,'Code').getByRole('button',{name:'Install',exact:true}).click();
+  await editor.goto(fixture.base+'/code'+draftFile);const textarea=editor.locator('textarea').first();
+  await expect(textarea).toHaveValue(originalDraft);await textarea.fill(draft);
+  const remote=await context.newPage();await remote.goto(fixture.base+'/store');
+  await installed(card(remote,'Code')).click();await remote.getByRole('dialog').getByRole('button',{name:'Uninstall',exact:true}).click();
+  await expect.poll(()=>editor.evaluate(()=>JSON.parse(localStorage.getItem('mso:enabled:v1'))['code-editor'])).toBe(false);
+  await expect(textarea).toHaveValue(draft);expect(await readFile(draftFile,'utf8')).toBe(originalDraft);
+  await screenshot(editor,'cross-tab-draft-preserved');
+  await textarea.focus();await textarea.press('Control+s');
+  await expect.poll(()=>readFile(draftFile,'utf8')).toBe(draft);
+  await editor.reload();await expect(editor.getByText('Code is not installed.',{exact:true})).toBeVisible();
+  await context.close();results.push({engine,crossTabDraft:'PASS',saveAfterMenuRemoval:'PASS',newMountRequiresInstall:'PASS'});
   if (output) await writeFile(path.join(output,`${engine}-store-results.json`),JSON.stringify({synthetic:true,results},null,2),{mode:0o600});
 } finally {await browser?.close();await fixture.close();}
