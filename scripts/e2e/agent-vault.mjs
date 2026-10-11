@@ -56,9 +56,11 @@ export async function agentVaultJourney(page, fixture) {
   await expect(structureNode).toHaveCount(1);
   expect(await structureNode.getAttribute("data-node-id")).toBe(identity);
   expect(connectionReads).toBe(loadedConnections);
-  await structureNode.dblclick();
+  await structureNode.press("Enter");
+  await structureNode.press("Enter");
   await expect(page.getByRole("heading",{name:"Fixture worker",exact:true})).toBeVisible();
   expect(await page.locator('[data-slot="knowledge-workspace"]').getAttribute("data-model-root")).toBe(modelRoot);
+  await expect(reader.locator("article")).toBeFocused();
 
   await page.getByLabel("Search vault notes", { exact: true }).fill("worker");
   await expect(page.getByRole("button", { name: /^Fixture worker/ })).toBeVisible();
@@ -86,6 +88,16 @@ export async function agentVaultJourney(page, fixture) {
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect.poll(() => readFile(personalFile, "utf8")).toContain("Saved in the native editor.");
   await writeFile(prefsFile, savedPrefs, { mode: 0o600 });
+  await page.goto(fixture.base + "/agent-vault");
+  await views.getByRole("button",{name:"Organization",exact:true}).click();
+  const personalIdentity=`personal:${path.basename(personalFile)}`;
+  await expect(page.locator(`[data-node-id="${personalIdentity}"]`)).toBeVisible();
+  await views.getByRole("button",{name:"Memory",exact:true}).click();
+  await expect(page.locator(`[data-node-id="${personalIdentity}"]`)).toBeVisible();
+  await views.getByRole("button",{name:"Vault",exact:true}).click();
+  await page.getByRole("button",{name:"Refresh snapshot",exact:true}).click();
+  await expect.poll(()=>readFile(personalFile,"utf8")).toContain("Saved in the native editor.");
+
   for (const viewport of [{ width: 390, height: 844 }, { width: 844, height: 390 }]) {
     await page.setViewportSize(viewport);
     await page.goto(fixture.base + "/agent-vault");

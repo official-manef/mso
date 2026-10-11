@@ -13,6 +13,13 @@ describe("one knowledge workspace model",()=>{
     expect(hydrated.nodes.some(node=>node.targetApp==="organization")).toBe(true);
     expect(snapshot.notes[0].source).toBe("generated.md");
   });
+  it("projects personal note identities once for every presentation without changing snapshots",()=>{
+    const document=workspaceDocument(state,snapshot,null,[{name:"synthetic-personal.md",kind:"file",size:10}]);
+    expect(document.nodes.find(node=>node.id==="personal:synthetic-personal.md")).toMatchObject({title:"synthetic-personal",path:"/synthetic/vault/Notes/synthetic-personal.md",group:"Personal notes"});
+    expect(document.counts.notes).toBe(2);
+    expect(document.edges.some(edge=>edge.target==="personal:synthetic-personal.md"&&edge.kind==="contains")).toBe(true);
+    expect(snapshot.notes).toHaveLength(1);
+  });
   it("keeps empty state and partial projection explicit without inventing records",()=>{
     expect(workspaceDocument(null,undefined,null).nodes).toEqual([]);
     expect(workspaceDocument(state,{...snapshot,truncated:true},null).truncated).toBe(true);

@@ -9,7 +9,7 @@ import type { WorkspaceGraphProps } from "../memory/components/memory-graph-scre
 import { VaultScreen } from "./vault-screen";
 
 export function WorkspaceScreen({initialView="vault", project, root}: {initialView?: WorkspaceView; project?: string; root?: string}) {
-  const workspace = useWorkspace(project, root), {vault, document, loadGraph} = workspace;
+  const workspace = useWorkspace(project, root), {vault, document, loadGraph, loadPersonal} = workspace;
   const {status, role} = useSession();
   const [mobileReader, setMobileReader] = useState(false);
   const [view, setView] = useState(initialView), [selected, setSelected] = useState<string | null>(null);
@@ -18,9 +18,9 @@ export function WorkspaceScreen({initialView="vault", project, root}: {initialVi
   const [viewError, setViewError] = useState("");
   useEffect(() => {
     if (view === "vault" || status !== "in" || role !== "owner") return;
-    loadGraph();
+    loadGraph(); void loadPersonal();
     if (!GraphView) void import("../memory/components/memory-graph-screen").then(module=>setGraphView(()=>module.MemoryGraphScreen)).catch(()=>setViewError("Could not open this view. Reload to retry."));
-  }, [view, status, role, loadGraph, GraphView]);
+  }, [view, status, role, loadGraph, loadPersonal, GraphView]);
   const openNode = (node: WorkspaceNode) => {
     if (node.note) { setMobileReader(true); void vault.select(node.note.path); setView("vault"); return; }
     if (node.targetApp === "organization") { openEditor(); return; }
@@ -39,6 +39,6 @@ export function WorkspaceScreen({initialView="vault", project, root}: {initialVi
     </nav>
     {viewError ? <p role="alert" className="px-3 py-2 text-sm text-destructive">{viewError}</p> : null}
     <div className={`${view==="vault"&&!editing?"flex":"hidden"} min-h-0 flex-1 flex-col`}><VaultScreen workspace={workspace} active={view==="vault"&&!editing} mobileReader={mobileReader} setMobileReader={setMobileReader}/></div>
-    {editing ? <div className="min-h-0 flex-1">{Editor?<Editor/>:<p role="status" className="p-4">Loading source editor…</p>}</div> : view!=="vault" ? <div className="min-h-0 flex-1">{GraphView?<GraphView key={view} graph={document} busy={workspace.graphBusy} error={workspace.graphError} organization={view==="organization"} selected={selected} onSelect={setSelected} onOpen={openNode} onReload={workspace.reloadGraph}/>:<p role="status" className="p-4">Loading view…</p>}</div> : null}
+    {editing ? <div className="min-h-0 flex-1">{Editor?<Editor/>:<p role="status" className="p-4">Loading source editor…</p>}</div> : view!=="vault" ? <div className="min-h-0 flex-1">{GraphView?<GraphView key={view} graph={document} busy={workspace.graphBusy} error={workspace.graphError||workspace.personalError} organization={view==="organization"} selected={selected} onSelect={setSelected} onOpen={openNode} onReload={()=>{workspace.reloadGraph();void loadPersonal(true);}}/>:<p role="status" className="p-4">Loading view…</p>}</div> : null}
   </div>;
 }

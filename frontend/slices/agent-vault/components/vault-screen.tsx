@@ -73,7 +73,7 @@ export function VaultScreen({workspace, active, mobileReader, setMobileReader}: 
         </div>
         <article ref={reader} tabIndex={-1} aria-label={selected?.title || "Note content"} aria-busy={noteBusy} className="min-h-0 min-w-0 flex-1 overflow-y-auto px-4 py-4" style={{ overscrollBehavior: "contain" }}>
           <div className="mx-auto max-w-3xl">
-            {personal ? <PersonalNotes key={state!.root} root={state!.root} /> : noteBusy ? <p role="status" className="text-sm text-muted-foreground">Loading note…</p> : note ? <>
+            {personal ? <PersonalNotes key={state!.root} workspace={workspace} /> : noteBusy ? <p role="status" className="text-sm text-muted-foreground">Loading note…</p> : note ? <>
               <p className="mb-4 break-all text-xs text-muted-foreground">Source: {selected?.source}</p>
               <NotePreview content={note.content} resolve={resolveLink} onOpen={openNote} />
             </> : <p className="text-sm text-muted-foreground">Choose an agent, project or progress note. Use History to browse earlier captures.</p>}

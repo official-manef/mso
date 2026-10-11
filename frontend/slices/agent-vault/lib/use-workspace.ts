@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { FsEntry, FsList } from "@/lib/contracts/os-api";
 import type { MemoryGraphDocument } from "@/lib/memory-graph/types";
 import { workspaceDocument } from "./workspace-model";
 import { useVault } from "./use-vault";
@@ -9,6 +10,22 @@ export function useWorkspace(project?: string, root?: string) {
   const snapshot = vault.state?.snapshots.find(item => item.id === vault.snapshotId);
   const graphRoot = vault.state && snapshot ? `${vault.state.root}/Snapshots/${snapshot.id}` : root ?? "";
   const graphProject = vault.state?.project.path ?? project ?? "";
+  const directory = vault.state ? `${vault.state.root}/Notes` : "";
+  const [personal, setPersonal] = useState<{directory:string; entries:FsEntry[]; error:string} | null>(null);
+  const personalRequest = useRef<AbortController | null>(null);
+  const loadPersonal = useCallback(async (force=false) => {
+    if (!directory || (!force && personal?.directory===directory)) return;
+    personalRequest.current?.abort(); const controller=new AbortController(); personalRequest.current=controller;
+    try {
+      const response=await fetch(`/api/v1/fs/list?${new URLSearchParams({path:directory})}`,{cache:"no-store",signal:controller.signal});
+      const result=await response.json();
+      if (!response.ok && response.status!==404) throw new Error(result.error||"Could not read personal notes");
+      if (!controller.signal.aborted) setPersonal({directory,entries:response.status===404?[]:(result as FsList).entries.filter(entry=>entry.kind==="file"&&entry.name.endsWith(".md")),error:""});
+    } catch(cause) { if(!controller.signal.aborted) setPersonal({directory,entries:[],error:cause instanceof Error?cause.message:"Could not read personal notes"}); }
+  },[directory,personal?.directory]);
+  useEffect(()=>()=>{personalRequest.current?.abort();},[directory]);
+  const entries=personal?.directory===directory?personal.entries:undefined;
+  const personalError=personal?.directory===directory?personal.error:"";
   const [nonce, setNonce] = useState(0);
   const key = `${graphRoot}\n${graphProject}\n${nonce}`;
   const [result, setResult] = useState<{ key: string; graph: MemoryGraphDocument | null; error: string } | null>(null);
@@ -25,6 +42,6 @@ export function useWorkspace(project?: string, root?: string) {
     }).catch(cause => { if (!controller.signal.aborted) setResult({key, graph:null, error:cause instanceof Error ? cause.message : "Could not load workspace connections"}); });
   }, [graphRoot, graphProject, key, result?.key, vault.busy]);
   useEffect(() => () => { request.current?.controller.abort(); request.current = null; }, [key]);
-  const document = useMemo(() => workspaceDocument(vault.state, snapshot, graph), [vault.state, snapshot, graph]);
-  return {vault, document, graph, graphError:error, graphBusy:result?.key !== key, loadGraph, reloadGraph:()=>setNonce(value=>value+1)};
+  const document = useMemo(() => workspaceDocument(vault.state, snapshot, graph, entries), [vault.state, snapshot, graph, entries]);
+  return {vault, document, personalError, loadPersonal, graph, graphError:error, graphBusy:result?.key !== key, loadGraph, reloadGraph:()=>setNonce(value=>value+1)};
 }
