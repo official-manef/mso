@@ -32,7 +32,7 @@ try {
   const response=await fetch(fixture.base+'/api/auth/login',{method:'POST',headers:{origin:fixture.base,'content-type':'application/json'},body:JSON.stringify({password:fixture.password,deviceId:fixture.device,deviceLabel:'Synthetic Store QA'})});
   expect(response.ok).toBe(true);
   const cookie=/(?:^|,\s*)session=([^;]+)/.exec(response.headers.get('set-cookie')??'')?.[1]; expect(cookie).toBeTruthy();
-  browser=await ({chromium,firefox,webkit})[engine].launch({headless:true});
+  browser=await ({chromium,firefox,webkit})[engine].launch({headless:true, ...(engine==='webkit' && process.env.QA_WEBKIT_EXECUTABLE ? {executablePath:process.env.QA_WEBKIT_EXECUTABLE} : {})});
   const sentinel=path.join(fixture.dir,'fixture.txt'), original=await readFile(sentinel,'utf8');
   for (const initialShell of shells) {
     const context=await browser.newContext({viewport:viewport(initialShell),deviceScaleFactor:mobile(initialShell)?3:2,hasTouch:mobile(initialShell),serviceWorkers:'block'});
