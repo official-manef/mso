@@ -118,25 +118,25 @@ try {
   }
   const runtimeContext=await browser.newContext({viewport:{width:1363,height:936},serviceWorkers:'block'});
   await runtimeContext.addCookies([{name:'session',value:cookie,url:fixture.base,sameSite:'Strict'}]);
-  const runtimeEntry='https://runtime.example.test/editor';
-  await writeFile(path.join(fixture.dir,'surface-apps.json'),JSON.stringify([{id:'synthetic-connection',title:'Synthetic connection',description:'Generated reviewed fixture',origin:'https://runtime.example.test',startPath:'/editor',renderer:'iframe',presentation:'inline',environment:'production',placements:['shell'],sandbox:'allow-scripts allow-same-origin allow-forms'}]),{mode:0o600});
-  await runtimeContext.route('https://runtime.example.test/**',route=>route.fulfill({contentType:'text/html',body:'<!doctype html><html><body><label>Generated draft<input aria-label="Generated draft"></label></body></html>'}));
+  const runtimeEntry='https://excalidraw.com';
+  await writeFile(path.join(fixture.dir,'surface-apps.json'),JSON.stringify([{id:'synthetic-connection',title:'Synthetic connection',description:'Generated reviewed fixture',origin:'https://excalidraw.com',startPath:'/',renderer:'iframe',presentation:'inline',environment:'production',placements:['shell'],sandbox:'allow-scripts allow-same-origin allow-forms'}]),{mode:0o600});
+  await runtimeContext.route('https://excalidraw.com/**',route=>route.fulfill({contentType:'text/html',body:'<!doctype html><html><body><label>Generated draft<input aria-label="Generated draft"></label></body></html>'}));
   await runtimeContext.addInitScript(entry=>{
     if (window!==window.top || !['http:','https:'].includes(location.protocol) || localStorage.getItem('mso:apps')) return;
     localStorage.setItem('mso:onboarding:v1','done');
-    localStorage.setItem('mso:apps',JSON.stringify([{appId:'synthetic-runtime',title:'Synthetic runtime',glyph:'code',gradient:'gray',runtime:'html',entry,source:'custom',installed:true}]));
+    localStorage.setItem('mso:apps',JSON.stringify([{appId:'siteforge',title:'SiteForge',glyph:'code',gradient:'gray',runtime:'html',entry,source:'store',installed:true}]));
   },runtimeEntry);
-  const running=await runtimeContext.newPage();await running.goto(fixture.base+'/synthetic-runtime');
+  const running=await runtimeContext.newPage();await running.goto(fixture.base+'/siteforge');
   const input=running.frameLocator('iframe').getByLabel('Generated draft');await input.fill('Generated unsaved value');
   const store=await runtimeContext.newPage();await store.goto(fixture.base+'/store');
   await store.getByRole('button',{name:'Featured',exact:true}).click();
-  const runtimeCard=store.locator('[data-slot="card"]').filter({has:store.getByText('Synthetic runtime',{exact:true})});
+  const runtimeCard=store.locator('[data-slot="card"]').filter({has:store.getByText('SiteForge',{exact:true})});
   await installed(runtimeCard).click();await store.getByRole('dialog').getByRole('button',{name:'Uninstall',exact:true}).click();
   await expect.poll(()=>running.evaluate(()=>JSON.parse(localStorage.getItem('mso:apps'))[0].installed)).toBe(false);
   await expect(input).toHaveValue('Generated unsaved value');
   expect(await running.evaluate(()=>JSON.parse(localStorage.getItem('mso:apps'))[0].entry)).toBe(runtimeEntry);
   await screenshot(running,'runtime-draft-preserved');await running.reload();
-  await expect(running.getByText('Synthetic runtime is not installed.',{exact:true})).toBeVisible();
+  await expect(running.getByText('SiteForge is not installed.',{exact:true})).toBeVisible();
   await runtimeContext.close();results.push({engine,runtimeCrossTab:'PASS',runtimeDraft:'PASS',runtimeSourcePreserved:'PASS'});
   if (output) await writeFile(path.join(output,`${engine}-store-results.json`),JSON.stringify({synthetic:true,results},null,2),{mode:0o600});
 } finally {await browser?.close();await fixture.close();}

@@ -4,7 +4,7 @@ import { useSyncExternalStore } from "react";
 
 // Runtime app registry — apps created via Create App or installed from the App
 // Store. Persisted to localStorage (per-browser) — no backend table needed. A tiny external store so app-store, create-app, and
-// the shell's useInstalledApps all read the same reactive list.
+// the shell's useRuntimeApps all read the same reactive list.
 
 export type AppRow = {
   appId: string;
