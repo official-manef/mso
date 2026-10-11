@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { MemoryGraphEdge, MemoryGraphNode } from "@/lib/memory-graph/types";
 import { groupColor, placeNodes, type GraphLayoutName } from "../lib/layout";
@@ -41,16 +41,27 @@ function GraphStage({
   onSelect: (id: string) => void;
   onOpen: (node: MemoryGraphNode) => void;
 }) {
+  const canvas = useRef<SVGSVGElement>(null);
+  useEffect(() => {
+    const svg = canvas.current;
+    if (!svg?.parentElement || !nodes.length) return;
+    const node = nodes.find(item => item.id === selected) ?? nodes.reduce((a, b) => a.degree >= b.degree ? a : b);
+    const reveal = () => [...svg.querySelectorAll<SVGGElement>("[data-node-id]")].find(item => item.dataset.nodeId === node.id)?.scrollIntoView({ block: "center", inline: "center" });
+    const observer = new ResizeObserver(reveal);
+    observer.observe(svg.parentElement); reveal();
+    return () => observer.disconnect();
+  }, [nodes, selected]);
   const [view, setView] = useState(bounds);
   const drag = useRef<{ x: number; y: number; vx: number; vy: number } | null>(null);
   return (
-    <div className="relative h-full min-h-0 overflow-auto bg-background">
+    <div className="relative h-full min-h-0 overflow-auto bg-background" style={{ scrollPaddingTop: 44 }}>
       <div className="sticky left-0 top-0 z-10 flex w-fit gap-1 bg-background/90 p-1">
         <Button size="sm" variant="outline" aria-label="Zoom in graph" onClick={() => setView(current => ({ ...current, w: current.w * 0.8, h: current.h * 0.8 }))}>+</Button>
         <Button size="sm" variant="outline" aria-label="Zoom out graph" onClick={() => setView(current => ({ ...current, w: current.w * 1.25, h: current.h * 1.25 }))}>-</Button>
         <Button size="sm" variant="outline" onClick={() => setView(bounds)}>Reset zoom</Button>
       </div>
     <svg
+      ref={canvas}
       className="block min-h-full min-w-full"
       style={{ width: bounds.w * 12 / 11, height: bounds.h * 12 / 11 }}
       viewBox={`${view.x} ${view.y} ${view.w} ${view.h}`}

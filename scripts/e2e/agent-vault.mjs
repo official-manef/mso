@@ -5,6 +5,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
 export async function agentVaultJourney(page, fixture) {
+  expect(fixture.vaultProject.startsWith(fixture.dir + path.sep)).toBe(true);
   // Git evidence is generated inside the same private project, never borrowed.
   const git = (...args) => promisify(execFile)("git", ["-C", fixture.vaultProject, ...args]);
   await git("init", "-q"); await git("add", ".");
