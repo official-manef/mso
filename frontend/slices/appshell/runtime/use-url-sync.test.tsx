@@ -3,15 +3,16 @@ import type { AppDescriptor } from "../lib/types";
 
 const mocks = vi.hoisted(() => ({
   pathname: "/notes/fixture", effects: [] as (() => void)[],
-  open: vi.fn(), focus: vi.fn(), getWindow: vi.fn(),
+  open: vi.fn(), focus: vi.fn(), getWindow: vi.fn(), refs: [] as { current: unknown }[], refN: 0,
 }));
 // Run the real URL effects without mounting presentation or requiring a DOM.
 vi.mock("react", () => ({
   useEffect: (effect: () => void) => { mocks.effects.push(effect); },
-  useRef: (value: unknown) => ({ current: value }),
+  useRef: (value: unknown) => mocks.refs[mocks.refN++] ??= { current: value },
+  useLayoutEffect: (effect: () => void) => { mocks.effects.push(effect); },
 }));
 vi.mock("next/navigation", () => ({ usePathname: () => mocks.pathname }));
-vi.mock("../hooks/use-shell", () => ({ useFocused: () => null, useWindow: () => undefined }));
+vi.mock("../hooks/use-shell", () => ({ useFocused: () => null, useWindow: () => mocks.getWindow() }));
 vi.mock("../lib/store", () => ({
   openWindow: mocks.open, focusApp: mocks.focus,
   shellStore: { getFocused: () => null, getWindow: mocks.getWindow },
@@ -23,13 +24,14 @@ const app = (id: string, slug = id): AppDescriptor => ({
   load: vi.fn().mockResolvedValue({ default: () => null }),
 });
 function boot(apps: AppDescriptor[]) {
+  mocks.effects = []; mocks.refN = 0;
   UrlSync({ apps });
   mocks.effects.forEach(effect => effect());
 }
 
 describe("requested app starts alongside its shell", () => {
   beforeEach(() => {
-    vi.clearAllMocks(); mocks.effects = []; mocks.pathname = "/notes/fixture";
+    vi.clearAllMocks(); mocks.effects = []; mocks.refs = []; mocks.refN = 0; mocks.pathname = "/notes/fixture";
     mocks.focus.mockReturnValue(false); mocks.getWindow.mockReturnValue(undefined);
   });
   it("starts only the deep-linked import before opening its window", () => {
@@ -53,6 +55,18 @@ describe("requested app starts alongside its shell", () => {
     mocks.getWindow.mockReturnValue({ app: "vault", minimized: false });
     const notes = app("vault", "notes"); boot([notes]);
     expect(notes.load).not.toHaveBeenCalled(); expect(mocks.open).not.toHaveBeenCalled();
+  });
+  it("keeps an uninstalled deep link free of module loading", () => {
+    const notes = { ...app("vault", "notes"), installed: false };
+    boot([notes]); expect(notes.load).not.toHaveBeenCalled();
+    expect(mocks.open).toHaveBeenCalledOnce();
+  });
+  it("starts the requested import when persisted installation hydrates after its window", () => {
+    const notes = { ...app("vault", "notes"), installed: false };
+    boot([notes]); mocks.getWindow.mockReturnValue({ app: "vault", minimized: false, payload: { path: "/fixture" } });
+    boot([{ ...notes, installed: true }]);
+    expect(notes.load).toHaveBeenCalledOnce(); expect(mocks.open).toHaveBeenCalledOnce();
+    boot([{ ...notes, installed: true }]); expect(notes.load).toHaveBeenCalledOnce();
   });
   it("keeps opening the window after an early import fails, allowing its loader to retry", async () => {
     const notes = app("vault", "notes");
