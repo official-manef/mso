@@ -88,7 +88,7 @@ export function StoreFilterChips({
 }) {
   return (
     <div className="flex gap-1.5 overflow-x-auto [scrollbar-width:none]">
-      {[...FILTERS, ...SYSTEM_FILTERS].map((f) => (
+      {[...SYSTEM_FILTERS, ...FILTERS].map((f) => (
         <Button
           key={f}
           type="button"

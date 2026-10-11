@@ -54,6 +54,7 @@ try {
     await expect(page.getByRole('tab',{name:'Apps',exact:true})).toHaveAttribute('aria-selected','true');
     const panel=page.getByRole('tabpanel'), cards=panel.getByRole('article');
     await expect(cards).toHaveCount(27);
+    if (mobile(initialShell)) await expect(page.getByRole('button',{name:'Apps',exact:true})).toBeInViewport({ratio:1});
     await expect(panel.getByRole('button',{name:/^(Installed|Uninstall)$/})).toHaveCount(6);
     await expect(panel.getByRole('button',{name:'Required',exact:true})).toBeDisabled();
     await expect(card(page,'Camoufox')).toBeVisible(); await expect(installed(card(page,'Hermes'))).toBeVisible();
