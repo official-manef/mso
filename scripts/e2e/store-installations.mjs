@@ -12,10 +12,9 @@ if (!['chromium', 'firefox', 'webkit'].includes(engine)) throw new Error('Unknow
 const output = process.env.MSO_SCREENSHOT_DIR;
 const fixture = await releaseFixture({live:true});
 const results = []; let browser;
-// Wait for this fixture's requests; unrelated favicon hosts cannot block navigation.
-const pending = new WeakMap();
+// Observe native fetch completion in the active document; SDK cache events can outlive it.
 async function settle(page) {
-  await expect.poll(() => pending.get(page)?.size ?? 0).toBe(0);
+  await expect.poll(() => page.evaluate(() => window.qaPendingFetches?.size ?? 0)).toBe(0);
 }
 const shells = ['macos', 'windows', 'dashboard', 'ios', 'android'];
 const mobile = shell => ['ios', 'android'].includes(shell);
@@ -30,11 +29,18 @@ async function screenshot(page, name) {
 async function track(context) {
   // Playwright routing disables HTTP cache, giving completed request events on reload.
   await context.route('**/*', route => route.continue());
-  context.on('page', page => {
-    const active = new Set(); pending.set(page, active);
-    page.on('request', request => { if (request.isNavigationRequest() && request.frame() === page.mainFrame()) active.clear(); if (request.url().startsWith(fixture.base + '/')) active.add(request); });
-    page.on('requestfinished', request => active.delete(request));
-    page.on('requestfailed', request => active.delete(request));
+  await context.addInitScript(() => {
+    const nativeFetch = window.fetch;
+    const pending = window.qaPendingFetches = new Set();
+    window.fetch = (...args) => {
+      const promise = nativeFetch(...args);
+      const url = new URL(args[0] instanceof Request ? args[0].url : String(args[0]), location.href);
+      if (url.origin === location.origin && url.pathname.startsWith('/api/')) {
+        pending.add(promise);
+        void promise.then(response => response.clone().arrayBuffer()).then(() => pending.delete(promise), () => pending.delete(promise));
+      }
+      return promise;
+    };
   });
 }
 async function switchShell(page, shell) {
