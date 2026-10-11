@@ -27,10 +27,12 @@ async function screenshot(page, name) {
   await mkdir(output, {recursive:true, mode:0o700});
   await page.screenshot({path:path.join(output,`${engine}-${name}.png`),animations:'disabled'});
 }
-function track(context) {
+async function track(context) {
+  // Playwright routing disables HTTP cache, giving completed request events on reload.
+  await context.route('**/*', route => route.continue());
   context.on('page', page => {
     const active = new Set(); pending.set(page, active);
-    page.on('request', request => { if (request.url().startsWith(fixture.base + '/')) active.add(request); });
+    page.on('request', request => { if (request.isNavigationRequest() && request.frame() === page.mainFrame()) active.clear(); if (request.url().startsWith(fixture.base + '/')) active.add(request); });
     page.on('requestfinished', request => active.delete(request));
     page.on('requestfailed', request => active.delete(request));
   });
@@ -49,8 +51,8 @@ try {
   const sentinel=path.join(fixture.dir,'fixture.txt'), original=await readFile(sentinel,'utf8');
   for (const initialShell of shells) {
     const context=await browser.newContext({viewport:viewport(initialShell),deviceScaleFactor:mobile(initialShell)?3:2,hasTouch:mobile(initialShell),serviceWorkers:'block'});
-    track(context);
-  await context.addCookies([{name:'session',value:cookie,url:fixture.base,sameSite:'Strict'}]);
+    await track(context);
+    await context.addCookies([{name:'session',value:cookie,url:fixture.base,sameSite:'Strict'}]);
     await context.addInitScript(({shell,isMobile})=>{
       if (window !== window.top || !["http:", "https:"].includes(location.protocol)) return;
       if (!localStorage.getItem('sv:shell')) localStorage.setItem('sv:shell',JSON.stringify({desktop:isMobile?'macos':shell,mobile:isMobile?shell:'ios'}));
@@ -116,7 +118,7 @@ try {
   for (const draftShell of shells) {
   await writeFile(draftFile,originalDraft,{mode:0o600});
   const context=await browser.newContext({viewport:viewport(draftShell),deviceScaleFactor:mobile(draftShell)?3:2,serviceWorkers:'block'});
-  track(context);
+  await track(context);
   await context.addCookies([{name:'session',value:cookie,url:fixture.base,sameSite:'Strict'}]);
   await context.addInitScript(()=>{if (['http:','https:'].includes(location.protocol) && window===window.top) localStorage.setItem('mso:onboarding:v1','done');});
   const editor=await context.newPage();await settle(editor);await editor.goto(fixture.base+'/store');await switchShell(editor,draftShell);
@@ -134,7 +136,7 @@ try {
   await context.close();results.push({engine,draftShell,crossTabDraft:'PASS',saveAfterMenuRemoval:'PASS',newMountRequiresInstall:'PASS'});
   }
   const runtimeContext=await browser.newContext({viewport:{width:1363,height:936},serviceWorkers:'block'});
-  track(runtimeContext);
+  await track(runtimeContext);
   await runtimeContext.addCookies([{name:'session',value:cookie,url:fixture.base,sameSite:'Strict'}]);
   const runtimeEntry='https://excalidraw.com';
   await writeFile(path.join(fixture.dir,'surface-apps.json'),JSON.stringify([{id:'synthetic-connection',title:'Synthetic connection',description:'Generated reviewed fixture',origin:'https://excalidraw.com',startPath:'/',renderer:'iframe',presentation:'inline',environment:'production',placements:['shell'],sandbox:'allow-scripts allow-same-origin allow-forms'}]),{mode:0o600});
