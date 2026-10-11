@@ -7,25 +7,18 @@ import { IS_DEMO } from "@/lib/demo";
 import { faviconUrl, openQuicklink, useQuicklinks } from "@/lib/quicklinks";
 import { openWindow, type ShellCapabilities, type SystemStats } from "@/features/appshell";
 
-// Passive effects may finish during document replacement; do not start new host reads then.
-let leaving = false;
-if (typeof window !== "undefined") {
-  window.addEventListener("pagehide", () => { leaving = true; });
-  window.addEventListener("pageshow", () => { leaving = false; });
-}
-
 // Polls `poll` every `ms`, but only fires while the tab is visible (a hidden
 // cockpit shouldn't keep hammering its own VPS), and refreshes immediately when
 // the tab is shown again. Returns the cleanup. The interval ticks regardless but
 // no-ops cheaply when hidden — no network calls in the background.
 function startVisiblePoll(poll: () => void, ms: number): () => void {
   const tick = () => {
-    if (!leaving && (typeof document === "undefined" || !document.hidden)) poll();
+    if (typeof document === "undefined" || !document.hidden) poll();
   };
   tick();
   const t = setInterval(tick, ms);
   const onVis = () => {
-    if (!leaving && !document.hidden) poll();
+    if (!document.hidden) poll();
   };
   if (typeof document !== "undefined") document.addEventListener("visibilitychange", onVis);
   return () => {
