@@ -6,10 +6,10 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe("Vault request scheduling", () => {
   it.each([undefined, "Snapshots/synthetic/worker.md"])("prioritizes an actual read while preserving no-store and cancellation (%s)", async note => {
-    const fetch = vi.fn(async () => Response.json(view)); vi.stubGlobal("fetch", fetch);
+    const fetch = vi.fn(async (_url: string, _options: RequestInit) => Response.json(view)); vi.stubGlobal("fetch", fetch);
     const controller = new AbortController();
     expect(await vaultRequest(" /qa/generated ", controller.signal, false, note)).toEqual(view);
-    const [url, options] = fetch.mock.calls[0] as unknown as [string, RequestInit];
+    const [url, options] = fetch.mock.calls[0]!;
     const query = new URL(url, "https://qa.example.invalid").searchParams;
     expect(query.get("project")).toBe("/qa/generated");
     expect(query.get("note")).toBe(note ?? null);
@@ -18,7 +18,7 @@ describe("Vault request scheduling", () => {
   });
 
   it("keeps refresh as the existing cancellable POST", async () => {
-    const fetch = vi.fn(async () => Response.json(view)); vi.stubGlobal("fetch", fetch);
+    const fetch = vi.fn(async (_url: string, _options: RequestInit) => Response.json(view)); vi.stubGlobal("fetch", fetch);
     const controller = new AbortController();
     await vaultRequest("/qa/generated", controller.signal, true);
     expect(fetch).toHaveBeenCalledWith("/api/v1/agent-vault?project=%2Fqa%2Fgenerated", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ project: "/qa/generated" }), signal: controller.signal });
