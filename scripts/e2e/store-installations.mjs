@@ -102,7 +102,7 @@ try {
     await confirm.getByRole('button',{name:'Cancel',exact:true}).click();await expect(installed(card(page,'n8n'))).toBeVisible();
     await installed(card(page,'n8n')).click();await confirm.getByRole('button',{name:'Uninstall',exact:true}).click();
     await expect(card(other,'n8n').getByRole('button',{name:'Install',exact:true})).toBeVisible();
-    expect(await readFile(sentinel,'utf8')).toBe(original);await settle(other);await other.close();
+    expect(await readFile(sentinel,'utf8')).toBe(original);await settle(other);expect(other.isClosed()).toBe(false);
     await settle(page);await page.reload();await expect(card(page,'n8n').getByRole('button',{name:'Install',exact:true})).toBeVisible();
     await switchShell(page,initialShell);
     // Replacing a document with pending telemetry can produce native WebKit diagnostics; keep raw stress evidence separately.
@@ -114,7 +114,8 @@ try {
     await expect(page.getByPlaceholder('Search apps')).toHaveValue('n8n');
     await card(page,'n8n').getByRole('button',{name:'Install',exact:true}).click();
     await settle(page);await page.goto(fixture.base+'/n8n');await expect(page.locator('[data-slot="n8n-feature"]')).toBeVisible();
-    expect(errors).toEqual([]);await context.close();
+    // Keep the observing tab alive through reload; forced driver-close diagnostics are audited separately.
+    await expect(installed(card(other,'n8n'))).toBeVisible();expect(errors).toEqual([]);await context.close();
     results.push({engine,initialShell,dpr:mobile(initialShell)?3:2,freshEssentials:7,catalog:27,switches:5,crossTab:'PASS',reload:'PASS',keyboard:'PASS',landscape:'PASS',uninstalledLazyLoad:'PASS',a11y:'PASS',sentinel:'PASS'});
     console.log(`PASS ${engine}/${initialShell}: seven defaults, complete catalog, all-shell install, cross-tab/reload, guarded removal, lazy deep link and accessibility`);
   }
