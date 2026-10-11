@@ -1,3 +1,7 @@
+## 2026-10-11 — Remove redundant dock filter paints (not deployed)
+
+Native WebKit Timeline isolated the multi-second delay before the Vault index request to Paint, rather than a long JavaScript callback. Three diagnostic captures recorded longest paints of 2.641/4.398/6.313s; disabling only dock link/button filters in a synthetic fixture reduced them to 0.745/0.829/0.998s. Dock glyphs already have their tile shadow, so remove the extra outer CSS drop-shadow from app and plain dock slots. Icon artwork, layout, magnification, focus, app loading and data contracts stay intact. No timer, cache, dependency or user-data migration is added. Normal measurements are separate from profiler timings; Linux headless rendering is not a physical Safari latency guarantee. Verification uses private synthetic sessions/notes/media, isolated builds, and data/main integrity guards.
+
 ## 2026-10-11 — Separate Memory labels in the knowledge workspace (not deployed)
 
 The shared graph layout now reserves space for the node and its displayed label after placement, including wide glyphs. Separation follows the existing direction on both axes to preserve a compact map. It keeps all three existing layouts and adds horizontal fit padding, without another renderer, dependency or data migration. A dense synthetic hub regression covers all layouts, deterministic placement and unchanged inputs; browser geometry checks cover Memory and the Organization map at desktop and phone sizes.
