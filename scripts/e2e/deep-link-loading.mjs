@@ -82,11 +82,9 @@ try {
       })).toBe(true);
     }
     if (shell === 'macos') {
-      expect(await page.evaluate(() => {
-        const roots = [...document.querySelectorAll('[inert][aria-hidden="true"]')].filter(el => el.className.includes('shell-platform-mark_img'));
-        return roots.length > 0 && roots.every(root => [...root.querySelectorAll('.shell-platform-mark img')].every(img => getComputedStyle(img).display === 'none'));
-      })).toBe(true);
+      await expect(page.getByRole('textbox', {name:'Search apps', exact:true})).toHaveCount(0);
       await page.getByRole('button', {name: shell === 'macos' ? 'Launchpad' : 'Back to Home', exact:true}).click();
+      await expect(page.getByRole('textbox', {name:'Search apps', exact:true})).toBeFocused();
       await expect.poll(() => page.locator('.shell-platform-mark img').evaluateAll(images => {
         const visible = images.filter(img => { const r=img.getBoundingClientRect(); return r.width > 0 && r.height > 0 && r.top < innerHeight && r.bottom > 0; });
         return visible.length > 3 && visible.every(img => img.complete && img.naturalWidth > 0);
