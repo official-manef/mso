@@ -4543,3 +4543,5 @@ Screenshot evidence previously lived in unrelated scratch directories or only in
 - A synthetic 49-note control exposed first-read contention from the repeated manifest. Private Vault note GET JSON now uses standard async gzip above 1 KiB for explicit unweighted gzip clients; index timing, owner/rate checks, JSON shape and private no-store remain intact. Weighted/custom headers keep the previous identity response.
 
 The shared install model keeps catalog lookup for routes and running-window controls in all five shells; launch menus still use only installed entries. Native draft retention is tested per shell. The runtime resolver signature includes source metadata, and the historical audit link follows its renamed file.
+
+Store WebKit navigation exposed native fetch diagnostics from telemetry effects starting after pagehide. The shared visible poller now skips reads while the old document is leaving and resumes on pageshow; no transport/auth contract changed. Lifecycle tests cover late subscription, pause/resume and unsubscribe.
