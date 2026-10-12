@@ -35,7 +35,12 @@ export async function menuEvidence({ page, check, shot }, theme) {
       expect(axe.violations.map(v => ({ id: v.id, targets: v.nodes.map(n => n.target) }))).toEqual([]);
     });
     await check(theme + " desktop context menu bounds and radius", async () => {
-      await page.mouse.click(1504, 160, { button: "right" });
+      // Right-click the bare desktop near its right edge so the menu opens at the
+      // clamped corner. A fixed pixel sat exactly on the section boundary and broke
+      // whenever the shell laid the desktop out a few px differently.
+      const desktop = page.locator("#main-content section").first();
+      const desktopBox = await desktop.boundingBox();
+      await page.mouse.click(desktopBox.x + desktopBox.width - 12, desktopBox.y + 40, { button: "right" });
       const menu = page.locator('.macos-menu[role="menu"]');
       await expect(menu).toBeVisible();
       await menuChrome(menu);
