@@ -17,6 +17,7 @@ export type ChannelView = {
   enabled: boolean;
   defaultTarget?: string;
   workflowId?: string;
+  agentGroupId?: string;
   createdAt: string;
   updatedAt: string;
   lastCheck?: { at: string; ok: boolean; detail: string };

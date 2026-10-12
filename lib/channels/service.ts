@@ -118,11 +118,29 @@ export async function receiveTelegram(id: string, raw: unknown, suppliedSecret: 
   const channel = await channelById(id);
   if (channel.provider !== "telegram") throw new ChannelError("channel_provider_mismatch", 404);
   assertEnabled(channel);
+  const event = normalizeTelegramUpdate(raw);
+  // A group wired to an Agent group authenticates by its bound group id plus a
+  // leading /discuss command, so it does not require a webhook secret. Bot
+  // traffic is dropped here so agents never answer each other into a loop.
+  if (channel.agentGroupId) return telegramGroupEvent(event);
   const credential = await values(channel);
   if (!credential.webhookSecret) throw new ChannelError("telegram_webhook_secret_required", 503);
   if (!verifyTelegramSecret(credential, suppliedSecret)) throw new ChannelError("invalid_webhook_signature", 401);
   if (rateLimited(`channel-authenticated:${id}`, 120, 60_000)) throw new ChannelError("rate_limited", 429);
-  return normalizeTelegramUpdate(raw);
+  return event;
+}
+
+const DISCUSS = /^\/discuss(?:@\w+)?\s+([\s\S]+)$/;
+
+// Returns the discussion topic for a group message that belongs to an Agent
+// group, or throws to drop anything that is not an owner command.
+export function telegramGroupEvent(event: ChannelInboundEvent): ChannelInboundEvent {
+  const raw = event.raw as { message?: { from?: { is_bot?: boolean } } } | undefined;
+  if (raw?.message?.from?.is_bot) throw new ChannelError("telegram_bot_message_ignored", 202);
+  if (event.kind !== "message") throw new ChannelError("telegram_group_command_required", 202);
+  const topic = event.text?.trim().match(DISCUSS)?.[1]?.trim();
+  if (!topic) throw new ChannelError("telegram_group_command_required", 202);
+  return { ...event, text: topic };
 }
 
 export async function receiveDiscord(

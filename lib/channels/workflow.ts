@@ -4,6 +4,7 @@ import type { Scope } from "@/lib/capabilities/scope";
 import type { CapabilityTool } from "@/lib/capabilities/tool";
 import { findActiveChannelSource } from "@/lib/workflow/graph-triggers";
 import { startWorkflowGraph } from "@/lib/workflow/graph-engine";
+import { startAgentGroupRun } from "@/lib/agent-group";
 import { ChannelError } from "./errors";
 import { channelById, recordChannelActivity } from "./store";
 import type { ChannelInboundEvent } from "./types";
@@ -31,6 +32,11 @@ export async function dispatchChannelInbound(
 ) {
   const channel = await channelById(channelId);
   await recordChannelActivity(channelId);
+  if (channel.agentGroupId) {
+    if (!await admitChannelEvent(channelId, event.eventId)) return { agentGroup: null, duplicate: true };
+    const run = await startAgentGroupRun(channel.agentGroupId, event.text ?? "");
+    return { agentGroup: { runId: run.id, groupId: channel.agentGroupId } };
+  }
   if (!channel.workflowId) return { workflow: null };
 
   const source = await findActiveChannelSource(channel.workflowId, channel.id, channel.workflowBinding);

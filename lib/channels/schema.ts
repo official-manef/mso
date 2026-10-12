@@ -65,6 +65,13 @@ export function parseChannelPatch(
     if (!/^[A-Za-z0-9][A-Za-z0-9._:-]{0,95}$/.test(workflowId)) throw new ChannelError("invalid_workflow");
   }
 
+  const groupRaw = raw.agentGroupId === undefined ? previous?.agentGroupId : raw.agentGroupId;
+  let agentGroupId: string | undefined;
+  if (groupRaw !== undefined && groupRaw !== null && groupRaw !== "") {
+    agentGroupId = clean(groupRaw, "agent_group", 36);
+    if (!/^[0-9a-f-]{36}$/i.test(agentGroupId)) throw new ChannelError("invalid_agent_group");
+  }
+
   return {
     name,
     provider: providerRaw,
@@ -72,5 +79,6 @@ export function parseChannelPatch(
     enabled,
     ...(defaultTarget ? { defaultTarget } : {}),
     ...(workflowId ? { workflowId } : {}),
+    ...(agentGroupId ? { agentGroupId } : {}),
   };
 }

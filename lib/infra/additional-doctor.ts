@@ -135,7 +135,7 @@ export async function doctorAdditionalProvider(id: string, values: Record<string
     }
     case "telegram": {
       if (!present(values.botToken)) return null;
-      if (!/^\\d{5,16}:[A-Za-z0-9_-]{20,}$/.test(values.botToken)) throw new Error("Telegram bot token format is invalid");
+      if (!/^\d{5,16}:[A-Za-z0-9_-]{20,}$/.test(values.botToken)) throw new Error("Telegram bot token format is invalid");
       const response = await checked("Telegram", "https://api.telegram.org/bot" + values.botToken + "/getMe", { accept: "application/json" });
       const root = obj(response.body);
       const result = obj(root.result);

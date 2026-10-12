@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Plug } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,8 @@ import type { ChannelsSnapshot, ChannelProviderId, ChannelView, WorkflowOption }
 
 const selectClass = "h-9 w-full rounded-md border bg-background px-2 text-sm";
 const credentialValue = (user: string, connection: string) => `${user}::${connection}`;
+
+type GroupOption = { id: string; name: string };
 
 export function ChannelEditor({
   open,
@@ -40,9 +42,19 @@ export function ChannelEditor({
   const [credential, setCredential] = useState(initialCredential);
   const [target, setTarget] = useState(row?.defaultTarget ?? "");
   const [workflowId, setWorkflowId] = useState(row?.workflowId ?? "");
+  const [agentGroupId, setAgentGroupId] = useState(row?.agentGroupId ?? "");
+  const [groups, setGroups] = useState<GroupOption[]>([]);
   const [enabled, setEnabled] = useState(row?.enabled ?? true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!open) return;
+    fetch("/api/v1/agent-groups", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((body: { groups?: GroupOption[] }) => setGroups(body.groups ?? []))
+      .catch(() => setGroups([]));
+  }, [open]);
 
   const credentials = useMemo(
     () => snapshot.credentials.filter((item) => item.provider === provider),
@@ -67,6 +79,7 @@ export function ChannelEditor({
         enabled,
         defaultTarget: target,
         workflowId,
+        agentGroupId,
       };
       await channelAction(row
         ? { action: "update", id: row.id, expectedRevision: snapshot.revision, data }
@@ -109,6 +122,12 @@ export function ChannelEditor({
         <select className={selectClass} value={workflowId} onChange={(event) => setWorkflowId(event.target.value)}>
           <option value="">Receive only — no workflow</option>
           {workflows.map((workflow) => <option key={workflow.id} value={workflow.id}>{workflow.name}</option>)}
+        </select>
+      </Field>
+      <Field label="Agent group (Telegram discussion)">
+        <select className={selectClass} value={agentGroupId} onChange={(event) => setAgentGroupId(event.target.value)}>
+          <option value="">Not linked</option>
+          {groups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}
         </select>
       </Field>
       <label className="flex items-center justify-between rounded-lg border p-3">

@@ -20,6 +20,7 @@ export type ChannelRecord = {
   enabled: boolean;
   defaultTarget?: string;
   workflowId?: string;
+  agentGroupId?: string;
   workflowBinding?: { owner: string; nodeId: string; revision: string };
   createdAt: string;
   updatedAt: string;
