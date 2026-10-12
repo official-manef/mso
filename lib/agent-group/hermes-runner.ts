@@ -1,5 +1,4 @@
 import { spawn } from "node:child_process";
-import path from "node:path";
 import { AgentGroupError } from "./errors";
 
 const TIMEOUT_MS = 90_000;
@@ -48,12 +47,14 @@ export async function runHermesTurn(input: HermesTurnInput): Promise<HermesTurnR
     resumeSessionId = input.resumeSessionId;
   }
 
-  const binary = process.env.HERMES_BIN ?? path.join(process.env.HOME ?? "/home", ".local", "bin", "hermes");
+  // `hermes` resolves from PATH (the mso.service unit includes ~/.local/bin), and a
+  // literal binary keeps Turbopack's file tracing static — a dynamic path made the
+  // build trace the whole project and fail the release warning gate.
   const args = ["chat", "-p", profile, "-Q", "-q", buildHermesQuery(input.prompt, input.system)];
   if (resumeSessionId) args.push("-r", resumeSessionId);
 
   const captured = await new Promise<{ out: string; err: string }>((resolve, reject) => {
-    const child = spawn(binary, args, {
+    const child = spawn("hermes", args, {
       env: process.env,
       stdio: ["ignore", "pipe", "pipe"],
     });
