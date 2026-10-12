@@ -93,6 +93,7 @@ Commands:
   workflow *           Visual/private Workflow Graph v2 CRUD + run/status (workflow --help)
   integrations  Named credential users, connections, sources, setup and execution
   channels *     Telegram/Discord channels: list, create/save/delete, test, send
+  agent-groups *       Multi-agent discussion groups: list, show, create/save/delete, run, stop
   provider *           Infrastructure credentials: list | set | rm | doctor
   providers *          Alias for provider
   gateway *             Secure public HTTPS tunnel: start | status | url | stop | doctor | install | domain

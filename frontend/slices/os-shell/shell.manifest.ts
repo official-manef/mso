@@ -22,6 +22,7 @@ import { quicklinksApp } from "@/features/quicklinks";
 import { docsApp } from "@/features/docs";
 import { integrationsApp } from "@/features/integrations";
 import { channelsApp } from "@/features/channels";
+import { agentGroupApp } from "@/features/agent-group";
 import { workflowsApp } from "@/features/workflows";
 import { n8nApp } from "@/features/n8n";
 import { organizationApp } from "@/features/organization";
@@ -86,6 +87,7 @@ export const BUILTIN_APPS: AppDescriptor[] = [
   withSlug(withArtwork(docsApp), "docs"),
   pin(withSlug(withArtwork(osSettingsApp), "settings")),
   withSlug(agentVaultApp, "agent-vault"),
+  withSlug(withArtwork(agentGroupApp), "agent-groups"),
   withSlug(withArtwork(quicklinksApp), "links"),
   withSlug(withArtwork(createAppApp), "create"),
 ];

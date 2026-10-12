@@ -11,6 +11,7 @@ case "$cmd" in
   onboard) run_onboard "${1-}" ;;
   integrations) run_integrations "$@" ;;
   channels) source "$ROOT/scripts/cli/channels.sh"; run_channels "$@" ;;
+  agent-groups) source "$ROOT/scripts/cli/agent-groups.sh"; run_agent_groups "$@" ;;
   flow) source "$ROOT/scripts/cli/flows.sh"; run_flow "$@" ;;
   workflow) source "$ROOT/scripts/cli/workflows.sh"; run_workflow "$@" ;;
   provider|providers) run_provider "$@" ;;
