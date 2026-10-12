@@ -35,7 +35,7 @@ export function WorkflowDirectoryPanel() {
   const q = query.toLowerCase().trim();
   const rows = useMemo<DirectoryRow[]>(() => (data?.[view] ?? []).filter(row => !q || searchText(row).includes(q)), [data, q, view]);
   const Icon = ICONS[view];
-  return <div className="flex h-full min-h-0 flex-col">
+  return <div data-slot="workflow-directory-panel" className="flex h-full min-h-0 flex-col">
     <div className="space-y-2 border-b p-2">
       <div className="grid grid-cols-5 gap-1">{VIEWS.map(item => <button key={item} type="button"
         className={`rounded-md px-2 py-1.5 text-[10px] capitalize ${view === item ? "bg-accent font-semibold" : "text-muted-foreground hover:bg-accent/60"}`}
