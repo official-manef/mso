@@ -32,9 +32,27 @@ export interface OsConfig {
   anthropicApiKey?: string;
 }
 
-const CONFIG_PATH = expandOwnerStorePath(process.env.OS_CONFIG_STORE ?? path.join(os.homedir(), ".mso", "config.json"));
+const OWNER_CONFIG_PATH = expandOwnerStorePath(process.env.OS_CONFIG_STORE ?? path.join(os.homedir(), ".mso", "config.json"));
+const MULTIUSER_ROOT = expandOwnerStorePath(process.env.OS_MULTIUSER_ROOT ?? path.join(os.homedir(), ".mso", "users"));
 const PROVIDER_ID_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;
+const TENANT_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
 const RESERVED_RECORD_KEYS = new Set(["__proto__", "prototype", "constructor"]);
+
+export function safeTenantId(value: string): string {
+  if (!TENANT_ID_RE.test(value) || RESERVED_RECORD_KEYS.has(value)) throw new Error("invalid tenant id");
+  return value;
+}
+
+// owner (undefined) keeps the legacy single-file store — no migration. A named
+// tenant resolves to <root>/<id>/config.json, contained under the multiuser root.
+function configPath(tenant?: string): string {
+  if (tenant === undefined) return OWNER_CONFIG_PATH;
+  const id = safeTenantId(tenant);
+  const resolved = path.resolve(MULTIUSER_ROOT, id, "config.json");
+  const rel = path.relative(path.resolve(MULTIUSER_ROOT), resolved);
+  if (!rel || rel.startsWith("..") || path.isAbsolute(rel)) throw new Error("invalid tenant id");
+  return resolved;
+}
 
 export const DEFAULT_MODEL = defaultModelFor(DEFAULT_PROVIDER);
 export { DEFAULT_PROVIDER };
@@ -59,25 +77,26 @@ function recordDelete<T>(record: Record<string, T> | undefined, key: string): Re
   return Object.fromEntries(Object.entries(record ?? {}).filter(([name]) => name !== key));
 }
 
-export async function readConfig(): Promise<OsConfig> {
+export async function readConfig(tenant?: string): Promise<OsConfig> {
   try {
-    return JSON.parse(await fs.readFile(CONFIG_PATH, "utf8")) as OsConfig;
+    return JSON.parse(await fs.readFile(configPath(tenant), "utf8")) as OsConfig;
   } catch {
     return {};
   }
 }
 
-export async function writeConfig(patch: OsConfig): Promise<void> {
-  const current = await readConfig();
+export async function writeConfig(patch: OsConfig, tenant?: string): Promise<void> {
+  const target = configPath(tenant);
+  const current = await readConfig(tenant);
   const next: OsConfig = { ...current, ...patch };
-  await fs.mkdir(path.dirname(CONFIG_PATH), { recursive: true, mode: 0o700 });
-  const tmp = `${CONFIG_PATH}.tmp`;
+  await fs.mkdir(path.dirname(target), { recursive: true, mode: 0o700 });
+  const tmp = `${target}.tmp`;
   await fs.writeFile(tmp, JSON.stringify(next, null, 2), { encoding: "utf8", mode: 0o600 });
-  await fs.rename(tmp, CONFIG_PATH);
+  await fs.rename(tmp, target);
 }
 
-export async function resolveModelRef(): Promise<string> {
-  const c = await readConfig();
+export async function resolveModelRef(tenant?: string): Promise<string> {
+  const c = await readConfig(tenant);
   const provider = safeProviderId(c.provider || DEFAULT_PROVIDER);
   return `${provider}/${c.model || defaultModelFor(provider)}`;
 }
@@ -85,21 +104,24 @@ export async function resolveModelRef(): Promise<string> {
 export function hostCredentialStore() {
   const env = envCredentialStore();
   return {
-    async getKey(_tenant: string | undefined, provider: string) {
+    async getKey(tenant: string | undefined, provider: string) {
       const safe = safeProviderId(provider);
-      const c = await readConfig();
+      const c = await readConfig(tenant);
       const fromFile = recordValue(c.keys, safe) ?? (safe === "anthropic" ? c.anthropicApiKey : undefined);
-      return fromFile || (await env.getKey(_tenant, safe));
+      if (fromFile) return fromFile;
+      // Owner may fall back to process env (dev/single-tenant). A named tenant must
+      // not inherit the host's env keys — it resolves only from its own file.
+      return tenant === undefined ? env.getKey(tenant, safe) : null;
     },
-    async setKey(_tenant: string | undefined, provider: string, key: string) {
+    async setKey(tenant: string | undefined, provider: string, key: string) {
       const safe = safeProviderId(provider);
-      const c = await readConfig();
-      await writeConfig({ keys: recordSet(c.keys, safe, key) });
+      const c = await readConfig(tenant);
+      await writeConfig({ keys: recordSet(c.keys, safe, key) }, tenant);
     },
-    async deleteKey(_tenant: string | undefined, provider: string) {
+    async deleteKey(tenant: string | undefined, provider: string) {
       const safe = safeProviderId(provider);
-      const c = await readConfig();
-      await writeConfig({ keys: recordDelete(c.keys, safe) });
+      const c = await readConfig(tenant);
+      await writeConfig({ keys: recordDelete(c.keys, safe) }, tenant);
     },
   };
 }
@@ -123,38 +145,38 @@ export function isBuiltinProvider(slug: string): boolean {
   return Object.prototype.hasOwnProperty.call(PROVIDERS, slug);
 }
 
-export async function selectedCustomConn(): Promise<CustomProviderConn | null> {
-  const c = await readConfig();
+export async function selectedCustomConn(tenant?: string): Promise<CustomProviderConn | null> {
+  const c = await readConfig(tenant);
   const provider = safeProviderId(c.provider || DEFAULT_PROVIDER);
   return recordValue(c.customProviders, provider) ?? null;
 }
 
-export async function upsertCustomProvider(slug: string, conn: CustomProviderConn): Promise<void> {
+export async function upsertCustomProvider(slug: string, conn: CustomProviderConn, tenant?: string): Promise<void> {
   const safe = safeProviderId(slug);
-  const c = await readConfig();
-  await writeConfig({ customProviders: recordSet(c.customProviders, safe, conn) });
+  const c = await readConfig(tenant);
+  await writeConfig({ customProviders: recordSet(c.customProviders, safe, conn) }, tenant);
 }
 
-export async function removeCustomProvider(slug: string): Promise<void> {
+export async function removeCustomProvider(slug: string, tenant?: string): Promise<void> {
   const safe = safeProviderId(slug);
-  const c = await readConfig();
-  await writeConfig({ customProviders: recordDelete(c.customProviders, safe) });
+  const c = await readConfig(tenant);
+  await writeConfig({ customProviders: recordDelete(c.customProviders, safe) }, tenant);
 }
 
-export async function readOAuthBundle(slug: string): Promise<OAuthBundle | null> {
+export async function readOAuthBundle(slug: string, tenant?: string): Promise<OAuthBundle | null> {
   const safe = safeProviderId(slug);
-  const c = await readConfig();
+  const c = await readConfig(tenant);
   return recordValue(c.oauthTokens, safe) ?? null;
 }
 
-export async function writeOAuthBundle(slug: string, bundle: OAuthBundle): Promise<void> {
+export async function writeOAuthBundle(slug: string, bundle: OAuthBundle, tenant?: string): Promise<void> {
   const safe = safeProviderId(slug);
-  const c = await readConfig();
-  await writeConfig({ oauthTokens: recordSet(c.oauthTokens, safe, bundle) });
+  const c = await readConfig(tenant);
+  await writeConfig({ oauthTokens: recordSet(c.oauthTokens, safe, bundle) }, tenant);
 }
 
-export async function removeOAuthBundle(slug: string): Promise<void> {
+export async function removeOAuthBundle(slug: string, tenant?: string): Promise<void> {
   const safe = safeProviderId(slug);
-  const c = await readConfig();
-  await writeConfig({ oauthTokens: recordDelete(c.oauthTokens, safe) });
+  const c = await readConfig(tenant);
+  await writeConfig({ oauthTokens: recordDelete(c.oauthTokens, safe) }, tenant);
 }
