@@ -4,6 +4,24 @@
 Newest first. `docs/PROGRESS.md` is the source of truth for *why* a change was made;
 this is the *what*, and it is what Settings → Account → About shows as “What's new”.
 
+## 2026-10-13
+
+**Tests**
+
+- `e2e` right-click the desktop from its measured box
+- `e2e` scope workflow directory assertions to the panel
+
+## 2026-10-12
+
+**Added**
+
+- `channels` start an Agent group from a bound Telegram group
+- `agent-group` multi-agent discussion groups over Hermes profiles
+
+**Fixed**
+
+- `agent-group` spawn hermes by name to keep build tracing static
+
 ## 2026-10-10
 
 **Added**
