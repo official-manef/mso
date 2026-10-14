@@ -10,6 +10,10 @@ this is the *what*, and it is what Settings → Account → About shows as “Wh
 
 - `tenancy` owner-only enrollment CLI for tenant bindings
 
+**Fixed**
+
+- `config` keep tenant config path traceable by Turbopack
+
 ## 2026-10-13
 
 **Added**
