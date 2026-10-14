@@ -79,7 +79,7 @@ function recordDelete<T>(record: Record<string, T> | undefined, key: string): Re
 
 export async function readConfig(tenant?: string): Promise<OsConfig> {
   try {
-    return JSON.parse(await fs.readFile(configPath(tenant), "utf8")) as OsConfig;
+    return JSON.parse(await fs.readFile(/* turbopackIgnore: true */ configPath(tenant), "utf8")) as OsConfig;
   } catch {
     return {};
   }
