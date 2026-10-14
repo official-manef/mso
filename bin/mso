@@ -109,6 +109,7 @@
 #
 #   reset [--scope config|all]  Preview local factory reset; explicit token required to apply
 #   uninstall [--purge] [--remove-code]  Preview owned installation removal
+#   tenant *             Owner-only local enrollment: status | list | init | enroll | set-enabled
 #
 #  Escape hatches
 #   crud *               Generic resource CRUD, incl. editor documents
@@ -176,6 +177,13 @@ case "${1-}" in
     [ -z "$BASE_OVERRIDE$ENV_OVERRIDE${MSO_BASE:-}${OS_BASE:-}${MSO_ENV:-}${OS_ENV:-}" ] \
       || die "maintenance is local-only; omit --base/--env and run over SSH on the intended host"
     exec node "$ROOT/scripts/mso-maintenance.mjs" "$@" ;;
+  tenant)
+    [ -z "$BASE_OVERRIDE$ENV_OVERRIDE${MSO_BASE:-}${OS_BASE:-}${MSO_ENV:-}${OS_ENV:-}" ] \
+      || die "tenant enrollment is local-only; omit --base/--env and run over SSH on the intended host"
+    shift
+    set -a; . "$ROOT/.env.local" 2>/dev/null || true; set +a
+    export PATH="$HOME/.bun/bin:$PATH"
+    exec bun "$ROOT/scripts/mso-tenant.ts" "$@" ;;
 esac
 
 B="${BASE_OVERRIDE:-${MSO_BASE:-${OS_BASE:-http://127.0.0.1:4005}}}"
