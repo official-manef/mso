@@ -25,6 +25,30 @@ const pad = (value, max) => {
   return out + " ".repeat(Math.max(0, max - visibleWidth(out)));
 };
 
+// Read all of fd 0 without fs.readFileSync: a non-blocking pipe makes readFileSync
+// throw EAGAIN instead of waiting for the producer to write the candidate rows.
+function readStdinSync() {
+  const chunks = [];
+  const buf = Buffer.alloc(65536);
+  const sleeper = new Int32Array(new SharedArrayBuffer(4));
+  for (;;) {
+    let n;
+    try {
+      n = fs.readSync(0, buf, 0, buf.length, null);
+    } catch (error) {
+      if (error && error.code === "EAGAIN") {
+        Atomics.wait(sleeper, 0, 0, 5);
+        continue;
+      }
+      if (error && error.code === "EOF") break;
+      throw error;
+    }
+    if (!n) break;
+    chunks.push(Buffer.from(buf.subarray(0, n)));
+  }
+  return Buffer.concat(chunks).toString("utf8");
+}
+
 export function parsePickerItems(raw) {
   return String(raw || "").split(/\r?\n/).filter(Boolean).map((line) => {
     const [value = "", label = "", meta = "", state = ""] = line.split("\t");
@@ -80,7 +104,7 @@ function panel(items, selected, title, query, columns) {
 async function run() {
   const title = clean(process.argv[2] || "Select");
   const activeValue = String(process.argv[3] || "");
-  const items = parsePickerItems(fs.readFileSync(0, "utf8"));
+  const items = parsePickerItems(readStdinSync());
   if (!items.length) process.exit(2);
 
   // One read/write descriptor: no separate pathname check/open or truncating open.

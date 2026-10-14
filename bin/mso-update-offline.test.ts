@@ -32,6 +32,7 @@ function fixture() {
     "scripts/mso-update",
     "scripts/mso-cli-agent.sh",
     "scripts/cli/ai-provider-catalog.sh",
+    "scripts/cli/ai-provider-auth.sh",
     "scripts/cli/runtime.sh",
     "scripts/cli/service.sh",
     "scripts/cli/transport.sh",

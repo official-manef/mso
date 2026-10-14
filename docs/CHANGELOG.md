@@ -12,6 +12,7 @@ this is the *what*, and it is what Settings → Account → About shows as “Wh
 
 **Fixed**
 
+- `cli` repair provider picker and make models add scriptable
 - `config` keep tenant config path traceable by Turbopack
 
 ## 2026-10-13

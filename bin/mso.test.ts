@@ -108,6 +108,7 @@ describe("bin/mso", () => {
       fs.readFileSync(path.join(repo, "scripts/cli/commands.sh"), "utf8"),
       ...commandOwnerFiles.map((rel) => fs.readFileSync(path.join(repo, rel), "utf8")),
       fs.readFileSync(path.join(repo, "scripts/mso-cli-agent.sh"), "utf8"),
+      fs.readFileSync(path.join(repo, "scripts/cli/ai-provider-auth.sh"), "utf8"),
       fs.readFileSync(path.join(repo, "scripts/mso-cli-integrations.sh"), "utf8"),
     ].join("\n");
 
