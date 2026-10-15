@@ -2,7 +2,8 @@
 
 import { requireSession } from "@/lib/auth/require-session";
 import { headers } from "next/headers";
-import { getClient, storeCode, CODE_TTL_MS } from "@/lib/mcp/store";
+import { getClient, ensureClient, isAutoRegisterableClientId, storeCode, CODE_TTL_MS } from "@/lib/mcp/store";
+import type { McpToolProfile } from "@/lib/mcp/tool-contract";
 import { randomToken, isAllowedRedirect } from "@/lib/mcp/pkce";
 import { parseScope, clampScope, mcpEnabled, type Scope } from "@/lib/mcp/scope";
 
@@ -48,27 +49,50 @@ export async function approve(form: FormData): Promise<ApprovalResult> {
   if (!expectedIssuer || issuer !== expectedIssuer || resource !== `${expectedIssuer}/mcp`) return { ok: false, error: "OAuth resource/issuer mismatch." };
 
   const client = await getClient(clientId);
-  // Only server-generated registrations own durable client principals.
-  if (!client) return { ok: false, error: "This client must register before requesting authorization." };
+  // An unknown but valid public client id is registered on demand here too: the
+  // consent page already offered Allow for it (inert until this approval), and
+  // ChatGPT's user-defined client caches its id across connects. Reserved MSO
+  // principals and malformed ids still fail closed.
+  if (!client && !isAutoRegisterableClientId(clientId)) {
+    return { ok: false, error: "This client must register before requesting authorization." };
+  }
+  if (!client) {
+    await ensureClient(clientId, [redirectUri]);
+    return approveRegistered({ clientId, redirectUri, challenge, state, scope, resource, issuer, offlineAccess, profile: "full" });
+  }
   if (!client.redirectUris.includes(redirectUri)) {
     return { ok: false, error: "That redirect target is not registered for this client." };
   }
 
+  return approveRegistered({ clientId, redirectUri, challenge, state, scope, resource, issuer, offlineAccess, profile: client.profile });
+}
+
+async function approveRegistered(input: {
+  clientId: string;
+  redirectUri: string;
+  challenge: string;
+  state: string;
+  scope: Scope;
+  resource: string;
+  issuer: string;
+  offlineAccess: boolean;
+  profile?: McpToolProfile;
+}): Promise<ApprovalResult> {
   const code = randomToken("mso_code_");
   await storeCode(code, {
-    clientId,
-    redirectUri,
-    codeChallenge: challenge,
-    scope,
-    resource,
-    profile: client.profile,
-    offlineAccess,
+    clientId: input.clientId,
+    redirectUri: input.redirectUri,
+    codeChallenge: input.challenge,
+    scope: input.scope,
+    resource: input.resource,
+    profile: input.profile,
+    offlineAccess: input.offlineAccess,
     expiresAt: Date.now() + CODE_TTL_MS,
   });
 
-  const dest = new URL(redirectUri);
+  const dest = new URL(input.redirectUri);
   dest.searchParams.set("code", code);
-  if (state) dest.searchParams.set("state", state);
-  dest.searchParams.set("iss", issuer);
+  if (input.state) dest.searchParams.set("state", input.state);
+  dest.searchParams.set("iss", input.issuer);
   return { ok: true, redirectTo: dest.toString() };
 }

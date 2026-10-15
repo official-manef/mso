@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { Sparkles, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { mdToHtml } from "../features/widgets/components/md";
@@ -38,7 +39,11 @@ function legacyMessageTime(id: string): number | undefined {
   return match ? Number(match[1]) : undefined;
 }
 
-export function MessageBubble({ message, ios }: { message: ChatMessage; ios?: boolean }) {
+// memoised: the transcript re-renders on every streamed token, but only the last
+// assistant bubble actually changes — without this every prior row re-parsed its
+// markdown and recomputed its timestamp per token. Props are the message object
+// (stable unless that row was patched) + ios, so the default shallow compare holds.
+export const MessageBubble = memo(function MessageBubble({ message, ios }: { message: ChatMessage; ios?: boolean }) {
   const createdAt = message.createdAt || legacyMessageTime(message.id);
   const time = createdAt ? new Date(createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }) : null;
   const isUser = message.role === "user";
@@ -110,4 +115,4 @@ export function MessageBubble({ message, ios }: { message: ChatMessage; ios?: bo
       </div>
     </div>
   );
-}
+});

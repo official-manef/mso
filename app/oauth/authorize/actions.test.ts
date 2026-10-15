@@ -3,13 +3,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   requireSession: vi.fn(),
   getClient: vi.fn(),
+  ensureClient: vi.fn(),
   storeCode: vi.fn(),
   randomToken: vi.fn(),
 }));
 
 vi.mock("@/lib/auth/require-session", () => ({ requireSession: mocks.requireSession }));
 vi.mock("@/lib/mcp/store", () => ({
-  getClient: mocks.getClient, storeCode: mocks.storeCode, CODE_TTL_MS: 60_000,
+  getClient: mocks.getClient,
+  ensureClient: mocks.ensureClient,
+  isAutoRegisterableClientId: (id: string) => /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/.test(id) && !/^(manual:|pat:|mso_)/.test(id),
+  storeCode: mocks.storeCode, CODE_TTL_MS: 60_000,
 }));
 vi.mock("@/lib/mcp/pkce", () => ({
   randomToken: mocks.randomToken,
@@ -49,6 +53,7 @@ describe("OAuth consent approval", () => {
     mocks.requireSession.mockResolvedValue(true);
     mocks.randomToken.mockReturnValue("mso_code_test");
     mocks.getClient.mockResolvedValue({ name: "ChatGPT", profile: "chatgpt", redirectUris: ["https://chatgpt.com/connector/oauth/test"] });
+    mocks.ensureClient.mockResolvedValue({ name: "ChatGPT", profile: "full", redirectUris: ["https://chatgpt.com/connector/oauth/test"] });
   });
 
   afterEach(() => vi.unstubAllEnvs());
@@ -78,11 +83,21 @@ describe("OAuth consent approval", () => {
     expect(mocks.storeCode).not.toHaveBeenCalled();
   });
 
-  it.each(["chatgpt-mso", "mcpc_pruned", "manual:pat:another-owner"])("rejects unregistered principal %s even with an HTTPS callback", async (id) => {
+  it.each(["manual:pat:another-owner", "pat:abc", "mso_code_x"])("rejects reserved MSO principal %s even with an HTTPS callback", async (id) => {
     mocks.getClient.mockResolvedValue(null);
     const data = form("https://attacker.example/callback"); data.set("client_id", id);
     expect(await approve(data)).toMatchObject({ ok: false, error: expect.stringContaining("register") });
     expect(mocks.storeCode).not.toHaveBeenCalled();
+    expect(mocks.ensureClient).not.toHaveBeenCalled();
+  });
+
+  it("registers a self-declared public client id on demand and continues the flow", async () => {
+    mocks.getClient.mockResolvedValue(null);
+    const data = form();
+    data.set("client_id", "chatgpt-mso");
+    await expect(approve(data)).resolves.toMatchObject({ ok: true, redirectTo: expect.stringContaining("code=mso_code_test") });
+    expect(mocks.ensureClient).toHaveBeenCalledWith("chatgpt-mso", ["https://chatgpt.com/connector/oauth/test"]);
+    expect(mocks.storeCode).toHaveBeenCalledWith("mso_code_test", expect.objectContaining({ clientId: "chatgpt-mso", profile: "full" }));
   });
 
   it("does not authorize a registered client at another callback", async () => {
