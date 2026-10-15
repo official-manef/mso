@@ -149,6 +149,7 @@ Commands:
 
   reset [--scope config|all]  Preview local factory reset; explicit token required to apply
   uninstall [--purge] [--remove-code]  Preview owned installation removal
+  tenant *             Owner-only local enrollment: status | list | init | enroll | set-enabled
 
  Escape hatches
   crud *               Generic resource CRUD, incl. editor documents

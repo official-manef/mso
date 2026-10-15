@@ -2,7 +2,10 @@
 # TTY and guided onboarding helpers. Sourced by scripts/cli/runtime.sh.
 # shellcheck source=onboarding-ai.sh
 source "$ROOT/scripts/cli/onboarding-ai.sh"
-tty_ok() { [ -r /dev/tty ] && [ -w /dev/tty ]; }
+# `[ -r/-w /dev/tty ]` is not enough: the char device can exist while opening it
+# fails with ENXIO when the process has no controlling terminal, which made
+# non-interactive (piped) runs die inside tty_print's redirect. Test the real open.
+tty_ok() { { : </dev/tty; } 2>/dev/null && { : >/dev/tty; } 2>/dev/null; }
 tty_print() { if tty_ok; then printf '%s' "$*" > /dev/tty; else printf '%s' "$*"; fi; }
 tty_line() {
   local prompt="$1" default="${2-}" value=""

@@ -141,61 +141,10 @@ print_model_catalog() {
 }
 
 
-configure_oauth_provider() {
-  local provider="$1" response code url interval poll
-  [ "$provider" = "openai-codex" ] || die "OAuth provider not supported yet: $provider"
-  response=$(jpost "/api/oauth/openai" '{"action":"start","select":false}')
-  code=$(jq -r '.userCode // empty' <<<"$response"); url=$(jq -r '.verificationUrl // empty' <<<"$response"); interval=$(jq -r '.intervalMs // 5000' <<<"$response")
-  [ -n "$code" ] && [ -n "$url" ] || die "OpenAI OAuth did not return a device code"
-  echo "Open this URL in any browser: $url"
-  echo "Enter code: $code"
-  echo "Waiting for authorization (active model will NOT change)..."
-  while true; do
-    poll_seconds=$((interval / 1000))
-        [ "$poll_seconds" -gt 2 ] || poll_seconds=3
-        sleep "$poll_seconds"
-    poll=$(jpost "/api/oauth/openai" '{"action":"poll","select":false}')
-    if [ "$(jq -r '.ok // false' <<<"$poll")" = true ]; then
-      echo "  ✓ connected $(jq -r '.slug' <<<"$poll"); model selection unchanged"
-      return
-    fi
-    [ "$(jq -r '.pending // false' <<<"$poll")" = true ] || die "OpenAI OAuth failed: $poll"
-    tty_print "."
-  done
-}
-
-configure_ai_provider() {
-  local provider="$1" key body name base protocol models
-  case "$provider" in
-    chatgpt|codex) provider=openai-codex ;;
-  esac
-  case "$provider" in
-    openai-codex) configure_oauth_provider "$provider"; return ;;
-    custom)
-      tty_ok || die "custom provider setup needs an interactive terminal"
-      tty_line "Provider name: " ""; name="$REPLY"; [ -n "$name" ] || die "provider name required"
-      tty_line "Base URL (https://.../v1): " ""; base="$REPLY"; [ -n "$base" ] || die "base URL required"
-      tty_line "Protocol [openai|anthropic] [openai]: " "openai"; protocol="$REPLY"
-      case "$protocol" in
-        openai|anthropic) ;;
-        *) die "protocol must be openai or anthropic" ;;
-      esac
-      tty_line "Models (comma/newline IDs; optional): " ""; models="$REPLY"
-      tty_secret "API key: "; key="$REPLY"; [ -n "$key" ] || die "empty API key"
-      body=$(printf '%s\0%s\0%s\0%s\0%s' "$name" "$base" "$protocol" "$key" "$models" | custom_provider_body_unselected)
-      secret_post "/api/config" "$body" >/dev/null
-      unset key body REPLY
-      echo "  ✓ custom provider configured; active model unchanged"
-      return ;;
-    *) ai_provider_supported "$provider" || die "unknown/unsupported AI provider '$provider'; run: mso models free or mso models add" ;;
-  esac
-  tty_ok || die "provider setup needs an interactive terminal"
-  tty_secret "Paste $provider API key: "; key="$REPLY"; [ -n "$key" ] || die "empty API key"
-  body=$(printf '%s\0%s' "$provider" "$key" | provider_key_body_unselected)
-  secret_post "/api/config" "$body" >/dev/null
-  unset key body REPLY
-  echo "  ✓ $provider configured; active model unchanged"
-}
+# AI provider auth (OAuth device flow, key/custom endpoint): kept in its own slice
+# so this file stays under the architecture line budget.
+# shellcheck source=cli/ai-provider-auth.sh
+source "$ROOT/scripts/cli/ai-provider-auth.sh"
 
 select_model_ref() {
   local requested="$1" cfg provider model candidate data
@@ -263,20 +212,28 @@ run_model_setup() {
 
 run_models() {
   local sub="${1:-}" cfg provider action rc
+  case "$sub" in
+    -h|--help|help) usage_models_add; return 0 ;;
+  esac
   ensure_local_cli_device; ensure_onboard_runtime; jget "/api/auth/me" >/dev/null
   cfg=$(ai_model_config)
   case "$sub" in
-    status|list) print_ai_providers "$cfg" ;;
+    status|list)
+      if [ -n "${2-}" ]; then
+        ai_provider_connected "$2" "$cfg" && echo "$2 connected" || { echo "$2 not connected"; return 1; }
+      else print_ai_providers "$cfg"; fi ;;
     free) print_free_ai_options "${2:-}" ;;
     add|auth)
       provider="${2-}"
+      if [ "$provider" = "-h" ] || [ "$provider" = "--help" ]; then usage_models_add; return 0; fi
       if [ -z "$provider" ] && tty_ok; then
         provider=$(dynamic_ai_provider_picker_rows "" "" | tui_select "Connect AI platform" "") || {
           rc=$?; [ "$rc" -eq 130 ] && { picker_cancelled; return 0; }; return "$rc";
         }
       fi
-      [ -n "$provider" ] || die "usage: mso models $sub <provider>"
-      configure_ai_provider "$provider" ;;
+      [ -n "$provider" ] || die "usage: mso models $sub <provider> [--api-key <key>] [--type api-key|oauth]"
+      set -- "$provider" "${@:3}"
+      configure_ai_provider "$@" ;;
     rm|remove)
       provider="${2-}"
       if [ -z "$provider" ] && tty_ok; then

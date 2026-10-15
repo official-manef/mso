@@ -12,6 +12,7 @@ const cli = [
   fs.readFileSync(path.join(__dirname, "../scripts/cli/onboarding-ai.sh"), "utf8"),
   fs.readFileSync(path.join(__dirname, "../scripts/mso-cli-agent.sh"), "utf8"),
   fs.readFileSync(path.join(__dirname, "../scripts/cli/ai-provider-catalog.sh"), "utf8"),
+  fs.readFileSync(path.join(__dirname, "../scripts/cli/ai-provider-auth.sh"), "utf8"),
   fs.readFileSync(path.join(__dirname, "../scripts/cli/transport.sh"), "utf8"),
 ].join("\n");
 
