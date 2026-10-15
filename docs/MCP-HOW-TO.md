@@ -57,7 +57,8 @@ Pilih scope sesuai tugas: jangan menyebut seluruh MSO read-only hanya karena sat
    dan autentikasi **OAuth**. Gunakan domain instalasi sendiri, bukan `/api/mcp` atau `/sse`.
 4. Selesaikan login/consent pada domain MSO dan pilih scope minimum. Gunakan discovery/DCR
    untuk mendaftarkan callback URL dan mendapatkan Client ID unik tanpa client secret.
-   Client ID manual lama `chatgpt-mso` perlu didaftarkan dan disambungkan ulang.
+   Client ID manual lama `chatgpt-mso` kini didaftarkan ulang otomatis bila belum ada,
+   memakai callback yang sama; reconnect ke callback yang sama tetap berhasil.
    Jangan memasukkan password MSO sebagai client secret dan jangan memilih No Authentication.
 5. Scan/refresh tools, simpan/publikasikan sesuai UI workspace, lalu aktifkan MSO pada percakapan.
 6. Uji dengan `@MSO tolong cek status VPS tanpa mengubah apa pun`.

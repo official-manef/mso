@@ -39,3 +39,32 @@ describe("approval argument disclosure", () => {
     expect(canonicalToolInput(input)).toBe(JSON.stringify(input, null, 2));
   });
 });
+
+describe("human-readable tool identity (OpenDots parity)", () => {
+  it("shows a human label + state word, with the raw name kept for audit", () => {
+    const write = renderToStaticMarkup(<ApprovalCard message={card("fs.write", { path: "/tmp/a" })} onResolve={vi.fn()} />);
+    expect(write).toContain("Saving file");
+    expect(write).toContain("fs.write");
+    expect(write).toContain("Needs your approval");
+    const exec = renderToStaticMarkup(<ApprovalCard message={card("exec.run", { cmd: "ls" })} onResolve={vi.fn()} />);
+    expect(exec).toContain("Running command");
+  });
+
+  it("falls back to the raw name for an unknown tool", () => {
+    const html = renderToStaticMarkup(<ApprovalCard message={card("future.tool", {})} onResolve={vi.fn()} />);
+    expect(html).toContain("future.tool");
+  });
+
+  it("uses Denied, never Failed, for a denied call", () => {
+    const denied: ChatMessage = {
+      id: "d",
+      role: "tool",
+      text: "",
+      tool: { name: "fs.delete", input: { path: "/tmp/x" }, effect: "mutate", status: "denied" },
+    };
+    const html = renderToStaticMarkup(<ApprovalCard message={denied} onResolve={vi.fn()} />);
+    expect(html).toContain("Deleting file");
+    expect(html).toContain("Denied");
+  });
+});
+

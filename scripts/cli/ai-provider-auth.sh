@@ -60,7 +60,9 @@ configure_ai_provider() {
     ""|api-key|api_key|key|oauth) ;;
     *) die "--type must be api-key or oauth" ;;
   esac
-  case "$provider" in chatgpt|codex) provider=openai-codex ;; esac
+  case "$provider" in
+    chatgpt|codex) provider=openai-codex ;;
+  esac
 
   # OAuth (device flow) is a sign-in, never a pasted key.
   if [ "$cred_type" = oauth ] || [ "$provider" = openai-codex ]; then

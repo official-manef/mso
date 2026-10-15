@@ -4,6 +4,17 @@
 Newest first. `docs/PROGRESS.md` is the source of truth for *why* a change was made;
 this is the *what*, and it is what Settings → Account → About shows as “What's new”.
 
+## 2026-10-15
+
+**Fixed**
+
+- `security-core` parse the provider case arm on its own lines
+- `oauth` re-register a cached public client id on demand
+
+**Faster**
+
+- `appshell` memoise chat rows and show human tool identity
+
 ## 2026-10-14
 
 **Added**

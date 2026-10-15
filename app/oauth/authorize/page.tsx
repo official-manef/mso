@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
 import { requireSession } from "@/lib/auth/require-session";
-import { getClient } from "@/lib/mcp/store";
+import { getClient, isAutoRegisterableClientId } from "@/lib/mcp/store";
 import { isAllowedRedirect } from "@/lib/mcp/pkce";
 import { denyUrl, selfUrl } from "@/lib/mcp/redirect";
 import { mcpEnabled, maxScope } from "@/lib/mcp/scope";
@@ -79,11 +79,15 @@ export default async function AuthorizePage({
 
   // Fail loudly and specifically BEFORE showing an Allow button — a consent screen
   // that approves a malformed request is worse than one that refuses to render.
-  const client = await getClient(clientId);
+  const provided = (await getClient(clientId)) ?? (
+    isAutoRegisterableClientId(clientId)
+      ? { name: clientId, redirectUris: [redirectUri], createdAt: 0 }
+      : null
+  );
   const problem =
     !clientId ? "The client did not send a client_id."
-    : !client ? "This client must register before requesting authorization."
-    : !client.redirectUris.includes(redirectUri) ? "That redirect target is not registered for this client."
+    : !provided ? "This client must register before requesting authorization."
+    : !provided.redirectUris.includes(redirectUri) ? "That redirect target is not registered for this client."
     : !isAllowedRedirect(redirectUri) ? "The client's redirect target is missing, or is not https (or localhost)."
     : method !== "S256" || !challenge ? "The client did not use PKCE with S256, which mso requires."
     : !issuer || resource !== expectedResource ? "The OAuth resource does not match this MSO MCP endpoint."
@@ -113,7 +117,7 @@ export default async function AuthorizePage({
   return (
     <Shell>
       <ConsentForm
-        clientName={client?.name ?? clientId}
+        clientName={provided?.name ?? clientId}
         redirectUri={redirectUri}
         denyUrl={deny}
         ceiling={maxScope()}
