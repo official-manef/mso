@@ -37,6 +37,12 @@ this is the *what*, and it is what Settings → Account → About shows as “Wh
 - `e2e` right-click the desktop from its measured box
 - `e2e` scope workflow directory assertions to the panel
 
+**Build**
+
+- `deps-dev` bump the development-minor-patch group with 3 updates
+- `deps` bump the production-minor-patch group with 15 updates
+- `deps-dev` bump the test-toolchain group with 2 updates
+
 ## 2026-10-12
 
 **Added**
