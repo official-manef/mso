@@ -4,7 +4,22 @@
 Newest first. `docs/PROGRESS.md` is the source of truth for *why* a change was made;
 this is the *what*, and it is what Settings → Account → About shows as “What's new”.
 
+## 2026-10-14
+
+**Added**
+
+- `tenancy` owner-only enrollment CLI for tenant bindings
+
+**Fixed**
+
+- `cli` repair provider picker and make models add scriptable
+- `config` keep tenant config path traceable by Turbopack
+
 ## 2026-10-13
+
+**Added**
+
+- `config` per-tenant credential store under OS_MULTIUSER_ROOT
 
 **Tests**
 
