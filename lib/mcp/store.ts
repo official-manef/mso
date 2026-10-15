@@ -2,21 +2,19 @@ import { TenantDenied } from "@/lib/tenancy/authority";
 import { tenantCredentialFields } from "@/lib/tenancy/credentials";
 import { authorizeMcpTenantGrant } from "@/lib/tenancy/runtime";
 import type { TenantCredentialBinding } from "@/lib/tenancy/types";
-import { randomUUID } from "node:crypto";
 import { sha256hex } from "./pkce";
 import type { Scope } from "./scope";
 import type { McpToolProfile } from "./tool-contract";
-import { detectMcpToolProfile } from "./client-profile";
 import {
   commitMcpStore as write,
   mutateMcpStore as mutate,
-  assertMcpClientCapacity,
   readMcpStore as read,
   sweepMcpStore as sweep,
 } from "./store-state";
-import type { McpClient, McpCode, McpRefreshToken, McpToken } from "./store-types";
+import type { McpCode, McpRefreshToken, McpToken } from "./store-types";
 
 export type { McpClient, McpCode, McpRefreshToken, McpToken, TokenView } from "./store-types";
+export { registerClient, getClient, ensureClient, isAutoRegisterableClientId } from "./store-clients";
 
 export const CODE_TTL_MS = 60_000;
 export const TOKEN_TTL_MS = 90 * 24 * 60 * 60 * 1000;
@@ -24,27 +22,6 @@ export const OAUTH_ACCESS_TOKEN_TTL_MS = 60 * 60 * 1000;
 export const REFRESH_TOKEN_TTL_MS = 90 * 24 * 60 * 60 * 1000;
 export class OAuthRefreshRateLimit extends Error {}
 
-export function registerClient(name: string, redirectUris: string[]): Promise<string> {
-  return mutate(async () => {
-    const store = sweep(await read());
-    assertMcpClientCapacity(store);
-    const clientId = "mcpc_" + randomUUID().replaceAll("-", "").slice(0, 24);
-    const cleanName = name.slice(0, 80) || "MCP Client";
-    store.clients[clientId] = {
-      name: cleanName,
-      redirectUris,
-      profile: detectMcpToolProfile({ clientId, name: cleanName, redirectUris }),
-      createdAt: Date.now(),
-    };
-    await write(store);
-    return clientId;
-  });
-}
-
-export async function getClient(clientId: string): Promise<McpClient | null> {
-  const clients = sweep(await read()).clients;
-  return Object.hasOwn(clients, clientId) ? clients[clientId] : null;
-}
 
 export function storeCode(code: string, rec: McpCode): Promise<void> {
   const captured = structuredClone(rec), tenant = tenantCredentialFields(captured);

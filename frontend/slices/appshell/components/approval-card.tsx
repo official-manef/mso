@@ -1,18 +1,81 @@
 "use client";
 
-import { useState } from "react";
-import { Check, Loader2, ShieldAlert, Wrench, X } from "lucide-react";
+import { memo, useState } from "react";
+import {
+  Check,
+  FilePlus,
+  FileText,
+  FolderPlus,
+  FolderSearch,
+  ListTree,
+  Loader2,
+  MemoryStick,
+  Play,
+  ShieldAlert,
+  Terminal,
+  Trash2,
+  Wrench,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
-import type { ChatMessage } from "./message-bubble";
+import type { ChatMessage, ToolStatus } from "./message-bubble";
 import { canRememberAlfaTool } from "../lib/alfa-approval-policy";
+
+// Human-readable tool identity, OpenDots-style: the transcript says "Saving file",
+// not "fs.write". Icons + labels live in one table so the card reads like a status
+// line instead of a raw function dump. Unknown/new tools fall back to the raw name.
+const TOOLS: Record<string, { label: string; icon: LucideIcon }> = {
+  "fs.read": { label: "Reading file", icon: FileText },
+  "fs.write": { label: "Saving file", icon: FilePlus },
+  "fs.list": { label: "Listing files", icon: ListTree },
+  "fs.search": { label: "Searching files", icon: FolderSearch },
+  "fs.usage": { label: "Checking disk usage", icon: ListTree },
+  "fs.mkdir": { label: "Creating folder", icon: FolderPlus },
+  "fs.move": { label: "Moving file", icon: FileText },
+  "fs.copy": { label: "Copying file", icon: FileText },
+  "fs.delete": { label: "Deleting file", icon: Trash2 },
+  "exec.run": { label: "Running command", icon: Terminal },
+  "memory.remember": { label: "Remembering", icon: MemoryStick },
+  "memory.forget": { label: "Forgetting", icon: MemoryStick },
+  "skills.list": { label: "Listing skills", icon: ListTree },
+  "skills.read": { label: "Reading skill", icon: FileText },
+  "skills.search": { label: "Searching skills", icon: FolderSearch },
+  "app.open": { label: "Opening app", icon: Play },
+  "apps.list": { label: "Listing apps", icon: ListTree },
+  "apps.logs": { label: "Reading app logs", icon: FileText },
+  "apps.power": { label: "Toggling app", icon: Play },
+  "browser.status": { label: "Checking browser", icon: Wrench },
+  "browser.power": { label: "Toggling browser", icon: Play },
+  "sys.stats": { label: "Reading system stats", icon: Wrench },
+  "sys.processes": { label: "Listing processes", icon: Wrench },
+};
+
+// State word shown on the right, OpenDots-style. Never invent "success": a read that
+// has not started is Pending, and a denied call is Denied, not Failed.
+const STATE: Record<ToolStatus, string> = {
+  pending: "Needs your approval",
+  running: "Working",
+  ok: "Finished",
+  error: "Needs attention",
+  denied: "Denied",
+};
+
+export function toolIdentity(name: string): { label: string; icon: LucideIcon } {
+  return TOOLS[name] ?? { label: name, icon: Wrench };
+}
+
 
 // Renders a role:"tool" message — one host tool call. A pending MUTATE call shows
 // the full args + Approve/Deny (the agent loop is parked awaiting the click);
 // reads and finished calls render as compact status chips. Colours use theme
 // tokens only (primary = mutate/ok, destructive = denied/refused).
-export function ApprovalCard({
+//
+// memoised: the transcript re-renders on every streamed token, but a parked card
+// is unchanged — without this each token re-ran the full-args render.
+export const ApprovalCard = memo(function ApprovalCard({
   message,
   onResolve,
 }: {
@@ -22,6 +85,7 @@ export function ApprovalCard({
   const [remember, setRemember] = useState(false);
   const t = message.tool;
   if (!t) return null;
+  const { label, icon: Icon } = toolIdentity(t.name);
   const pending = t.status === "pending";
   const bad = t.status === "error" || t.status === "denied";
   return (
@@ -32,8 +96,11 @@ export function ApprovalCard({
       )}
     >
       <div className="flex items-center gap-1.5">
-        <Wrench className="size-3.5 shrink-0 text-muted-foreground" />
-        <span className="font-mono font-medium">{t.name}</span>
+        <Icon className="size-3.5 shrink-0 text-muted-foreground" />
+        <span className="font-medium">{label}</span>
+        {/* Raw tool name kept as a dimmed mono breadcrumb: the human label is for
+            scanning, but the exact capability stays visible for audit. */}
+        <code className="truncate text-[10px] text-muted-foreground/70">{t.name}</code>
         <span
           className={cn(
             "rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
@@ -42,9 +109,12 @@ export function ApprovalCard({
         >
           {t.effect}
         </span>
-        {t.status === "running" && <Loader2 className="ml-auto size-3.5 animate-spin text-muted-foreground" />}
-        {t.status === "ok" && <Check className="ml-auto size-3.5 text-primary" />}
-        {(t.status === "error" || t.status === "denied") && <X className="ml-auto size-3.5 text-destructive" />}
+        {t.status === "running" && <Loader2 className="size-3.5 animate-spin text-muted-foreground" />}
+        {t.status === "ok" && <Check className="size-3.5 text-primary" />}
+        {(t.status === "error" || t.status === "denied") && <X className="size-3.5 text-destructive" />}
+        <span className={cn("ml-auto shrink-0 text-[10px]", bad ? "text-destructive" : "text-muted-foreground")}>
+          {STATE[t.status]}
+        </span>
       </div>
 
       <ToolArgs name={t.name} input={t.input} />
@@ -79,7 +149,7 @@ export function ApprovalCard({
       )}
     </div>
   );
-}
+});
 
 // The exact input object passed to the tool is the approval artifact. Mutation-critical
 // values are never truncated; large values stay fully present inside a bounded scroll area.

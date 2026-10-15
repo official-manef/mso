@@ -39,7 +39,11 @@ export function AlfaThread({ ctx, placeholder }: { ctx: AlfaContext; placeholder
   const approvals = useAlfaApprovalCount();
 
   useEffect(() => {
-    bottom.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    // Coalesce into one rAF and force instant: streaming appends a message per
+    // token, and a smooth scroll restarted every token both janks and forces a
+    // layout each frame. Matches the Assistant panel's own scroll effect.
+    const id = requestAnimationFrame(() => bottom.current?.scrollIntoView({ behavior: "auto", block: "end" }));
+    return () => cancelAnimationFrame(id);
   }, [messages]);
 
   const titleOf = (id?: string) => apps.find((a) => a.id === id)?.title ?? id;
