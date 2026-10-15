@@ -148,7 +148,7 @@ export async function oauthRegistrationJourney(page, fixture) {
   try {
   for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 }]) {
     await page.setViewportSize(viewport);
-    await page.goto(consent("chatgpt-mso", "https://attacker.invalid/callback"));
+    await page.goto(consent("manual:pat:another-owner", "https://attacker.invalid/callback"));
     await expect(page.getByRole("heading", { name: "Cannot connect this client" })).toBeVisible();
     await expect(page.getByText("This client must register before requesting authorization.")).toBeVisible();
     await expect(page.getByRole("button", { name: "Allow", exact: true })).toHaveCount(0);
@@ -167,9 +167,14 @@ export async function oauthRegistrationJourney(page, fixture) {
     const url = new URL(page.url()); expect(url.searchParams.get("state")).toBe("fixture-state");
     const exchanged = await page.request.post(fixture.base + "/oauth/token", { form: { grant_type: "authorization_code", code: url.searchParams.get("code"), code_verifier: verifier, client_id: clientId, redirect_uri: callback, resource: fixture.base + "/mcp" } });
     expect(exchanged.status()).toBe(200); expect((await exchanged.json()).token_type).toBe("Bearer");
-    // Replacing the isolated test store simulates a pruned registration, never owner data.
+    // Replacing the isolated test store simulates a swept registration, never owner
+    // data. A self-declared public id may re-register on demand at its own callback
+    // (consent renders, Allow is offered), but a reserved MSO principal fails closed.
     await fixture.seedMcp();
     await page.goto(consent(clientId));
+    await expect(page.getByRole("heading", { name: /to your VPS$/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Allow", exact: true })).toHaveCount(1);
+    await page.goto(consent("manual:pat:pruned"));
     await expect(page.getByText("This client must register before requesting authorization.")).toBeVisible();
     await expect(page.getByRole("button", { name: "Allow", exact: true })).toHaveCount(0);
   }
