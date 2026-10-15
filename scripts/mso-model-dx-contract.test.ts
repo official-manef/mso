@@ -13,6 +13,10 @@ const providerCatalogCli = fs.readFileSync(
   path.join(root, "scripts/cli/ai-provider-catalog.sh"),
   "utf8",
 );
+const providerAuthCli = fs.readFileSync(
+  path.join(root, "scripts/cli/ai-provider-auth.sh"),
+  "utf8",
+);
 const configRoute = fs.readFileSync(
   path.join(root, "app/api/config/route.ts"),
   "utf8",
@@ -30,7 +34,7 @@ const picker = fs.readFileSync(
   "utf8",
 );
 
-const all = [cli, commandOwner, agentCli, providerCatalogCli, configRoute, oauthRoute, slash, picker].join("\n");
+const all = [cli, commandOwner, agentCli, providerCatalogCli, providerAuthCli, configRoute, oauthRoute, slash, picker].join("\n");
 
 describe("MSO model/provider/session CLI contract", () => {
   it("keeps provider auth (`models`) separate from active selection (`model`)", () => {
@@ -41,6 +45,7 @@ describe("MSO model/provider/session CLI contract", () => {
     expect(agentCli).toContain("run_model_setup()");
     expect(agentCli).toContain("provider_key_body_unselected");
     expect(agentCli).toContain("custom_provider_body_unselected");
+    expect(providerAuthCli).toContain("configure_ai_provider()");
     expect(all).toContain("select:false");
     expect(configRoute).toContain("body.select !== false");
     expect(oauthRoute).toContain("body.select === true");
@@ -69,6 +74,16 @@ describe("MSO model/provider/session CLI contract", () => {
     expect(agentCli).toContain('free) print_free_ai_options');
     expect(providerCatalogCli).toContain('FREE · ');
     expect(providerCatalogCli).toContain('provider account/key and rate limits may still apply');
+  });
+
+  it("adds providers hermes-style: non-interactive flags plus a status <provider> probe", () => {
+    expect(providerAuthCli).toContain("usage_models_add()");
+    expect(providerAuthCli).toContain("--api-key <key>");
+    expect(providerAuthCli).toContain("--type api-key|oauth");
+    expect(agentCli).toContain('case "$sub" in\n    -h|--help|help) usage_models_add');
+    // Picker must not use fs.readFileSync(0): a non-blocking pipe throws EAGAIN.
+    expect(picker).toContain("readStdinSync");
+    expect(picker).not.toContain("readFileSync(0");
   });
 
   it("supports explicit and slash-containing model IDs without losing provider intent", () => {
