@@ -8,6 +8,7 @@ this is the *what*, and it is what Settings → Account → About shows as “Wh
 
 **Added**
 
+- `domains` provision persistent managed-app subdomains from CLI
 - `models` discover model ids from custom endpoints
 
 **Docs**
