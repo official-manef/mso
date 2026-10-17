@@ -100,6 +100,36 @@ and official skill `mso-agent-bootstrap`, not by jumping to `exec_run`.
 - System service actions require exact owner allowlisting and fixed argv. Do not add wildcard units,
   raw `systemctl` arguments, or package-update/apply buttons to the Viewer/Operator surface.
 
+## Pull request readiness (mandatory for all coding agents)
+
+**A code change is not PR-ready because it compiles or has been committed.**
+After targeted tests and a local commit on an isolated worktree:
+
+1. Run `bun run pr:local` and capture the exact HEAD SHA + first failure.
+   This reuses the full committed `scripts/gates.sh`: typecheck, lint, coverage,
+   architecture/docs/audit, isolated build, and mandatory browser journeys.
+2. Run `bun run pr:security` when Docker is available (pinned Semgrep + ShellCheck,
+   same arguments/images as CI). **No Docker, failed scan, or incomplete evidence is
+   BLOCKED, not PASSED.** Never interpret Semgrep's "0 findings" as success when
+   its process exits nonzero; `--strict` also checks parse warnings.
+3. If any check fails, fix it and rerun. If an environment prerequisite cannot
+   be satisfied, create/leave a **Draft PR**, record the missing evidence, and do
+   not assert "ready" or bypass checks. Never use `--no-verify`, `SKIP`, branch
+   protection bypass, scanner suppression, or `continue-on-error` to fake green.
+4. After opening the draft, verify the exact pushed SHA in GitHub Actions.
+   CodeQL/Code scanning, Dependency Review and other remote required checks must
+   complete successfully; resolve all actual review threads after fixing their
+   underlying issues, then mark the PR ready. CodeQL new alerts require real
+   remediation and retesting, not a blanket dismissal.
+5. Report a compact evidence table: SHA, local result, security result, remote
+   result, failing log URLs, unresolved threads, and merge-readiness. Never
+   merge/declare shipped while required checks are red or the PR is a draft.
+
+Run `bun run pr:preflight` to request both local and scanner parity in one
+command. The gate exits 2 when required local tools are missing. If security
+scanners cannot run locally, CI can provide the missing evidence *after* a
+Draft PR; a local-only pass never implies CodeQL approval.
+
 ## Shipping
 
 Run validation with `umask 077`: security fixtures must create private files/directories, not inherit group-writable shell defaults. On a busy shared host, bound Vitest concurrency with `VITEST_MAX_WORKERS=2` before changing timeout or coverage limits.

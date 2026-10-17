@@ -123,6 +123,12 @@ verb, and `docs/CLI.md` was regenerated from the help text (the same change keep
 gates passed (100% routing recall, 97.3% schema reduction, deterministic selection). Per the P7 #5 / P8 #6
 closed-loop rule, a passing corpus is not evidence of a defect, so it reported the observed gate values instead
 of inventing a speculative change.
+## 2026-10-17: Make PR readiness auditable across MSO coding agents (candidate)
+
+PR #123 showed four distinct blockers: two gateway tests failing during CI coverage, a ShellCheck SC2164 warning, strict Semgrep exiting 3 with zero findings, and two new CodeQL filesystem race alerts. Existing `AGENTS.md` and the pre-push `scripts/gates.sh` offered guidance but could not establish whether another AI surface had run it, and GitHub-only CodeQL cannot be proven before the PR exists.
+
+The candidate adds an explicit agent-facing `scripts/pr-preflight.sh` and Bun commands `pr:local`, `pr:security`, `pr:preflight`. Local mode reuses the checked-in gates and strict audit rather than defining a weaker test suite; security mode reproduces pinned Semgrep/ShellCheck CI checks and fails closed when Docker is missing. A PR template and both agent manuals require exact-commit evidence, Draft state for unavailable checks, required GitHub CodeQL/review-thread clearance before marking ready, and no bypass. Automated contracts pin scanner parity. This is a candidate branch, **not deployed or merged into main**; GitHub-required checks and review resolution remain separate.
+
 ## 2026-10-17: Handoff the managed-domain CLI candidate for a new session
 
 The owner explicitly requested a committed, pushed draft PR checkpoint and progress record before continuing in a new session. Implementation is preserved on `agent/mso-103047d38625`; the code commit is `da3ce4f69dfcdcb44a26f4522ced653194ec6172`, based on `89d61bb0d73b47047c67e51df9a6ee30351c8c3a`. The task worktree is `~/.cache/mso-worktrees/mso-103047d38625`; canonical remains `~/mso`. Keep the draft separate from release integration until the remaining checks pass.
