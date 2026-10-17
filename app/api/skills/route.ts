@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/require-session";
 import { IS_DEMO } from "@/lib/demo";
 import { catalogSkillsDetailed, resolveSkill, readSkillFile, type SkillInfo } from "@/lib/skills/catalog";
+import { catalogTtl } from "@/lib/skills/catalog-ttl";
 import { listLearnedRecipes } from "@/lib/workflow";
 import { searchSkillMemory } from "@/lib/skills/search";
 
@@ -44,21 +45,23 @@ export async function GET(req: NextRequest) {
     }));
   }
 
-  const { skills, scan } = await catalogSkillsDetailed();
-  if (!name) {
-    const recipes = (await listLearnedRecipes({ ownerView: true })).map((r) => ({
-      id: r.id, intent: r.intent, project: r.project, summary: r.summary, attempts: r.attempts,
-      successes: r.successes, failures: r.failures, fastestDurationMs: r.fastestDurationMs, updatedAt: r.updatedAt,
-    }));
-    return NextResponse.json({ skills, recipes, scan });
+  if (name) {
+    const { skills } = await catalogSkillsDetailed();
+    const { skill, ambiguous } = resolveSkill(skills, name);
+    // A bare name matching several projects is not a 404 and must not be a guess:
+    // returning one project's instructions under another's name is the whole bug.
+    if (ambiguous) return NextResponse.json({ error: "ambiguous", candidates: ambiguous }, { status: 409 });
+    if (!skill) return NextResponse.json({ error: "not_found" }, { status: 404 });
+    const content = await readSkillFile(skill.path);
+    if (content === null) return NextResponse.json({ error: "not_found" }, { status: 404 });
+    return NextResponse.json({ skill, content: content.slice(0, 24_000), truncated: content.length > 24_000 });
   }
 
-  const { skill, ambiguous } = resolveSkill(skills, name);
-  // A bare name matching several projects is not a 404 and must not be a guess:
-  // returning one project's instructions under another's name is the whole bug.
-  if (ambiguous) return NextResponse.json({ error: "ambiguous", candidates: ambiguous }, { status: 409 });
-  if (!skill) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const content = await readSkillFile(skill.path);
-  if (content === null) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  return NextResponse.json({ skill, content: content.slice(0, 24_000), truncated: content.length > 24_000 });
+  const refresh = req.nextUrl.searchParams.get("refresh") === "1" || req.nextUrl.searchParams.get("refresh") === "true";
+  const { skills, scan } = await catalogTtl.get({ refresh });
+  const recipes = (await listLearnedRecipes({ ownerView: true })).map((r) => ({
+    id: r.id, intent: r.intent, project: r.project, summary: r.summary, attempts: r.attempts,
+    successes: r.successes, failures: r.failures, fastestDurationMs: r.fastestDurationMs, updatedAt: r.updatedAt,
+  }));
+  return NextResponse.json({ skills, recipes, scan });
 }
