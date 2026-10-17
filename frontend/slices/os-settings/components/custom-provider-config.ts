@@ -7,6 +7,16 @@ export type CustomConfig = { name: string; baseURL: string; apiKey: string; prot
 
 export const parseModelList = (s: string): string[] => s.split(/[\n,]/).map((m) => m.trim()).filter(Boolean);
 
+/** Toggle one discovered id in a delimited model list, keeping the text field the
+ * single source of truth. Returns the new list string (comma-space joined). */
+export function toggleModelInList(current: string, id: string): string {
+  const target = id.trim();
+  if (!target) return current;
+  const ids = parseModelList(current);
+  const next = ids.includes(target) ? ids.filter((m) => m !== target) : [...ids, target];
+  return next.join(", ");
+}
+
 export function parseCustomProviderConfig(json: string): CustomConfig {
   const o = JSON.parse(json);
   const name = o.name ?? o.slug,

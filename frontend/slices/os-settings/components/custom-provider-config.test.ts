@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseCustomProviderConfig, parseModelList } from "./custom-provider-config";
+import { parseCustomProviderConfig, parseModelList, toggleModelInList } from "./custom-provider-config";
 
 describe("parseCustomProviderConfig", () => {
   it("parses field aliases + a delimited models string", () => {
@@ -16,5 +16,13 @@ describe("parseCustomProviderConfig", () => {
 
   it("parseModelList splits comma + newline and trims blanks", () => {
     expect(parseModelList("a, b\n c ,")).toEqual(["a", "b", "c"]);
+  });
+
+  it("toggleModelInList adds then removes a discovered id", () => {
+    expect(toggleModelInList("", "gpt-oss")).toBe("gpt-oss");
+    expect(toggleModelInList("a", "gpt-oss")).toBe("a, gpt-oss");
+    expect(toggleModelInList("a, gpt-oss, b", "gpt-oss")).toBe("a, b");
+    expect(toggleModelInList("a, b", "a")).toBe("b");
+    expect(toggleModelInList("a", "  ")).toBe("a");
   });
 });

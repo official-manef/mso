@@ -6,11 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { parseCustomProviderConfig, parseModelList } from "./custom-provider-config";
+import { parseCustomProviderConfig, parseModelList, toggleModelInList } from "./custom-provider-config";
+
+type DiscoveredModel = { id: string; name: string };
 
 // Add a custom OpenAI-compatible / Anthropic-Messages provider. Two input modes:
 //  • fields — name / protocol / baseURL / key (+ optional comma/newline models)
 //  • JSON   — paste {name, baseURL, apiKey, protocol, models[]} whole
+// "Discover models" asks the endpoint's own list API (POST /api/models/discover,
+// SSRF-pinned, key sent only to that host) so the owner can pick ids instead of
+// guessing them; discovered ids are toggled as chips into the models field.
 // POSTs { customProvider } to /api/config (SSRF-checked, slug-reserved server-side);
 // the added provider is selected immediately. onAdded refreshes the parent.
 export function CustomProviderForm({ onAdded }: { onAdded: () => void }) {
@@ -22,6 +27,35 @@ export function CustomProviderForm({ onAdded }: { onAdded: () => void }) {
   const [models, setModels] = useState("");
   const [json, setJson] = useState("");
   const [busy, setBusy] = useState(false);
+  const [found, setFound] = useState<DiscoveredModel[]>([]);
+  const [scanning, setScanning] = useState(false);
+
+  async function discover() {
+    setScanning(true);
+    try {
+      const r = await fetch("/api/models/discover", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ baseURL, apiKey: key, protocol }),
+      });
+      const d = (await r.json().catch(() => ({}))) as { ok?: boolean; count?: number; models?: DiscoveredModel[]; error?: string };
+      if (!r.ok) {
+        toast(d.error || "Couldn't reach that endpoint", { tone: "error" });
+        return;
+      }
+      if (!d.ok || !d.models?.length) {
+        setFound([]);
+        toast(d.error || "No models found at that endpoint", { tone: "error" });
+        return;
+      }
+      setFound(d.models);
+      toast(`Discovered ${d.models.length} model${d.models.length === 1 ? "" : "s"} — tap to add`);
+    } catch (e) {
+      toast((e as Error).message || "Discovery failed", { tone: "error" });
+    } finally {
+      setScanning(false);
+    }
+  }
 
   async function submit() {
     setBusy(true);
@@ -40,7 +74,7 @@ export function CustomProviderForm({ onAdded }: { onAdded: () => void }) {
         toast(d.error || "Couldn’t add provider", { tone: "error" });
         return;
       }
-      setName(""); setBaseURL(""); setKey(""); setModels(""); setJson("");
+      setName(""); setBaseURL(""); setKey(""); setModels(""); setJson(""); setFound([]);
       toast(`Added ${d.slug ?? "provider"}`);
       onAdded();
     } catch (e) {
@@ -80,7 +114,30 @@ export function CustomProviderForm({ onAdded }: { onAdded: () => void }) {
           </div>
           <Input disabled={busy} placeholder="https://host/v1" value={baseURL} onChange={(e) => setBaseURL(e.target.value)} />
           <Input disabled={busy} type="password" placeholder="API key" value={key} onChange={(e) => setKey(e.target.value)} />
-          <Input disabled={busy} placeholder="models (optional) — comma/newline, e.g. minimax-m3, gpt-4o" value={models} onChange={(e) => setModels(e.target.value)} />
+          <div className="flex items-center gap-2">
+            <Input disabled={busy} placeholder="models (optional) — comma/newline, e.g. minimax-m3, gpt-4o" value={models} onChange={(e) => setModels(e.target.value)} className="flex-1" />
+            <Button type="button" variant="outline" size="sm" className="[@media(pointer:coarse)]:min-h-[44px]" disabled={busy || scanning || !baseURL || !key} onClick={discover}>
+              {scanning ? "Discovering…" : "Discover models"}
+            </Button>
+          </div>
+          {found.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {found.map((m) => {
+                const on = parseModelList(models).includes(m.id);
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    title={m.name}
+                    onClick={() => setModels((prev) => toggleModelInList(prev, m.id))}
+                    className={`rounded-md border px-2 py-1 font-mono text-xs [@media(pointer:coarse)]:min-h-[44px] ${on ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"}`}
+                  >
+                    {m.id}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       ) : (
         <Textarea

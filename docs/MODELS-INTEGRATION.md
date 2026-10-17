@@ -47,6 +47,29 @@ Likewise, an Anthropic/OpenRouter/etc API key is unrelated to MSO's own OAuth se
 A custom endpoint stores its provider metadata in the host config and routes through the
 same streaming abstraction after URL/protocol validation.
 
+### Discovering a custom endpoint's models
+
+Instead of making the owner guess model ids, MSO can ask a custom endpoint which ids it
+serves and offer them as choices — the same idea as OpenCode's built-in discovery for known
+runtimes. It is explicit, never silent: the owner triggers it, reviews the list, and the
+models text field stays the source of truth for what is saved.
+
+- **Settings → AI → Add custom provider** has a **Discover models** button that POSTs
+  `{baseURL, apiKey, protocol}` to `POST /api/models/discover`; the returned ids render as
+  toggle chips that edit the models field (`toggleModelInList`). Discovery only fills the
+  field in — it never saves on its own.
+- **`mso models add <name> --base-url … --api-key …`** with no `--models` queries the same
+  route, confirms interactively (or auto-fills in scripts), and falls back to manual ids
+  when discovery fails. The key reaches the server over stdin via `secret_post`, never argv.
+- A **saved** custom provider is re-discoverable with `{provider}` (its key comes from the
+  host credential store), and `GET /api/models?provider=<slug>` now returns its stored ids so
+  the Browse drawer is never empty.
+
+Discovery calls the endpoint's own list API — OpenAI-compatible `GET {baseUrl}/models` with
+`Authorization: Bearer`, Anthropic `GET {baseUrl}/v1/models` with `x-api-key` +
+`anthropic-version`. It is owner-only, SSRF-pinned through `safeProviderFetch`, bounded in
+size and time, and the key is never returned, logged, or echoed back.
+
 ## 4. OpenAI Codex / ChatGPT subscription provider
 
 `openai-codex` is a distinct optional Alfa provider. It uses the ChatGPT consumer
@@ -90,6 +113,8 @@ provider. Host mutation approval and filesystem boundaries remain separate MSO c
 - `lib/config/store.ts` — credential/provider persistence
 - `app/api/config/route.ts` — Settings configuration API
 - `app/api/models/route.ts`, `app/api/models/test/route.ts` — catalog/test surfaces
+- `lib/models/discover.js` — endpoint model-discovery helpers (list URL, auth headers, bounded parse)
+- `app/api/models/discover/route.ts` — `POST /api/models/discover` (owner-only, SSRF-pinned)
 - `app/api/assistant/route.ts` — common assistant gateway
 - `lib/ai/openai-stream.ts` — OpenAI-compatible streaming
 - `lib/ai/codex-stream.ts` — ChatGPT Codex Responses streaming

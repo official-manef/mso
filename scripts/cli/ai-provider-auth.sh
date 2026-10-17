@@ -39,7 +39,23 @@ Options:
   --base-url <url>       Custom OpenAI/Anthropic-compatible base URL
   --protocol <p>         Custom endpoint protocol: openai (default) | anthropic
   --models <ids>         Custom endpoint model ids, comma/newline separated
+                         (leave empty and the endpoint's own list API is queried)
 TXT
+}
+
+# Ask a custom endpoint which model ids it actually serves. Populates
+# DISCOVERED_MODELS (newline-separated) and returns 0 only on a usable answer,
+# so a caller can fall back to manual ids. The key travels in the stdin-bodied
+# secret_post body, never process argv, and is never echoed back.
+discover_custom_models() {
+  local base="$1" key="$2" protocol="$3" body response
+  DISCOVERED_MODELS=""
+  body=$(printf '%s\0%s\0%s' "$base" "$key" "$protocol" | discover_body)
+  response=$(secret_post "/api/models/discover" "$body" 2>/dev/null) || { unset body; return 1; }
+  unset body
+  [ "$(jq -r '.ok // false' <<<"$response")" = true ] || return 1
+  DISCOVERED_MODELS=$(jq -r '.models[]?.id // empty' <<<"$response")
+  [ -n "$DISCOVERED_MODELS" ]
 }
 
 configure_ai_provider() {
@@ -88,9 +104,29 @@ configure_ai_provider() {
       openai|anthropic) ;;
       *) die "protocol must be openai or anthropic" ;;
     esac
-    if [ -z "$models" ] && tty_ok; then tty_line "Models (comma/newline IDs; optional): " ""; models="$REPLY"; fi
+    # The key is needed to query what the endpoint serves, so it is collected
+    # before models. An empty --models now asks the endpoint itself, instead of
+    # leaving the picker for this custom provider empty.
     if [ -z "$api_key" ]; then tty_secret "API key: "; api_key="$REPLY"; fi
     [ -n "$api_key" ] || die "empty API key"
+    if [ -z "$models" ] && discover_custom_models "$base" "$api_key" "$protocol"; then
+      local discovered_count
+      discovered_count=$(grep -c . <<<"$DISCOVERED_MODELS")
+      if tty_ok; then
+        echo "  discovered $discovered_count model(s) at $base:"
+        while IFS= read -r m; do [ -n "$m" ] && printf '    %s\n' "$m"; done <<<"$DISCOVERED_MODELS"
+        tty_line "Use all $discovered_count discovered models? [Y/n]: " "y"
+        case "${REPLY,,}" in
+          n|no) models=""; tty_line "Models (comma/newline IDs; optional): " ""; models="$REPLY" ;;
+          *) models="$DISCOVERED_MODELS" ;;
+        esac
+      else
+        models="$DISCOVERED_MODELS"
+      fi
+    elif [ -z "$models" ] && tty_ok; then
+      echo "  · could not discover models automatically"
+      tty_line "Models (comma/newline IDs; optional): " ""; models="$REPLY"
+    fi
     body=$(printf '%s\0%s\0%s\0%s\0%s' "$name" "$base" "$protocol" "$api_key" "$models" | custom_provider_body_unselected)
     secret_post "/api/config" "$body" >/dev/null
     unset api_key body REPLY

@@ -153,7 +153,9 @@ describe("bin/mso", () => {
     // they actually issue, so this stays a method check, not a free pass.
     const HELPERS: Record<string, string[]> = {
       GET: ["jget", "reqraw", "curl"],
-      POST: ["jpost", "req -F", "-X POST"],
+      // secret_post is the stdin-bodied POST used for credentials and now for
+      // model discovery (which carries a pasted API key, so it must stay off argv).
+      POST: ["jpost", "req -F", "-X POST", "secret_post"],
       PUT: ["jput"],
       PATCH: ["jpatch"],
       DELETE: ["jdel"],

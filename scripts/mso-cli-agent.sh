@@ -21,6 +21,12 @@ process.stdout.write(JSON.stringify({customProvider:{name:a[0]||"",baseURL:a[1]|
 '
 }
 
+# Build a model-discovery request from stdin so the pasted API key never reaches
+# node/curl argv. Fields: baseURL \0 apiKey \0 protocol.
+discover_body() {
+  node -e 'const fs=require("fs"); const a=fs.readFileSync(0).toString("utf8").split("\0"); process.stdout.write(JSON.stringify({baseURL:a[0]||"",apiKey:a[1]||"",protocol:a[2]||"openai"}));'
+}
+
 onboard_infra() {
   local yes="$1" choice
   if [ "$yes" = 1 ]; then

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/require-session";
 import { listModels } from "@/lib/models";
 import { isFreeModel, providerCatalogId } from "@/lib/models/discovery.js";
-import { readOAuthBundle, writeOAuthBundle } from "@/lib/config/store";
+import { readConfig, readOAuthBundle, safeProviderId, writeOAuthBundle } from "@/lib/config/store";
 import { codexModels, ensureFreshCodex } from "@/lib/ai/oauth/codex";
 
 export const runtime = "nodejs";
@@ -42,6 +42,27 @@ export async function GET(req: NextRequest) {
         agentReady: true,
       })),
     });
+  }
+
+  // A custom endpoint has no models.dev entry, so the picker reads the ids the
+  // owner declared/discovered for it instead of returning an empty catalog.
+  if (provider) {
+    try {
+      const conn = (await readConfig()).customProviders?.[safeProviderId(provider)];
+      if (conn) {
+        const models = freeOnly ? [] : (conn.models ?? []).map((id) => ({
+          ref: `${provider}/${id}`,
+          provider,
+          id,
+          name: id,
+          free: false,
+          agentReady: false,
+        }));
+        return NextResponse.json({ models });
+      }
+    } catch {
+      // An invalid provider id falls through to the catalog filter below.
+    }
   }
 
   try {

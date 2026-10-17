@@ -5,6 +5,7 @@ import { requireSession } from "@/lib/auth/require-session";
 const listModels = vi.fn();
 const readOAuthBundle = vi.fn();
 const writeOAuthBundle = vi.fn();
+const readConfig = vi.fn();
 const codexModels = vi.fn();
 const ensureFreshCodex = vi.fn();
 
@@ -13,6 +14,8 @@ vi.mock("@/lib/models", () => ({ listModels: (...args: unknown[]) => listModels(
 vi.mock("@/lib/config/store", () => ({
   readOAuthBundle: (...args: unknown[]) => readOAuthBundle(...args),
   writeOAuthBundle: (...args: unknown[]) => writeOAuthBundle(...args),
+  readConfig: (...args: unknown[]) => readConfig(...args),
+  safeProviderId: (value: string) => value,
 }));
 vi.mock("@/lib/ai/oauth/codex", () => ({
   codexModels: (...args: unknown[]) => codexModels(...args),
@@ -48,6 +51,7 @@ describe("/api/models dynamic pricing and provider mapping", () => {
     ]);
     readOAuthBundle.mockReset().mockResolvedValue(null);
     writeOAuthBundle.mockReset();
+    readConfig.mockReset().mockResolvedValue({});
     codexModels.mockReset();
     ensureFreshCodex.mockReset();
   });
@@ -74,6 +78,37 @@ describe("/api/models dynamic pricing and provider mapping", () => {
     expect(body.models.map((m: { id: string }) => m.id)).toEqual(["glm-free"]);
   });
 
+  it("returns a custom provider's declared ids instead of an empty catalog", async () => {
+    readConfig.mockResolvedValue({
+      customProviders: { "my-llm": { baseUrl: "https://gw.example/v1", models: ["b", "a"] } },
+    });
+    const { GET } = await import("./route");
+    const res = await GET(new NextRequest("http://localhost/api/models?provider=my-llm"));
+    const body = await res.json();
+    expect(body.models).toEqual([
+      { ref: "my-llm/b", provider: "my-llm", id: "b", name: "b", free: false, agentReady: false },
+      { ref: "my-llm/a", provider: "my-llm", id: "a", name: "a", free: false, agentReady: false },
+    ]);
+    expect(listModels).not.toHaveBeenCalled();
+  });
+
+  it("keeps a custom provider free query empty (no models.dev pricing)", async () => {
+    readConfig.mockResolvedValue({
+      customProviders: { "my-llm": { baseUrl: "https://gw.example/v1", models: ["a"] } },
+    });
+    const { GET } = await import("./route");
+    const res = await GET(new NextRequest("http://localhost/api/models?provider=my-llm&free=1"));
+    expect((await res.json()).models).toEqual([]);
+  });
+
+  it("falls back to the catalog when the provider is not custom", async () => {
+    readConfig.mockResolvedValue({ customProviders: { other: { baseUrl: "https://gw.example/v1" } } });
+    const { GET } = await import("./route");
+    const res = await GET(new NextRequest("http://localhost/api/models?provider=glm"));
+    expect((await res.json()).models).toHaveLength(3);
+    expect(listModels).toHaveBeenCalled();
+  });
+
   it.each(["openai-codex", "glm", ""])("requires an owner before any provider access (%s)", async (provider) => {
     vi.mocked(requireSession).mockResolvedValue(false);
     const { GET } = await import("./route");
@@ -84,6 +119,7 @@ describe("/api/models dynamic pricing and provider mapping", () => {
     expect(listModels).not.toHaveBeenCalled();
     expect(readOAuthBundle).not.toHaveBeenCalled();
     expect(writeOAuthBundle).not.toHaveBeenCalled();
+    expect(readConfig).not.toHaveBeenCalled();
     expect(ensureFreshCodex).not.toHaveBeenCalled();
     expect(codexModels).not.toHaveBeenCalled();
   });
