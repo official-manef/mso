@@ -10,6 +10,10 @@ this is the *what*, and it is what Settings → Account → About shows as “Wh
 
 - `models` discover model ids from custom endpoints
 
+**Docs**
+
+- `progress` record custom-endpoint discovery deploy and no-service ship limitation
+
 ## 2026-10-15
 
 **Other**

@@ -1,3 +1,14 @@
+## 2026-10-17: Deploying on a host with no `mso.service`, and why `bun run ship` cannot finalize there
+
+The custom-endpoint discovery below reached `main` at `5fc9a5f`, but `bun run ship` pushed and then failed its release finalizer: *"could not safely quiesce gateway runtime at http://127.0.0.1:4005"*. Two independent environment mismatches, both in the handoff's assumptions:
+
+- `scripts/ship-handoff.sh` finalizes through a `systemd-run --user` transient unit, and that unit's default `PATH` (`/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:…`) does not contain `node` on this box (node lives in `~/.local/bin` and `~/.hermes/tools/…`). `scripts/mso-gateway runtime-stop` therefore exits instantly with `mso gateway: missing dependency: node`, before it can even inspect runtime ownership.
+- The same finalizer (`scripts/self-update.sh`) restarts by signalling an active `mso.service` MainPID that has `Restart=always`. This box has no `mso.service` at all; :4005 is a gateway-owned fallback runtime started outside systemd (cgroup `/init.scope`), so even a green quiesce would have dead-ended at *"mso.service has no automatic restart policy"*.
+
+The supported path for exactly this topology is the offline updater, which `mso update` selects whenever `systemctl is-active mso.service` is false: quiesce the fallback runtime → `bun install` → out-of-tree verify → in-place `next build` → write the deploy receipt → restore the fallback runtime. `scripts/mso-update --rebuild` deployed `5fc9a5f` in place; `GET /api/health` now reports `buildSha: 5fc9a5f`, `POST /api/models/discover` answers `403` (route present, owner-gated) and `GET /api/models` answers `401`. The deploy receipt at `~/.mso/private/update-state/<key>/deployed.json` and the gateway state (`runtimeOwned: true`, new PID + `runtimeInstanceId`) were rewritten to match, and the restore inventory + `restart-runtime` marker were cleared.
+
+Decision for this host: deploy with `mso update` / `mso update --rebuild`; treat `bun run ship` as push-only here. Its finalizer is design-correct only where an active systemd `mso.service` exists *and* the transient unit inherits a node-bearing `PATH`. No ship-script change was made — the fix belongs to whichever host owns a real service unit.
+
 ## 2026-10-17: Let a custom provider discover the models it actually serves
 
 Adding a custom OpenAI/Anthropic-compatible endpoint meant typing model ids by hand; leave the list empty and the picker for that provider had nothing to show, because models.dev has no entry for a self-hosted slug. MSO can now ask the endpoint which ids it serves, the way OpenCode already does for known runtimes.
