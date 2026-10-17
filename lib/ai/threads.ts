@@ -73,6 +73,15 @@ export async function saveThread(t: ChatThread): Promise<void> {
   await fs.rename(tmp, dest);
 }
 
+export async function renameThread(id: string, title: string): Promise<ThreadSummary | null> {
+  const t = await getThread(id);
+  if (!t) return null;
+  t.title = title.trim().slice(0, 120) || "Untitled";
+  t.updatedAt = Date.now();
+  await saveThread(t);
+  return { id: t.id, title: t.title, createdAt: t.createdAt || 0, updatedAt: t.updatedAt };
+}
+
 export async function deleteThread(id: string): Promise<void> {
   const file = fileFor(id); // invalid ids are authorization/input errors, not "already gone"
   try {
