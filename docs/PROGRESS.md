@@ -1,3 +1,46 @@
+## 2026-10-18: Five agent-surface improvements, and one benchmark that said "no change"
+
+A parallel agent run (one coordinator, disposable worktrees under `~/.cache/mso-worktrees/mso-*`, each worker
+owning a disjoint file set) landed five independent improvements to the agent surface, plus one benchmark run
+that correctly produced no code. Everything below was reviewed as a diff, merged to `main`, and gated.
+
+**`/api/skills` is cached now.** `lib/skills/catalog-ttl.ts` is a value-level memo (`createCatalogTtl`, 15 s
+default, injected clock, single-flight) wired into the list branch of `app/api/skills/route.ts`. The Cockpit and
+`skills.list` tool calls stop re-walking every skill root per turn. The `?name=` branch stays uncached (a stale
+name lookup would be a trust bug), `?refresh=1` forces a re-walk, and the `scan`/`continuation` report passes
+through byte-identical so `scan.truncated` still means incomplete-not-absent. This closes the one gap the
+assistant contract named.
+
+**`fs_stat` is a new read-scope MCP tool.** External MCP clients had no way to learn a file's true size or
+mtime without `exec_run` or reading binary content (`fs_list` reports size `0` by design). `lib/host/fs.ts`
+gained `statReadableMeta` behind the `resolveReadable()` guard, `lib/mcp/tools-read.ts` declares `fs_stat`
+reusing the standard `{ path }` schema, and parity records the deliberate `MCP_ONLY` exemption. The toolset
+moved to `2026.10.18.1` (119 model tools) and `docs/generated/MCP-CATALOG.md` was regenerated.
+
+**Alfa's saved-chat drawer is searchable and safe.** It rendered `updatedAt` but never showed it, had no
+search, could not rename, and deleted a chat with no confirmation. `lib/ai/threads.ts` gained `renameThread`
+(atomic temp-file save), `app/api/threads/route.ts` gained an owner-gated `PATCH { id, title }` with the same
+id validation the delete path uses, and the drawer filters, sorts, shows relative time, and gates delete
+behind a confirm. Title persistence survives later turns instead of being re-derived from the first message.
+
+**Proactive agent turns are bindable to a durable session.** This is the seam OpenDots-style "always-on"
+agents needed. A graph `agent` node may now set `sessionRef`; `lib/agent/session-turn.ts`
+(`runDurableSessionTurn`) resolves the same-owner session, runs the bounded turn through the existing local
+session seam, serializes with an at-most-one execution lease so two turns cannot interleave history writes,
+and persists the turn (history append + `agent_turn` audit event). Combined with the existing in-process
+schedule trigger this needs no systemd timer, cron entry, or second scheduler, and `lib/workflow/graph-authority.ts`
+is untouched — unattended authority is still `web:*`-only with a live device recheck.
+
+**Per-turn token usage is visible.** Every provider stream already emitted `usage` on its `done` event and the
+client threw it away. `AgentTurn`/`AgentLoopResult` now carry an optional `ProviderUsage` (additive only, so the
+image editor that also calls `runToolAgent` is unaffected), accumulated across tool rounds with `addProviderUsage`,
+and rendered per turn plus as a running thread total.
+
+**The cognitive-routing task produced no code, on purpose.** The worker ran `bun run bench:cognitive`; all 17
+gates passed (100% routing recall, 97.3% schema reduction, deterministic selection). Per the P7 #5 / P8 #6
+closed-loop rule, a passing corpus is not evidence of a defect, so it reported the observed gate values instead
+of inventing a speculative change.
+
 ## 2026-10-17: Deploying on a host with no `mso.service`, and why `bun run ship` cannot finalize there
 
 The custom-endpoint discovery below reached `main` at `5fc9a5f`, but `bun run ship` pushed and then failed its release finalizer: *"could not safely quiesce gateway runtime at http://127.0.0.1:4005"*. Two independent environment mismatches, both in the handoff's assumptions:
