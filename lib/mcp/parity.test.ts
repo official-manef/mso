@@ -49,6 +49,7 @@ const MCP_ONLY: Record<string, string> = {
   "project.mcp.call": "external MCP clients execute one exact dynamically-discovered project MCP tool under exec scope; Alfa can use its approved exec path and must not import project MCP catalogs",
   "fs.upload.file": "external ChatGPT connectors need openai/fileParams to move conversation-generated files onto the VPS; in-shell Alfa already has direct host filesystem access",
   "fs.export.file": "external MCP clients need an authenticated original-byte download bridge; in-shell Alfa already has direct host filesystem access",
+  "fs.stat": "external MCP clients need a true size/mtime without reading binary content",
   "workflow.start": "the external connector needs an actor-scoped task boundary; Alfa already owns an in-app conversation/run boundary",
   "workflow.status": "app-only MCP Apps bridge used by the ChatGPT progress component; Alfa already owns its in-shell run state and must not poll the external workflow store",
   "workflow.cancel": "same actor-scoped boundary; external runs need explicit recovery from an interrupted task",
