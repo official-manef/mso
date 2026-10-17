@@ -23,6 +23,52 @@ describe("RASMIC risk and contention classifier", () => {
     expect(result.isolation).toBe("direct");
   });
 
+  it.each([
+    ["Check hostname.", "Read only; do not modify files."],
+    ["Periksa hostname.", "Hanya observasi; jangan edit file."],
+    ["Periksa hostname.", "Hanya observasi; jangan ubah file."],
+    ["Check hostname; do not change files.", ""],
+    ["Check hostname.", "Do not write, edit, or modify files."],
+    ["Check hostname.", "Do not edit, modify, or update files."],
+    ["Check hostname.", "Don’t change files."],
+    ["Check hostname.", "Never edit or modify files."],
+    ["Periksa hostname.", "Jangan pernah edit atau modify file."],
+  ])("keeps a directly negated mutation observational: %s %s", (intent, constraints) => {
+    expect(sourceChangeLikely(intent, constraints)).toBe(false);
+    expect(classifyTask({ intent, constraints, scope: "exec" }).isolation).toBe("optional-worktree");
+  });
+
+  it.each([
+    ["Fix the source bug.", "Do not modify unrelated files."],
+    ["Do not edit docs; update the source file.", ""],
+    ["Do not edit docs but modify code.", ""],
+    ["Do not edit docs, then write tests.", ""],
+    ["Do not edit docs and update code.", ""],
+    ["Not only edit docs but fix code.", ""],
+    ["Do not forget to fix code.", ""],
+    ["Read only; implement a feature.", ""],
+    ["No source changes; write docs.", ""],
+    ["Do not edit, implement the feature from scratch.", ""],
+    ["Do not edit, and implement the feature from scratch.", ""],
+    ["Do not edit, or implement the feature instead.", ""],
+    ["Do not edit, modify, write files.", ""],
+  ])("preserves positive mutation evidence: %s %s", (intent, constraints) => {
+    expect(sourceChangeLikely(intent, constraints)).toBe(true);
+    expect(classifyTask({ intent, constraints, scope: "exec" }).isolation).toBe("isolated-worktree");
+  });
+
+  it("isolates explicitly declared paths without requiring a recognized mutation verb or collision", () => {
+    const input = { intent: "Sesuaikan nilai sumber.", constraints: "Do not edit unrelated files.", scope: "exec" as const };
+    expect(sourceChangeLikely(input.intent, input.constraints, ["src/value.ts"])).toBe(true);
+    expect(classifyTask({ ...input, affectedPaths: ["src/value.ts"] }).isolation).toBe("isolated-worktree");
+    expect(classifyTask({ ...input, collisionPaths: ["src/value.ts"] }).isolation).toBe("isolated-worktree");
+  });
+
+  it("retains the separate high-risk policy even for a negated operation", () => {
+    expect(classifyTask({ intent: "Check hostname.", constraints: "Do not deploy.", scope: "exec" }))
+      .toMatchObject({ risk: "high", isolation: "isolated-worktree" });
+  });
+
   it("requires isolated work for high-risk auth/schema/infra work", () => {
     const result = classifyTask({
       intent: "refactor authentication and database schema before production deployment",

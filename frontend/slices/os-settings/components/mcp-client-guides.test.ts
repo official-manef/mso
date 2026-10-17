@@ -17,7 +17,7 @@ describe("MCP client setup guides", () => {
     expect(endpoints.protectedResource).toContain("/.well-known/oauth-protected-resource");
   });
 
-  it("distinguishes a remotely reachable HTTPS origin from local loopback", () => {
+  it("distinguishes a configured remote HTTPS origin from local loopback", () => {
     expect(isRemoteMcpOrigin("https://mso.example.test")).toBe(true);
     expect(isRemoteMcpOrigin("https://localhost:4005")).toBe(false);
     expect(isRemoteMcpOrigin("http://127.0.0.1:4005")).toBe(false);
@@ -54,6 +54,7 @@ describe("MCP client setup guides", () => {
   it("accepts only matching endpoint, challenge and OAuth discovery metadata", async () => {
     const fetcher = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
+      if (url.endsWith("/api/health")) return Response.json({ status: "ok", service: "mso", version: "fixture", buildId: "fixture" });
       if (url.endsWith("/mcp") && init?.method === "POST") {
         return new Response(JSON.stringify({ error: "unauthorized" }), {
           status: 401,

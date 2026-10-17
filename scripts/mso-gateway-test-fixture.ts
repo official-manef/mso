@@ -75,6 +75,7 @@ setInterval(() => {}, 1000);
   fs.writeFileSync(procTcp6, "  sl  local_address rem_address   st\n");
   const baseEnv: NodeJS.ProcessEnv = {
     ...process.env,
+    NODE_ENV: "test",
     HOME: dir,
     MSO_GATEWAY_ROOT: ROOT,
     MSO_GATEWAY_ENV: envFile,

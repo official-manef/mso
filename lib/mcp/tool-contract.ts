@@ -105,7 +105,9 @@ function compactText(value: string, max = 80): string {
   if (clean.length <= max) return clean;
   const cut = clean.slice(0, max - 1);
   const sentence = Math.max(cut.lastIndexOf(". "), cut.lastIndexOf("; "));
-  return `${(sentence > max * 0.8 ? cut.slice(0, sentence + 1) : cut).trim()}…`;
+  const word = clean[max - 1] === " " ? cut.length : cut.lastIndexOf(" ");
+  const end = sentence > max * 0.8 ? sentence + 1 : word > max * 0.5 ? word : cut.length;
+  return `${cut.slice(0, end).trim()}…`;
 }
 
 function compactSchema(value: unknown): unknown {

@@ -27,6 +27,23 @@ describe("workflow_start structured projection", () => {
     expect(projected.context.recipe).toMatchObject({ id: "recipe-1", maturity: "verified", tools: ["browser_status", "exec_run"] });
   });
 
+  it("exposes exact authorized workspace paths without unrelated orchestration data", () => {
+    const workspacePath = "/srv/task worktree/" + "deep/".repeat(50);
+    const projected = workflowStartProjection({
+      workflow: {
+        id: "wf-workspace", project: "/srv/mso", startedAt: "2026-10-17T00:00:00.000Z", steps: [],
+        orchestration: { workspacePath, isolation: "isolated-worktree", baseCommit: "abc123", baseBranch: "main", reservedResources: ["private-context"] },
+      },
+    });
+    expect(projected?.workspace).toEqual({ path: workspacePath, projectPath: "/srv/mso", isolation: "isolated-worktree", baseCommit: "abc123", baseBranch: "main" });
+    expect(JSON.stringify(projected)).not.toContain("private-context");
+  });
+
+  it("does not invent a workspace for unresolved host work", () => {
+    const projected = workflowStartProjection({ workflow: { id: "wf-host", project: "@host", startedAt: "2026-10-17T00:00:00.000Z", steps: [] } });
+    expect(projected).not.toHaveProperty("workspace");
+  });
+
   it("falls back to projected memory plus recipe when orchestration count is absent", () => {
     const projected = workflowStartProjection({
       workflow: { id: "wf-2", startedAt: "2026-09-19T00:00:00.000Z", steps: [] },

@@ -3,8 +3,8 @@ import type { FileHandle } from "node:fs/promises";
 import path from "node:path";
 import { HostError } from "./host-error";
 import { isCredentialPath } from "./path-credentials";
-import { isUnderRoot, readRootList, writeRootList } from "./path-roots";
-import { assertIsolatedPath } from "./fs-isolation";
+import { isUnderRoot, writeRootList } from "./path-roots";
+import { assertIsolatedPath, readRootListWithWorkspace } from "./fs-isolation";
 
 const fdPath = (fd: number) => `/proc/self/fd/${fd}`;
 const VIRTUAL_FILESYSTEMS = new Set([0x9fa0, 0x62656572, 0x64626720, 0x73636673, 0x74726163, 0x27e0eb, 0x63677270, 0xcafe4a11, 0x62656570, 0x1cd1, 0x6e736673, 0xde5e81e4]);
@@ -17,7 +17,7 @@ export async function descriptorPath(handle: FileHandle, write: boolean): Promis
   const real = await fs.realpath(fdPath(handle.fd));
   if (write) await assertIsolatedPath(real);
   if (isCredentialPath(real)) throw new HostError("Access to credential/sensitive files is blocked");
-  for (const root of write ? writeRootList() : readRootList()) {
+  for (const root of write ? writeRootList() : await readRootListWithWorkspace(real)) {
     const canonical = path.resolve(/* turbopackIgnore: true */ root);
     if (isUnderRoot(real, canonical)) return real;
   }

@@ -58,7 +58,7 @@ export const WORKFLOW_START_TOOL: McpTool = {
         : { activeWorkflowCount: 0, conflictingWorkflowCount: 0, overlappingPaths: [], overlappingResources: [] };
       const activeProjectWorkflows = contention.activeWorkflowCount;
       const classification = classifyTask({
-        intent, constraints: opt(a, "constraints"), scope: context.scope, changedPaths, activeProjectWorkflows,
+        intent, constraints: opt(a, "constraints"), scope: context.scope, changedPaths, affectedPaths, activeProjectWorkflows,
         collisionPaths: contention.overlappingPaths, collisionResources: contention.overlappingResources,
       });
       const memoryLimit = classification.memoryRelevance === "high" ? 5 : classification.memoryRelevance === "medium" ? 3 : 0;

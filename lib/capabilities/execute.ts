@@ -36,6 +36,10 @@ export async function executeCapabilityCall(input: {
   actor?: string;
   context?: CapabilityExecutionContext;
 }): Promise<CapabilityExecutionResult> {
+  return withIsolatedFilesystem(undefined, () => executeCall(input));
+}
+
+async function executeCall(input: Parameters<typeof executeCapabilityCall>[0]): Promise<CapabilityExecutionResult> {
   const startedAt = Date.now();
   const { tool, args, scope, actor, context } = input;
   const name = tool.name;
@@ -122,9 +126,9 @@ export async function executeCapabilityCall(input: {
     if (titleHint && context?.principal && context.sessionId && !["agent_session_current", "workflow_status", "agent_subagent_run"].includes(name))
       await maybeAutoTitleAgentSession(context.principal, context.sessionId, titleHint).catch(() => undefined);
 
-    const needsIsolation = !lifecycle && tool.scope !== "read" && activeWorkflow?.orchestration?.isolation === "isolated-worktree";
+    const needsIsolation = !lifecycle && activeWorkflow?.orchestration?.isolation === "isolated-worktree";
     const isolatedRoot = needsIsolation ? activeWorkflow?.orchestration?.workspacePath : undefined;
-    if (needsIsolation && !isolatedRoot) throw new Error("isolated workflow has no verified workspace");
+    if (needsIsolation && tool.scope !== "read" && !isolatedRoot) throw new Error("isolated workflow has no verified workspace");
     const result = await withIsolatedFilesystem(isolatedRoot, () => tool.run(args, {
       signal:context?.signal,
       liveAuthorization:context?.liveAuthorization,
@@ -141,7 +145,7 @@ export async function executeCapabilityCall(input: {
       capabilities: context?.capabilities,
       authorizationGrant: context?.authorizationGrant,
       toolProfile: context?.toolProfile,
-    }));
+    }), { readOnly: tool.scope === "read" });
     const reportedFailure = capabilityReportedFailure(result) || trail?.outcome?.(result)?.ok === false;
     const completedState = reportedFailure ? "failed" : "completed";
     if (trail) {

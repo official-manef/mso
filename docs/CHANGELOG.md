@@ -63,6 +63,10 @@ this is the *what*, and it is what Settings → Account → About shows as “Wh
 - `domains` provision persistent managed-app subdomains from CLI
 - `models` discover model ids from custom endpoints
 
+**Fixed**
+
+- `mcp` repair observation workflows and connection diagnostics
+
 **Docs**
 
 - `progress` preserve managed-domain CLI handoff and remaining gates

@@ -1,10 +1,11 @@
 "use client";
 
+import type { RuntimeIdentity } from "@/lib/contracts/runtime-identity";
 import { useCallback, useEffect, useState } from "react";
 import type { McpTokenRow } from "./mcp-token-section";
 import type { McpToolsetInfo } from "./mcp-toolset-card";
 
-export type McpState = { enabled: boolean; maxScope: string; toolset: McpToolsetInfo; tokens: McpTokenRow[]; origin: string };
+export type McpState = { enabled: boolean; maxScope: string; toolset: McpToolsetInfo; tokens: McpTokenRow[]; origin: string; targetIdentity?: RuntimeIdentity };
 export function useMcpState() {
   const [state, setState] = useState<McpState | null>(null);
   const [error, setError] = useState("");

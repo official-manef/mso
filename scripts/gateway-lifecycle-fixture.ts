@@ -28,7 +28,7 @@ process.on('SIGTERM',()=>process.exit(0));setInterval(()=>{},1000);
 `, { mode: 0o700 });
   const procTcp = path.join(dir, "proc-tcp"), procTcp6 = path.join(dir, "proc-tcp6");
   fs.writeFileSync(procTcp, "  sl  local_address rem_address   st\n"); fs.writeFileSync(procTcp6, "  sl  local_address rem_address   st\n");
-  const env = { ...process.env, HOME: dir, PATH: `${bin}:${process.env.PATH}`, MSO_GATEWAY_ROOT: ROOT, MSO_GATEWAY_ENV: envFile,
+  const env = { ...process.env, NODE_ENV: "test" as const, HOME: dir, PATH: `${bin}:${process.env.PATH}`, MSO_GATEWAY_ROOT: ROOT, MSO_GATEWAY_ENV: envFile,
     MSO_GATEWAY_STATE_DIR: state, MSO_GATEWAY_CURL: curl, MSO_GATEWAY_CLOUDFLARED: cloudflared,
     MSO_GATEWAY_LOCAL_URL: "http://127.0.0.1:4005", MSO_GATEWAY_SKIP_PUBLIC_PROBE: "1",
     MSO_GATEWAY_PROC_NET_TCP: procTcp, MSO_GATEWAY_PROC_NET_TCP6: procTcp6 };

@@ -24,11 +24,23 @@ export type McpGuideStep = {
   copy?: { label: string; value: string; multiline?: boolean };
 };
 
-export type McpProbeCheckId = "mcp" | "challenge" | "resource" | "oauth";
-
+export type McpProbeCheckId = "server" | "https" | "mcp" | "challenge" | "resource" | "oauth" | "account" | "client-tools";
+export type McpProbeCheckState = "passed" | "failed" | "unknown";
+export type McpProbeCheck = {
+  id: McpProbeCheckId;
+  state: McpProbeCheckState;
+  ok: boolean;
+  detail: string;
+  guidance?: string;
+  httpStatus?: number;
+};
 export type McpProbeResult = {
+  /** Readiness covers the observed server and discovery, not external client state. */
   ready: boolean;
-  checks: Array<{ id: McpProbeCheckId; ok: boolean }>;
+  checks: McpProbeCheck[];
+  observedOrigin: string;
+  configuredOrigin: string;
+  checkedAt: string;
 };
 
 export const MCP_CLIENTS: Array<{
@@ -48,6 +60,10 @@ export const MCP_CLIENTS: Array<{
 ];
 
 export const MCP_PROBE_LABELS: Record<McpProbeCheckId, string> = {
+  server: "Server",
+  https: "HTTPS to configured origin",
+  account: "Selected AI app account",
+  "client-tools": "AI app tool cache",
   mcp: "MCP endpoint",
   challenge: "OAuth challenge",
   resource: "Protected resource",

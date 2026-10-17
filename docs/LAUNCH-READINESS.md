@@ -36,12 +36,18 @@ The OS metaphor is presentation. The product is the control plane. Anything that
 | 12 | Memory / second brain | Memory has provenance, scope, review/admission, supersession/forget semantics, poisoning tests and visible coverage limits. No memory can authorize destructive cleanup. | Memory lifecycle/adversarial suite + UI coverage receipt. | JEV admission and full learning-coverage review remain incomplete. |
 | 13 | Backup / recovery | 3-2-1 posture for critical state: production + independent backup + encrypted offsite copy; restore drill proves RPO/RTO; local snapshot is complete or explicitly partial. | Encrypted offsite backup + isolated restore drill. | Current verified backup is local, partial, not offsite. |
 | 14 | Security model | Complete mediation in downstream tools, least privilege, tool risk classes, explicit approvals for high-impact actions, prompt-injection/memory-poisoning/exfiltration/privilege abuse tests. | SECURITY-ASSURANCE + agent abuse-case matrix + current alert inventory. | No third-party audit; some agentic threat gates still need dedicated launch evidence. |
-| 15 | Concurrency safety | Automated source mutation never leaves canonical `main` as a shared scratchpad: one task = one isolated worktree; release integration occurs only from clean, proven candidates. | Tool-enforced workspace lease + collision tests + protected main/ruleset evidence. | Current incident proved policy is not yet tool-enforced; GitHub rulesets list is empty. |
+| 15 | Concurrency safety | Automated source mutation never leaves canonical `main` as a shared scratchpad: one task = one isolated worktree; release integration occurs only from clean, proven candidates. | Tool-enforced workspace lease + collision tests + protected main/ruleset evidence. | Workspace guards exist; `main` reports protected with eight required checks (2026-10-17). Full protection settings, complete mediation and current collision/integration evidence remain unverified. |
 | 16 | Release engineering | Exact SHA → full verify → isolated production build → browser E2E → integration queue/canary → rollback → exact live SHA/chunk health. Build/release is repeatable and no unique snowflake. | Release receipt per version. | Existing exact-SHA gates are strong; staged/canary policy still needs formal production evidence. |
 | 17 | Operational resilience | Published SLIs/SLOs, error-budget/change-freeze policy, disk/memory thresholds, alerting, restore/runbook ownership, and failure-mode drills. | SLO dashboard + alert/fire-drill receipts. | Disk pressure and capacity policy are not yet a complete product SLO. |
 | 18 | Documentation | Docs follow Tutorial / How-to / Reference / Explanation separation; one 10-minute tutorial is the canonical first route. | Docs map + link/check-doc gate + user completion test. | Excellent reference depth, but onboarding is still reference-heavy. |
 | 19 | Demoability | A reproducible ≤3-minute demo shows one project → agent/tool action → workflow/evidence → resume/handoff without secrets or hidden manual setup. | Recorded demo + script + clean fixture. | Existing demo is broad rather than one launch narrative. |
 | 20 | Launch readiness | Public beta only when all P0 gates are green, every known limitation is published, rollback/recovery is proven, and current main/live evidence matches the release claim. Stable label requires sustained SLO + recovery history. | Signed/dated release readiness receipt. | Public Alpha/Developer Preview remains the accurate label today. |
+
+### Source concurrency evidence checked 2026-10-17
+
+[`workflow-workspace-guard.ts`](../lib/mcp/workflow-workspace-guard.ts) contains guards for source-workflow filesystem paths, shell working directories and project execution targets. This establishes implementation presence, not complete mediation or a passing current concurrency drill.
+
+The [GitHub main branch summary](https://api.github.com/repos/rahmanef63/mso/branches/main) reported `protected: true` with eight required checks and `non_admins` enforcement. The [rulesets collection](https://api.github.com/repos/rahmanef63/mso/rulesets) was empty; that does not establish an unprotected branch. Detailed branch-protection access returned 403 for the installed integration, so administrator bypass, force-push/deletion restrictions and integration-authority settings are not verified by this receipt.
 
 ## P0 before public beta
 
@@ -51,6 +57,17 @@ The OS metaphor is presentation. The product is the control plane. Anything that
 4. **Measured onboarding**: fresh host, fresh user, no maintainer knowledge; record time-to-first-value and every manual intervention.
 5. **One killer journey** across README, Product Hunt, demo and onboarding.
 6. **SLO + operational policy**: availability/latency/failed-action/disk-pressure SLIs, error budget, change freeze and rollback policy. See [`RELIABILITY.md`](./RELIABILITY.md).
+
+### Follow-up: configured project roots and durable identity
+
+A configured project container may itself be the intended repository. The current recovery path is to inspect an exact container path already returned by `projects_list` with `project_get`; a container entry alone does not prove repository contents. Root-row discovery remains separate work until these acceptance cases pass:
+
+- List, exact-ID, path, name and linked-worktree resolution agree for configured roots, overlapping roots and a root with a same-named child. Existing child identities remain stable.
+- Root and marker validation preserves ownership, credential exclusions and no-symlink checks. Hidden runtime state gains no new access. No marker or an invalid marker produces no repository claim.
+- Root rows appear exactly once across entry, project, deadline and page limits, with truthful raw-directory cursor positions and no lost child rows.
+- Before any logical root-ID change, prove that existing Agent Vault snapshots, user annotations and personal notes remain visible. A bounded legacy lookup must verify the exact canonical project path and select the same physical store for reads, writes and locking. Conflicting legacy/current stores must be reported without automatic merging or deletion.
+- Project-skill identities and continuation, historical task references and flow-receipt lookup remain usable. Reusing a flow idempotency key across the change must not replay an uncertain mutation or silently select another project.
+- Record migration and rollback evidence separately from discovery tests; retain Alpha/Developer Preview until the independent launch gates are satisfied.
 
 ## P1 before “stable”
 

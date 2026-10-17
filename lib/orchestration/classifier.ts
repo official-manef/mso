@@ -39,13 +39,21 @@ const MEMORY_HIGH = [
 const SOURCE_CHANGE_VERB = /\b(implement|fix|edit|modify|refactor|patch|add|remove|rename|write|rewrite)\b/i;
 const SOURCE_CHANGE_OBJECT = /\b(code|source|files?|repo(?:sitory)?|docs?|documentation|ui|component|tests?|scripts?|config(?:uration)?|package|lockfile|feature)\b/i;
 const SOURCE_CHANGE_WEAK_VERB = /\b(update|change)\b/i;
+const MUTATION_VERBS = "(?:" + SOURCE_CHANGE_VERB.source + "|" + SOURCE_CHANGE_WEAK_VERB.source + ")";
+const CONJUNCTION = "(?:and|or|nor|dan|atau)";
+const NEGATED_SOURCE_CHANGE = new RegExp(
+  "\\b(?:do\\s+not|don['’]t|never|jangan(?:\\s+pernah)?)\\s+" + MUTATION_VERBS
+    + "(?:\\s+" + CONJUNCTION + "\\s+" + MUTATION_VERBS
+    + "|(?:\\s*,\\s*" + MUTATION_VERBS + ")+\\s*,?\\s*" + CONJUNCTION + "\\s+" + MUTATION_VERBS + ")*",
+  "gi",
+);
 
 /** Safety-biased signal for repository/source mutation. It is intentionally
  * separate from risk: a typo remains low risk but still belongs in a task-owned
  * worktree so canonical main never becomes shared scratch space. */
 export function sourceChangeLikely(intent: string, constraints = "", affectedPaths: string[] = []): boolean {
   if (affectedPaths.length > 0) return true;
-  const text = `${intent}\n${constraints}`;
+  const text = `${intent}\n${constraints}`.replace(NEGATED_SOURCE_CHANGE, "");
   if (SOURCE_CHANGE_VERB.test(text)) return true;
   return SOURCE_CHANGE_WEAK_VERB.test(text) && SOURCE_CHANGE_OBJECT.test(text);
 }
@@ -92,6 +100,7 @@ export function classifyTask(input: {
   constraints?: string;
   scope?: "read" | "write" | "exec";
   changedPaths?: string[];
+  affectedPaths?: string[];
   activeProjectWorkflows?: number;
   collisionPaths?: string[];
   collisionResources?: string[];
@@ -132,7 +141,9 @@ export function classifyTask(input: {
   if (MEMORY_HIGH.some((rule) => rule.test(text)) || complexity === "heavy") memoryRelevance = "high";
   else if (complexity === "medium") memoryRelevance = "medium";
 
-  const sourceChange = input.scope !== "read" && sourceChangeLikely(input.intent, input.constraints, input.collisionPaths?.length ? input.collisionPaths : []);
+  const sourceChange = input.scope !== "read" && sourceChangeLikely(
+    input.intent, input.constraints, [...(input.affectedPaths ?? []), ...collisionPaths],
+  );
   if (sourceChange) reasons.push("repository/source mutation should use a task-owned worktree");
   const isolation: TaskClassification["isolation"] = risk === "high" || sourceChange
     ? "isolated-worktree"
