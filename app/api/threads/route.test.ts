@@ -46,6 +46,26 @@ describe("/api/threads route", () => {
     expect(data.error).toBe("Unauthorized");
   });
 
+  it("creates and retrieves threads via POST and GET", async () => {
+    const postReq = new NextRequest("http://localhost/api/threads", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        id: "thread_post_get",
+        title: "Test Thread",
+        messages: [{ role: "user", text: "hi" }],
+      }),
+    });
+    const postRes = await POST(postReq);
+    expect(postRes.status).toBe(200);
+
+    const getReq = new NextRequest("http://localhost/api/threads?id=thread_post_get");
+    const getRes = await GET(getReq);
+    expect(getRes.status).toBe(200);
+    const getData = await getRes.json();
+    expect(getData.title).toBe("Test Thread");
+  });
+
   it("renames only the title and preserves messages and history", async () => {
     const threadId = "thread_patch_ok";
     await saveThread({
