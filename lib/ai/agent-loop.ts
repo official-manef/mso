@@ -1,4 +1,5 @@
-import { streamAgentTurn, type AgentMsg, type AiTool } from "./stream";
+import { streamAgentTurn, type AgentMsg, type AiTool, type ProviderUsage } from "./stream";
+import { addProviderUsage } from "./provider-usage.mjs";
 
 // Generic tool-execution contract. `invoke` runs one tool call and returns a
 // short, model-readable outcome; where the side-effect happens (a client store,
@@ -11,6 +12,13 @@ export type AgentEvents = {
   onDelta: (chunk: string) => void;
   /** A tool the model called, with the local execution outcome. */
   onTool: (name: string, input: Record<string, unknown>, outcome: ToolOutcome) => void;
+};
+
+export type AgentLoopResult = {
+  history: AgentMsg[];
+  text: string;
+  outcome: "completed" | "stopped" | "limit";
+  usage?: ProviderUsage;
 };
 
 // Drives a function-calling conversation: stream a turn → run any tool_use via
@@ -28,13 +36,17 @@ export async function runToolAgent(
   maxTurns = 8,
   system?: string,
   signal?: AbortSignal,
-): Promise<{ history: AgentMsg[]; text: string; outcome: "completed" | "stopped" | "limit" }> {
+): Promise<AgentLoopResult> {
   const msgs = [...history];
   let lastText = "";
   let outcome: "completed" | "stopped" | "limit" = "limit";
+  let totalUsage: ProviderUsage | undefined = undefined;
   for (let i = 0; i < maxTurns; i++) {
     if (signal?.aborted) { outcome = "stopped"; break; }
-    const { text, toolUses } = await streamAgentTurn(msgs, tools, ev.onDelta, signal, system);
+    const { text, toolUses, usage } = await streamAgentTurn(msgs, tools, ev.onDelta, signal, system);
+    if (usage) {
+      totalUsage = addProviderUsage(totalUsage, usage) as ProviderUsage;
+    }
     msgs.push({ role: "assistant", text, toolUses });
     if (text) lastText = text;
     if (toolUses.length === 0) { outcome = signal?.aborted ? "stopped" : "completed"; break; }
@@ -51,7 +63,12 @@ export async function runToolAgent(
     }
     msgs.push({ role: "tool", results });
   }
-  return { history: msgs, text: lastText, outcome: signal?.aborted ? "stopped" : outcome };
+  return {
+    history: msgs,
+    text: lastText,
+    outcome: signal?.aborted ? "stopped" : outcome,
+    ...(totalUsage ? { usage: totalUsage } : {}),
+  };
 }
 
-export type { AgentMsg, AiTool } from "./stream";
+export type { AgentMsg, AiTool, ProviderUsage } from "./stream";
