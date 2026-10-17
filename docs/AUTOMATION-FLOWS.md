@@ -91,7 +91,7 @@ Reusing a key with identical project/definition/input returns its existing recei
 is rejected. Receipts are private and checkpointed around each step. They are not an exactly-once
 guarantee from external providers. A process interruption leaves an uncertain mutation:
 inspect the provider, then deliberately choose a new key if another attempt is appropriate.
-There is no automatic external retry, background queue or automatic rollback.
+There is no automatic external retry, background queue or automatic rollback; scheduled proactive agent turns execute via in-process workflow graph triggers bound to durable sessions.
 The runner currently remains in the MSO process; use existing managed jobs for standalone builds.
 
 ## Add MCP, assets and canvas

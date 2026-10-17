@@ -41,6 +41,8 @@ Webhook endpoint:
 
 `responseMode=onReceived` returns a run id immediately. `responseMode=lastNode` waits for bounded execution and returns only the explicit output-node result. Active webhooks fail closed unless `authVariable` names a secret-marked string of at least 16 characters; unauthenticated lookup traffic is rate-limited before graph discovery and cannot consume the authenticated execution bucket.
 
+Schedule triggers can drive proactive workflow graphs that target durable agent sessions via `agent` nodes configured with `sessionRef`, allowing always-on agent turn cycles without external cron or daemon processes.
+
 ### Flow control
 
 - `condition` — true/false handles
@@ -62,7 +64,7 @@ Graph edges stay acyclic. Item fan-out uses `loop`; conditional loop-back uses `
 - `project_mcp`
 - `integration`
 - `script` — execute a saved, validated repo-local RASMIC automation manifest by `project + script_id`; the graph stores only the reference, while runtime re-validates the manifest before replay
-- `agent`
+- `agent` — execute an organization seat, a project agent, or target a durable agent session via `sessionRef` for proactive/scheduled agent turns with history and event audit persistence
 - `project`
 - `folder`
 - `skill`
@@ -72,6 +74,8 @@ Graph edges stay acyclic. Item fan-out uses `loop`; conditional loop-back uses `
 Project/folder nodes resolve the live canonical server path when the graph runs and can open that real directory in MSO Files/Finder.
 
 Script nodes intentionally do **not** execute arbitrary shell or browser-supplied JavaScript. The Inspector can search the selected project's `.agent/scripts` catalog, shows candidate/tested state and step count, and persists the chosen `script_id` in the graph. Execution delegates to `project_script_run`, which re-reads the manifest and refuses steps outside the bounded replay-safe RASMIC policy. A successful candidate replay is promoted to tested by the existing script runner.
+
+Agent nodes configured with `sessionRef` bind turn execution directly to a same-owner durable session: the bounded turn runs via the local session agent seam, serializes via an at-most-one execution lease to avoid interleaving concurrent writes, appends an audit event, and updates the session's durable conversation history.
 
 ## Repeat Until and saved Session workflows
 
