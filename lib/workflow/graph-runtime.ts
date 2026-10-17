@@ -170,6 +170,10 @@ async function executeNode(node: WorkflowGraphNode, run: WorkflowGraphRun, graph
   if (node.type === "script") { if (!project || typeof config.script_id !== "string") throw new Error("script node requires project and script_id"); return { output: await callTool("project_script_run", { project, script_id: config.script_id, ...(context.workflowId ? { workflow_id: context.workflowId } : {}) }, context, resolve), log: `Script ${config.script_id} completed.` }; }
   if (node.type === "agent") {
     if (typeof config.message !== "string" || !config.message.trim()) throw new Error("agent node requires message");
+    if (typeof config.sessionRef === "string" && config.sessionRef.trim()) {
+      const { runDurableSessionTurn } = await import("@/lib/agent/session-turn");
+      return { output: await runDurableSessionTurn({ principal, sessionRef: config.sessionRef.trim(), objective: config.message, capabilities: context.capabilities, authority: context, persist: true }), log: `Durable agent turn completed for session ${config.sessionRef.trim()}.` };
+    }
     if (typeof config.orgSeatId === "string" && config.orgSeatId) {
       const seat = await resolveOrganizationSeat(config.orgSeatId), target = seat.target;
       if (config.orgTargetDigest !== organizationTargetDigest(seat)) throw new Error("organization execution binding changed; review and save the workflow before running it");
