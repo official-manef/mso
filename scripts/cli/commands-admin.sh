@@ -5,6 +5,7 @@
 mso_cmd_admin() {
   local cmd="$1"; shift || true
 case "$cmd" in
+  passwd) source "$ROOT/scripts/cli/passwd.sh"; mso_passwd "$ROOT" "$@" ;;
   reset|uninstall) exec node "$ROOT/scripts/mso-maintenance.mjs" "$cmd" "$@" ;;
   # ── devices (local file, works even when the service is down) ────────────
   # Both shapes work: `mso devices` reads as a noun, `mso device list` matches the
