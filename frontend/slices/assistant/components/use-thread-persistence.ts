@@ -5,7 +5,7 @@ import type { AgentMsg } from "../lib/host";
 import type { ChatMessage } from "@/features/appshell";
 import { clearAlfaRunState, newAlfaApprovalSession } from "@/features/appshell";
 
-type LoadArg = { id: string; createdAt: number; messages: unknown[]; history: unknown[] };
+type LoadArg = { id: string; title?: string; createdAt: number; messages: unknown[]; history: unknown[] };
 
 // Persists the current Alfa conversation to a YAML thread (/api/threads) and
 // restores one. Owns the current thread id + creation time; the panel owns the
@@ -17,6 +17,11 @@ export function useThreadPersistence(
 ) {
   const threadIdRef = useRef<string | null>(null);
   const createdAtRef = useRef<number>(0);
+  const titleOverrideRef = useRef<string | null>(null);
+
+  const setThreadTitle = useCallback((title: string) => {
+    titleOverrideRef.current = title;
+  }, []);
 
   const persist = useCallback(
     (msgs: ChatMessage[]) => {
@@ -26,12 +31,13 @@ export function useThreadPersistence(
         createdAtRef.current = Date.now();
       }
       const firstUser = msgs.find((m) => m.role === "user");
+      const title = titleOverrideRef.current ?? (firstUser?.text ?? "New chat").slice(0, 80);
       void fetch("/api/threads", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           id: threadIdRef.current,
-          title: (firstUser?.text ?? "New chat").slice(0, 80),
+          title,
           createdAt: createdAtRef.current,
           messages: msgs,
           history: historyRef.current,
@@ -48,6 +54,7 @@ export function useThreadPersistence(
       newAlfaApprovalSession();
       threadIdRef.current = t.id;
       createdAtRef.current = t.createdAt || Date.now();
+      titleOverrideRef.current = t.title ?? null;
       historyRef.current = (t.history ?? []) as AgentMsg[];
       setMessages((t.messages ?? []) as ChatMessage[]);
     },
@@ -60,9 +67,10 @@ export function useThreadPersistence(
     newAlfaApprovalSession();
     threadIdRef.current = null;
     createdAtRef.current = 0;
+    titleOverrideRef.current = null;
     historyRef.current = [];
     setMessages([]);
   }, [stop, historyRef, setMessages]);
 
-  return { persist, loadThread, newThread };
+  return { persist, loadThread, newThread, setThreadTitle };
 }
