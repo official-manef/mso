@@ -139,6 +139,7 @@ Commands:
   approve <id> [label] [--role ...]  Approve a device id
   revoke <id>          Revoke one device
   whoami               This CLI's device id + session state
+  passwd [status]      Set/change local login password with hidden prompts; status is metadata only
   login                Force a fresh login
   logout               Drop the session (server-side + local jar)
 

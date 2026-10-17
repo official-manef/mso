@@ -204,6 +204,10 @@ The Security Core gate was failing deterministically at `bff30987` on the Semgre
 
 A ChatGPT connector therefore reconnects against the callback it already holds; no re-add is required.
 
+## 2026-10-17: Local hidden-prompt login password setup
+
+`mso passwd` creates or changes the local installation login password without an HTTP session, password arguments, env-file execution or cookie-jar creation. It reuses login password validation and rotation; fresh configuration is published without overwriting another writer, mode 0600, with a random session signing secret and MCP disabled. Existing signing secrets and other configuration remain unchanged. Changing an existing password requires its current value. `mso passwd status` exposes configuration metadata only; no password read/delete operation is provided. The user must start/restart MSO explicitly to apply local file changes; existing sessions are not revoked. Tests use temporary installation fixtures, including a real PTY to verify hidden input and cancellation. No live installation credentials are created by development or tests.
+
 ## 2026-10-14: Fix the provider picker and make `mso models add` scriptable
 
 `mso models add` with no argument died with `mso picker: EAGAIN: resource temporarily unavailable, read`. The native arrow picker read its candidate rows with `fs.readFileSync(0)`, and Node throws instead of retrying when it is handed a non-blocking pipe that has not been written yet — exactly the state the manager's subshell pipeline produces. The picker now drains fd 0 through `fs.readSync` in a loop, sleeping on `Atomics.wait` and retrying `EAGAIN` until the producer closes the pipe, so the same selector works for both a pipeline and a redirected file. This restores the live provider list (Nvidia, OpenCode, OpenRouter, ZenMux and the rest) that the broken read had been hiding behind the static fallback.
