@@ -5,7 +5,9 @@ import {
   useEffect,
   useImperativeHandle,
   useMemo,
-  useRef, type Ref
+  useRef,
+  useState,
+  type Ref
 } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -31,6 +33,7 @@ import { composeAutomationRequest } from "../lib/automation-request";
 import { useHostCommands, type HostToolUi } from "../host-tools/use-host-commands";
 import { type ChatMessage, type ToolCard } from "@/features/appshell";
 import { ChatTranscript } from "./chat-transcript";
+import { TurnUsage, addUsage, type ProviderUsage } from "./turn-usage";
 
 import { EmptyState } from "./empty-state";
 import { useThreadPersistence } from "./use-thread-persistence";
@@ -88,6 +91,8 @@ export function ChatPanel({
   // the registered runner, so a local copy plus an `if (streaming) return` guard in
   // send() meant every send routed through the store was silently dropped.
   const streaming = useAlfaBusy();
+  const [turnUsage, setTurnUsage] = useState<ProviderUsage | null>(null);
+  const [threadUsage, setThreadUsage] = useState<ProviderUsage | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const agentRef = useRef(agent);
@@ -175,7 +180,7 @@ export function ChatPanel({
       setAlfaOperation("Requesting response");
       let runOk = false;
       try {
-        const { history: next, outcome } = await runToolAgent(
+        const { history: next, outcome, usage } = await runToolAgent(
           historyRef.current,
           tools,
           invoke,
@@ -194,6 +199,10 @@ export function ChatPanel({
           ctrl.signal,
         );
         historyRef.current = next;
+        if (usage) {
+          setTurnUsage(usage);
+          setThreadUsage((prev) => addUsage(prev, usage));
+        }
         runOk = outcome === "completed";
         if (outcome === "limit") appendToLastAssistant((t) => t + "\n\nTurn limit reached. Execution has stopped; send a new message to continue.");
       } catch (err) {
@@ -219,6 +228,21 @@ export function ChatPanel({
 
   useAlfaRunner(send, stop);
 
+  const handleLoadThread = useCallback(
+    (t: { id: string; createdAt: number; messages: unknown[]; history: unknown[] }) => {
+      setTurnUsage(null);
+      setThreadUsage(null);
+      loadThread(t);
+    },
+    [loadThread],
+  );
+
+  const handleNewThread = useCallback(() => {
+    setTurnUsage(null);
+    setThreadUsage(null);
+    newThread();
+  }, [newThread]);
+
   // Browser-local automations are execution recipes, not a second executor. One
   // click feeds their exact ordered tool intent back through Alfa's normal agent
   // loop, so reads use the same host bindings and every mutation still parks on
@@ -228,8 +252,8 @@ export function ChatPanel({
       void sendToAlfa(composeAutomationRequest(auto, (runAgent ?? agentRef.current).name));
     },
     stop,
-    loadThread,
-    newThread,
+    loadThread: handleLoadThread,
+    newThread: handleNewThread,
   }));
 
   return (
@@ -266,6 +290,7 @@ export function ChatPanel({
           </div>
         </ScrollArea>
       )}
+      <TurnUsage turnUsage={messages.length > 0 ? turnUsage : null} threadTotal={messages.length > 0 ? threadUsage : null} />
       {/* Through sendToAlfa, not send(): one entry point means one single-flight
           guard and one busy flag for every surface. */}
       <ChatComposer onSend={(t) => void sendToAlfa(t)} streaming={streaming} onStop={stop} />

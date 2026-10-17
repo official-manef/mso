@@ -11,7 +11,24 @@ export type AgentMsg =
   | { role: "user"; text: string }
   | { role: "assistant"; text?: string; toolUses?: AiToolUse[] }
   | { role: "tool"; results: { id: string; content: string; isError?: boolean }[] };
-export type AgentTurn = { text: string; toolUses: AiToolUse[]; stopReason: string | null };
+export type ProviderUsage = {
+  accountingMode?: string;
+  apiCalls?: number;
+  inputTokens?: number;
+  outputTokens?: number;
+  totalTokens?: number;
+  cacheReadTokens?: number;
+  cacheWriteTokens?: number;
+  reasoningTokens?: number;
+  detailCoverage?: Record<string, number>;
+};
+
+export type AgentTurn = {
+  text: string;
+  toolUses: AiToolUse[];
+  stopReason: string | null;
+  usage?: ProviderUsage;
+};
 
 // One assistant turn with tools. Streams text via `onDelta`, then resolves with
 // the accumulated text + any tool_use blocks the model emitted (which the caller
@@ -39,6 +56,7 @@ export async function streamAgentTurn(
   let text = "";
   const toolUses: AiToolUse[] = [];
   let stopReason: string | null = null;
+  let usage: ProviderUsage | undefined = undefined;
   while (true) {
     if (signal?.aborted) { await reader.cancel().catch(() => {}); break; }
     const { done, value } = await reader.read();
@@ -57,8 +75,19 @@ export async function streamAgentTurn(
       if (event === "delta") { const t = JSON.parse(data) as string; text += t; onDelta(t); }
       else if (event === "tool_use") toolUses.push(JSON.parse(data) as AiToolUse);
       else if (event === "error") throw new Error(JSON.parse(data) as string);
-      else if (event === "done") stopReason = (JSON.parse(data) as { stopReason: string }).stopReason ?? null;
+      else if (event === "done") {
+        const payload = JSON.parse(data) as { stopReason?: string; usage?: ProviderUsage };
+        stopReason = payload.stopReason ?? null;
+        if (payload.usage && typeof payload.usage === "object") {
+          usage = payload.usage;
+        }
+      }
     }
   }
-  return { text, toolUses, stopReason };
+  return {
+    text,
+    toolUses,
+    stopReason,
+    ...(usage !== undefined ? { usage } : {}),
+  };
 }
