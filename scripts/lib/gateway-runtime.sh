@@ -186,6 +186,13 @@ gateway_cmd_runtime_assert_update_safe_locked() {
   gateway_info "runtime: update-safe"
 }
 
+# The proof for a service-owned listener stays strict; this seam exists only so the
+# update path can be exercised in tests without owning a real unit.
+gateway_service_owned_or_test_allowed() {
+  gateway_service_owns_local_listener && return 0
+  [ "${NODE_ENV:-}" = test ] && [ -n "${MSO_GATEWAY_TEST_SERVICE_LISTENER:-}" ]
+}
+
 gateway_cmd_runtime_stop_locked() {
   local state runtime owned
   gateway_recovery_marker_path >/dev/null
@@ -214,6 +221,15 @@ gateway_cmd_runtime_stop_locked() {
     gateway_fail "recorded runtime ownership no longer matches a safely recoverable MSO instance; refusing offline rebuild"
   fi
   if gateway_health_ok; then
+    # A healthy loopback listener proven to be THIS checkout's own mso.service is not a
+    # fallback runtime: the service lifecycle keeps it through the build and
+    # scripts/self-update.sh replaces it by signalling its same-UID MainPID, so there is
+    # nothing to quiesce. Any listener not proven to be this checkout's unit still fails
+    # closed below, and the offline preflight (runtime-assert-update-safe) stays strict.
+    if gateway_service_owned_or_test_allowed; then
+      gateway_info "runtime: service-owned"
+      return 0
+    fi
     gateway_fail "a loopback MSO runtime is active but is not gateway-owned; stop it before an offline update"
   fi
   if gateway_recovery_pending; then gateway_info "runtime: recovery-pending"; else gateway_info "runtime: already-down"; fi

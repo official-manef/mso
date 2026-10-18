@@ -8,7 +8,7 @@ Workflow schedules now support explicit-offset one-shot timestamps with a requir
 
 The implementation map records five partial requirement groups and 59 pending groups, with no group marked complete. All 64 frozen groups, 24 packages, eight stages, 30 acceptance journeys and 69 derived compatibility variants remain in scope. The new browser journeys use their own synthetic stores because their real persisted sessions would otherwise contaminate the existing session-monitor pagination fixture.
 
-Integration preserves the current upstream session-turn runner, provider usage accounting, thread search/rename, skills cache and compact `fs_stat` catalog. Two existing UI lint failures prevented the combined gate: the chat controller exceeded the line limit, and the thread drawer synchronously reset state in an effect. Its presentation and scroll handling now live in a same-slice view, and drawer reset follows its open transition. Controller behavior and the upstream CSS budget remain intact.
+Integration preserves the current upstream session-turn runner, provider usage accounting, thread search/rename, skills cache and compact `fs_stat` catalog. Two UI lint failures initially prevented the combined gate: the chat controller exceeded the line limit, and the thread drawer synchronously reset state in an effect. Upstream subsequently resolved both with `useTurnUsage` and a drawer open-transition reset. This candidate adopts those upstream implementations and its service-owned update recovery fix; the temporary duplicate presentation extraction is removed.
 
 PR verification also exposed a sourced CLI usage variable without its module-level fallback and four test-only inline import types that the pinned Semgrep parser could not read. The CLI now follows neighboring modules' explicit fallback, and named type aliases preserve the exact mocks and assertions. Actual ShellCheck 0.11.0 and a complete Semgrep 1.174.0 strict scan pass after these repairs; no scanner rules or exclusions were relaxed.
 
@@ -19,6 +19,27 @@ The approved v0.1 draft spans 64 requirement groups, 24 packages, eight stages a
 The repository checks now validate the snapshot digest, exact requirement mappings, source identities and generated reference. A separate full-parity candidate gate requires clean HEAD, regular tracked source/test blobs, complete acceptance and compatibility records, all eight completion dimensions and six passing gates. Every receipt is bound to the candidate and hashed artifact bytes. A complete manifest cannot establish that its statements are true: release reviewers must inspect real runtime/provider evidence. Pending or partial scope keeps that release gate blocked.
 
 CLI help previously loaded HTTP credentials and attempted to create a private cookie jar before printing recovery guidance. Help now reads the existing entrypoint header before credential loading; grouped usage shares that helper and the offline-update fixture copies it. Regression tests use an executable synthetic env file and unusable private storage to prove help stays available without either side effect.
+
+## 2026-10-18c: A service-owned listener no longer dead-ends an update; Alfa lint restored
+
+Two follow-ups after the agent-surface batch.
+
+**Service-active updates.** An interrupted update could leave a gateway restore inventory naming an origin
+that this checkout's own `mso.service` now serves; the quiesce step then failed closed ("a loopback MSO
+runtime is active but is not gateway-owned") and every retry failed identically. The service-active quiesce
+path now reports `runtime: service-owned` when `gateway_service_owns_local_listener` *proves* the healthy
+listener belongs to this checkout's own active unit — that listener is not a fallback runtime, the service
+lifecycle keeps it, and `scripts/self-update.sh` replaces it by signalling its same-UID MainPID, so there is
+nothing to quiesce. The offline preflight (`runtime-assert-update-safe`) keeps the strict form, and any
+listener not proven to be this checkout's unit still fails closed. Regressions:
+`scripts/mso-gateway-service-owned.test.ts` plus a service-owned case in `scripts/mso-service-update.test.ts`.
+
+**Lint.** The batch above shipped two `bun run lint` failures that neither a `--no-verify` push nor the
+build-only verify stage catches: a `react-hooks/set-state-in-effect` error in the saved-chat drawer and a
+`max-lines` breach in `chat-panel.tsx` (239 counted lines). The drawer now resets with a render-time state
+adjustment (its History button opens the sheet without routing through `onOpenChange`), and the token-usage
+state moved into a new `useTurnUsage` hook, returning `chat-panel.tsx` to 217 counted lines.
+`docs/CHANGELOG.md` was regenerated.
 
 ## 2026-10-18b: `fs_stat` returns, paid for by a tighter ChatGPT description cap
 

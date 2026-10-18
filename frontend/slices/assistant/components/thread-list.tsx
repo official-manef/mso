@@ -31,13 +31,7 @@ export function ThreadList({
   const [editingTitle, setEditingTitle] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [previousOpen, setPreviousOpen] = useState(open);
   const design = useShellDesign();
-
-  if (open !== previousOpen) {
-    setPreviousOpen(open);
-    if (open) { setEditingId(null); setConfirmDeleteId(null); setError(null); }
-  }
 
   const load = useCallback(() => {
     fetch("/api/threads", { cache: "no-store" })
@@ -45,6 +39,18 @@ export function ThreadList({
       .then((d) => { setThreads(d.threads ?? []); setError(null); })
       .catch(() => setError("Failed to load chats"));
   }, []);
+
+  // Fresh drawer chrome every open (render-time state adjustment — no effect
+  // setState): reopening never lands mid-rename or with a stale error/confirm.
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
+    if (open) {
+      setEditingId(null);
+      setConfirmDeleteId(null);
+      setError(null);
+    }
+  }
 
   useEffect(() => {
     if (open) load();
