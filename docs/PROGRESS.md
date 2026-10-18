@@ -10,6 +10,8 @@ The implementation map records five partial requirement groups and 59 pending gr
 
 Integration preserves the current upstream session-turn runner, provider usage accounting, thread search/rename, skills cache and compact `fs_stat` catalog. Two existing UI lint failures prevented the combined gate: the chat controller exceeded the line limit, and the thread drawer synchronously reset state in an effect. Its presentation and scroll handling now live in a same-slice view, and drawer reset follows its open transition. Controller behavior and the upstream CSS budget remain intact.
 
+PR verification also exposed a sourced CLI usage variable without its module-level fallback and four test-only inline import types that the pinned Semgrep parser could not read. The CLI now follows neighboring modules' explicit fallback, and named type aliases preserve the exact mocks and assertions. Actual ShellCheck 0.11.0 and a complete Semgrep 1.174.0 strict scan pass after these repairs; no scanner rules or exclusions were relaxed.
+
 ## 2026-10-18: Freeze the complete Nakama target and separate inventory from runtime proof
 
 The approved v0.1 draft spans 64 requirement groups, 24 packages, eight stages and 30 acceptance journeys. The immutable snapshot preserves all original contracts and variants; the generated current reference reads a separate implementation map so progress cannot silently reduce the target. Source receipts identify all 100 distinct referenced files at the pinned Nakama and MSO commits. File identity proves source availability, not runtime behavior.

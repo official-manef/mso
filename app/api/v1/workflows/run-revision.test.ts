@@ -1,14 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
+type LimitsApi = typeof import("@/lib/host/limits-api");
+type SessionStore = typeof import("@/lib/agent/session-store");
+type GraphStore = typeof import("@/lib/workflow/graph-store");
+type GraphEngine = typeof import("@/lib/workflow/graph-engine");
+
 const mocks = vi.hoisted(() => ({
   role: "owner" as string | null, get: vi.fn(), createSession: vi.fn(), run: vi.fn(), limited: vi.fn(),
 }));
 vi.mock("@/lib/auth/require-session", () => ({ getSessionContext: async () => mocks.role ? { role: mocks.role, session: { device_id: "fixture-device" } } : null }));
-vi.mock("@/lib/host/limits-api", async (original) => ({ ...await original<typeof import("@/lib/host/limits-api")>(), rateLimited: mocks.limited }));
-vi.mock("@/lib/agent/session-store", async (original) => ({ ...await original<typeof import("@/lib/agent/session-store")>(), createAgentSession: mocks.createSession }));
-vi.mock("@/lib/workflow/graph-store", async (original) => ({ ...await original<typeof import("@/lib/workflow/graph-store")>(), getWorkflowGraph: mocks.get }));
-vi.mock("@/lib/workflow/graph-engine", async (original) => ({ ...await original<typeof import("@/lib/workflow/graph-engine")>(), startWorkflowGraph: mocks.run }));
+vi.mock("@/lib/host/limits-api", async (original) => ({ ...await original<LimitsApi>(), rateLimited: mocks.limited }));
+vi.mock("@/lib/agent/session-store", async (original) => ({ ...await original<SessionStore>(), createAgentSession: mocks.createSession }));
+vi.mock("@/lib/workflow/graph-store", async (original) => ({ ...await original<GraphStore>(), getWorkflowGraph: mocks.get }));
+vi.mock("@/lib/workflow/graph-engine", async (original) => ({ ...await original<GraphEngine>(), startWorkflowGraph: mocks.run }));
 vi.mock("@/lib/mcp/scope", () => ({ maxScope: () => "exec" }));
 vi.mock("@/lib/mcp/capability-runtime", () => ({ msoCapabilityRuntime: {} }));
 vi.mock("@/lib/mcp/tools", () => ({ TOOLS_BY_NAME: new Map() }));

@@ -9,6 +9,6 @@ run_agent_profiles() {
       input="$(json_arg "${1:?JSON or @file with expectedRevision and reason}")"
       jpost "/api/v1/agent-profiles" "$(jq -c --arg action "$action" '. + {action:$action}' <<< "$input")" ;;
     run) jpost "/api/v1/agent-profiles/run" "$(json_arg "${1:?JSON or @file with profileId, profileRevision and prompt}")" ;;
-    *) die "usage: mso $U_agent_profiles" ;;
+    *) die "usage: mso ${U_agent_profiles:-agent-profiles}" ;;
   esac
 }
