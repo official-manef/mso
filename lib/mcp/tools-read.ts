@@ -2,7 +2,7 @@ import { ownedArtifactSession } from "@/lib/agent/artifact-session";
 import { saveSessionArtifact } from "@/lib/agent/artifacts";
 import { artifactPaths } from "@/lib/agent/artifact-paths";
 import path from "node:path";
-import { listDir, readFile, searchFs, usage, sha256Text, utf8Bytes } from "@/lib/host/fs-api";
+import { listDir, readFile, searchFs, usage, statReadableMeta, sha256Text, utf8Bytes } from "@/lib/host/fs-api";
 import { stats, processes } from "@/lib/host/system-api";
 import { captureMsoScreen } from "@/lib/host/screenshot-api";
 import { createTempShare, tempShareUrl } from "@/lib/host/temp-share-api";
@@ -42,6 +42,17 @@ export const READ_TOOLS: McpTool[] = [
       const content = await readFile(str(a, "path"));
       return { path: a.path, content, bytes: utf8Bytes(content), sha256: sha256Text(content) };
     },
+  },
+  {
+    name: "fs_stat",
+    description:
+      "Get bounded metadata for a file or directory on the VPS (kind, true sizeBytes, mtimeMs, ctimeMs, mode). " +
+      "Use this for true file size or modification time without reading file contents or launching a shell. " +
+      "Reads are bounded to OS_FS_READ_ROOTS and credential paths (~/.ssh, ~/.mso, cloud tokens) are refused.",
+    scope: "read",
+    annotations: READ_ONLY,
+    inputSchema: S(PATH_P, ["path"]),
+    run: (a) => statReadableMeta(str(a, "path")),
   },
   {
     name: "fs_search",
@@ -121,7 +132,7 @@ export const READ_TOOLS: McpTool[] = [
       "Semantic search across trusted SKILL.md files, the live MCP tool catalog and learned successful workflows. " +
       "For MCP orientation, query mso-agent-bootstrap. Use this alone for capability research or unfamiliar single-step work. For a multi-step task call workflow_start directly — it already performs this search and avoids a duplicate startup call. " +
       "The embedding runs locally with no API cost; untrusted skill instructions are excluded unless explicitly requested.",
-    chatgptDescription: "Find mso-agent-bootstrap or research capabilities.",
+    chatgptDescription: "Find mso-agent-bootstrap",
     scope: "read",
     annotations: READ_ONLY,
     inputSchema: S({
@@ -174,19 +185,13 @@ export const READ_TOOLS: McpTool[] = [
         ttlMs: 15 * 60_000,
         maxDownloads: 5,
       });
-      const previewUrl = tempShareUrl(share.id);
-      const downloadUrl = tempShareUrl(share.id, true);
+      const previewUrl = tempShareUrl(share.id), downloadUrl = tempShareUrl(share.id, true);
+      const text = `MSO ${shot.shell} screenshot — ${shot.width}×${shot.height}\n` +
+        (artifactPath ? `Session artifact: ${artifactPath}\n` : "") +
+        `Temporary preview: ${previewUrl}\nDirect download: ${downloadUrl}\nExpires ${new Date(share.expiresAt).toISOString()} · ${share.downloadsLeft} authenticated downloads`;
       return mcpDirect([
         { type: "image", data: shot.data, mimeType: shot.mimeType },
-        {
-          type: "text",
-          text:
-            `MSO ${shot.shell} screenshot — ${shot.width}×${shot.height}\n` +
-            (artifactPath ? `Session artifact: ${artifactPath}\n` : "") +
-            `Temporary preview: ${previewUrl}\n` +
-            `Direct download: ${downloadUrl}\n` +
-            `Expires ${new Date(share.expiresAt).toISOString()} · ${share.downloadsLeft} authenticated downloads`,
-        },
+        { type: "text", text },
       ], false, {
         result: { artifact, artifactPath, shell: shot.shell, width: shot.width, height: shot.height, mimeType: shot.mimeType, previewUrl, downloadUrl, expiresAt: share.expiresAt, downloadsLeft: share.downloadsLeft },
       });
