@@ -1,3 +1,18 @@
+## 2026-10-18b: `fs_stat` returns, paid for by a tighter ChatGPT description cap
+
+The read-scope `fs_stat` tool (true size/mtime without `exec_run` or reading binary content) was reverted
+earlier today because its descriptor pushed the complete ChatGPT profile to 94,584 bytes, past the in-repo
+**92 KiB** gate asserted in `lib/mcp/chatgpt-profile.test.ts`. The established way to admit a tool is to
+compact the profile rather than raise the gate (see 2026-10-09), so `lib/mcp/tool-contract.ts` now caps the
+compact one-line descriptions at **24 characters** (was 30) and keeps an explicit `COMPACT_DESCRIPTIONS`
+override for `workflow_start` ("First call: multi-step") so the first-call rule survives the tighter cut;
+`skills_search`'s compact description was shortened so `mso-agent-bootstrap` stays intact. The complete
+profile is now **93,877 bytes with the new tool** (331 bytes of headroom under 92 KiB), the toolset moves to
+`2026.10.18.1` (119 model tools) with a regenerated catalog, and `fs_stat`'s guarded `statReadableMeta` host
+facade plus its parity `MCP_ONLY` entry are restored. The documented scanner budget is 96 KiB
+(`docs/CHATGPT-PLUGIN.md`); the in-repo gate stays deliberately stricter at 92 KiB, and only the character cap
+changed — names, schemas, scopes and safety semantics are unchanged.
+
 ## 2026-10-18: Four agent-surface improvements, a CLI verb, and one benchmark that said "no change"
 
 A parallel agent run (one coordinator, disposable worktrees under `~/.cache/mso-worktrees/mso-*`, each worker
