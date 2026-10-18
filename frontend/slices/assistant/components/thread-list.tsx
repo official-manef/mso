@@ -40,13 +40,20 @@ export function ThreadList({
       .catch(() => setError("Failed to load chats"));
   }, []);
 
-  useEffect(() => {
+  // Fresh drawer chrome every open (render-time state adjustment — no effect
+  // setState): reopening never lands mid-rename or with a stale error/confirm.
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
     if (open) {
-      load();
       setEditingId(null);
       setConfirmDeleteId(null);
       setError(null);
     }
+  }
+
+  useEffect(() => {
+    if (open) load();
   }, [open, load]);
 
   async function resume(id: string) {
