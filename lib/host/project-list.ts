@@ -15,6 +15,7 @@ export type ListProjectsResult = {
   limit: number;
   hasMore: boolean;
   nextOffset?: number;
+  nextAction?: string;
   scan: ScanReport;
   projects: ProjectRow[];
 };
@@ -48,6 +49,11 @@ export async function listProjects(
   }));
   const hasMore = offset + page.length < matched.length;
   return {
+    ...(matched.length === 0 && containers.length ? {
+      nextAction: "This scan lists child directories. Check scan.truncated and pass scan.continuation.cursor back as cursor when present. " +
+        "A returned container may itself be the intended project; call project_get with its exact path only when it matches the target. " +
+        "Container entries do not establish repository contents.",
+    } : {}),
     roots: containers.map((c) => c.path),
     containers: containers.map(({ id, path: p, derived, authorizedRoot }) => ({ id, path: p, derived, authorizedRoot })),
     total: matched.length,

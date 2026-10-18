@@ -4,6 +4,7 @@ const mocks = vi.hoisted(() => ({
   verifyAuth: vi.fn(async () => true),
   listTokens: vi.fn(async () => []),
   publicOrigin: vi.fn(() => "https://mso.example.test"),
+  getRuntimeIdentity: vi.fn(() => ({ hostname: "fixture-host", serviceUser: "fixture-user", runtimeInstanceId: "runtime-fixture", environment: null })),
   mintPatToken: vi.fn(async (input: { label: string; scope: string; ttlDays?: number | null }) => ({
     rawToken: "mso_pat_test123",
     tokenView: {
@@ -18,6 +19,7 @@ const mocks = vi.hoisted(() => ({
   })),
 }));
 
+vi.mock("@/lib/host/system-api", () => ({ getRuntimeIdentity: mocks.getRuntimeIdentity }));
 vi.mock("@/lib/agent/server", () => ({ verifyAuth: mocks.verifyAuth }));
 vi.mock("@/lib/mcp/store", () => ({
   listTokens: mocks.listTokens,
@@ -38,7 +40,8 @@ describe("Settings MCP state", () => {
     const request = new Request("http://127.0.0.1:4005/api/mcp/tokens");
     const response = await GET(request);
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toMatchObject({ enabled: true, maxScope: "exec", origin: "https://mso.example.test" });
+    await expect(response.json()).resolves.toMatchObject({ enabled: true, maxScope: "exec", origin: "https://mso.example.test", targetIdentity: mocks.getRuntimeIdentity() });
+    expect(mocks.verifyAuth).toHaveBeenCalledWith(request, "owner");
     expect(mocks.publicOrigin).toHaveBeenCalledWith(request);
   });
 
@@ -47,6 +50,9 @@ describe("Settings MCP state", () => {
     const { GET } = await import("./route");
     const response = await GET(new Request("https://mso.example.test/api/mcp/tokens"));
     expect(response.status).toBe(401);
+    expect(mocks.getRuntimeIdentity).not.toHaveBeenCalled();
+    expect(mocks.listTokens).not.toHaveBeenCalled();
+    expect(mocks.publicOrigin).not.toHaveBeenCalled();
   });
 
   it("mints Personal Access Tokens (PAT) via POST with owner auth", async () => {

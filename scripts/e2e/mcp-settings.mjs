@@ -1,4 +1,5 @@
 import { mcpSessionsJourney } from "./mcp-sessions.mjs";
+import { mcpConnectionJourney } from "./mcp-connection.mjs";
 // Real production Settings routes, with synthetic owner state and bounded fault injection.
 import path from "node:path";
 import { chmod } from "node:fs/promises";
@@ -71,6 +72,7 @@ export async function mcpOwnerJourneys(page, fixture) {
     await openMcp(page);
     const nav = page.getByRole("navigation", { name: "MCP navigation" });
     await expect(nav.getByRole("button", { name: /^Connected apps/ })).toBeVisible();
+    await mcpConnectionJourney(page, fixture, capture);
     await capture(page, `mcp-overview-${viewport.width}`);
     await nav.getByRole("button", { name: /^Connect an app/ }).click();
     await expect(page.getByRole("heading", { name: "Which app do you want to connect?" })).toBeVisible();

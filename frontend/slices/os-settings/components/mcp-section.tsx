@@ -76,7 +76,7 @@ function OwnerMcpSection() {
       </SettingsBlock>}
       {direction === "inbound" && <McpNavigation active={page} onSelect={navigate} activeCount={state.tokens.filter(token => token.status === "active").length} direction={direction} />}
       {page === "connect" && <McpSetupGuide origin={state.origin} maxScope={state.maxScope} />}
-      {page === "connection" && <McpConnectionSection origin={state.origin} />}
+      {page === "connection" && <McpConnectionSection origin={state.origin} targetIdentity={state.targetIdentity} />}
       {page === "access" && <McpTokenSection tokens={state.tokens} origin={state.origin} maxScope={state.maxScope} onChanged={reload} onConnect={() => navigate("connect")} />}
       {page === "activity" && <McpActivity />}
       {page === "tools" && <McpToolsetCard info={state.toolset} />}

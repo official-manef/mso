@@ -218,6 +218,15 @@ to `resources/` (rr) and drive any project from one manifest:
 - For browser verification, discover an available authenticated/local or mock-only endpoint from
   the current installation; do not encode an operator hostname or home path into tests.
 
+## Pull request readiness
+
+Follow the cross-agent hard gate in [`AGENTS.md`](./AGENTS.md#pull-request-readiness-mandatory-for-all-coding-agents).
+Use `bun run pr:local` before pushing a committed task branch and
+`bun run pr:security` for pinned CI scanner parity where Docker is available.
+If either is missing/failed, keep the PR in **Draft** and explicitly record the
+blocker. CodeQL and review-thread clearance are GitHub-side gates after PR
+creation; a local green run cannot supersede them. Never bypass branch rules.
+
 ## Rules in force
 - **One canonical checkout; parallel work only through isolated hidden worktrees.**
   The canonical `main` checkout is a **release/integration surface, not an agent scratchpad**. Automated source-changing work must happen in a task-owned hidden worktree; if canonical is dirty with another session's work, stop and preserve it rather than stashing, resetting, committing, merging or overwriting on that session's behalf. Only a release/integration step may advance canonical after the candidate and concurrent work are independently preserved and verified.
@@ -237,8 +246,9 @@ to `resources/` (rr) and drive any project from one manifest:
   not hex, mobile-first. Barrel-only cross-slice imports.
 - `/api/v1` host ops go through `lib/host` (bounds + realpath checks) — never call
   `fs`/`child_process` straight from a route.
-- Solo-dev: push direct to `main` once `bun run verify` is green (typecheck + lint +
-  test + check + audit). Conventional commits + Claude co-author.
+- Autonomous coding agents must use isolated task branches and PR review, never push
+  directly to `main`. Human-owned release integration still uses the verified
+  `bun run ship` path after review. Conventional commits + Claude co-author.
 - **The gates live in `scripts/gates.sh`, which IS committed.** `.git/hooks/pre-push`
   is a one-line shim that execs it; reinstall with `bash scripts/gates.sh --install`.
   They used to live in the untracked hook itself, which meant a fresh clone had NO

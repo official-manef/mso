@@ -108,7 +108,7 @@ mso_cli_main() {
       mso_cmd_runtime "$cmd" "$@" ;;
     ai|cockpit|threads|agent-sessions|agent-profiles|agents|org|a2a|memory|memory-graph|agent-vault|config|prefs|federation|models|jev|skills|changelog|stock)
       mso_cmd_state "$cmd" "$@" ;;
-    devices|device|approve|revoke|oauth|mcp|audit|whoami|login|logout|service|build|deploy|update|reset|uninstall|crud|api|completion)
+    devices|device|approve|revoke|oauth|mcp|audit|whoami|login|logout|passwd|service|build|deploy|update|reset|uninstall|crud|api|completion)
       mso_cmd_admin "$cmd" "$@" ;;
     help|-h|--help) usage; exit 0 ;;
     *) mso_cli_unknown "$cmd" ;;

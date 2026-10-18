@@ -57,7 +57,7 @@ function probe(args: string[], env: NodeJS.ProcessEnv) {
 
 describe("Termux PRoot Linux environment boundary", () => {
   it("keeps the adapter executable and valid Bash", () => {
-    expect(fs.statSync(installer).mode & 0o111).toBe(0o111);
+    expect(fs.statSync(installer).mode & 0o100).toBe(0o100);
     const result = spawnSync("/bin/bash", ["-n", installer], { encoding: "utf8" });
     expect(result.status, result.stderr).toBe(0);
   });

@@ -27,6 +27,7 @@ this is the *what*, and it is what Settings → Account → About shows as “Wh
 
 **Fixed**
 
+- `ci` keep secure CLI fixtures compatible with validation
 - `workflow` retain completion during status receipt reads
 - `security` guard model discovery and isolate CodeQL findings
 - close domain integration regressions and preserve strict gates
@@ -41,6 +42,7 @@ this is the *what*, and it is what Settings → Account → About shows as “Wh
 
 **Tests**
 
+- `terminal` isolate real PTY fixture from owner shell state
 - `mcp` add unit tests for fs_stat read capability
 - `api` cover GET and POST handlers in threads route test
 
@@ -52,6 +54,12 @@ this is the *what*, and it is what Settings → Account → About shows as “Wh
 - `progress` record the 2026-10-18 agent-surface batch and the no-change bench
 - `workflows` document proactive turns on durable sessions in workflow graphs
 
+**Chores**
+
+- `mcp` version preserved observation contract
+- `repo` reconcile preserved laptop work on current main
+- `ci` require agent PR readiness evidence
+
 **Other**
 
 - Revert "feat(mcp): add fs_stat read capability for bounded path metadata"
@@ -60,13 +68,23 @@ this is the *what*, and it is what Settings → Account → About shows as “Wh
 
 **Added**
 
+- `cli` add hidden local password setup
 - `domains` provision persistent managed-app subdomains from CLI
 - `models` discover model ids from custom endpoints
+
+**Fixed**
+
+- `cli` include passwd in command discovery
+- `mcp` repair observation workflows and connection diagnostics
 
 **Docs**
 
 - `progress` preserve managed-domain CLI handoff and remaining gates
 - `progress` record custom-endpoint discovery deploy and no-service ship limitation
+
+**Chores**
+
+- `cli` normalize password test file modes
 
 ## 2026-10-15
 

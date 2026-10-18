@@ -8,6 +8,7 @@ import type { FsRoot } from "@/lib/os-api/types";
 import { promises as fs } from "fs";
 import path from "path";
 import { HostError } from "./host-error";
+import { readRootListWithWorkspace, readableRootRealpath } from "./fs-isolation";
 import { isCredentialPath } from "./path-credentials";
 import { homeDir, isUnderRoot, readRootList, writeRootList } from "./path-roots";
 export { appDir, isAppSecret, isCredentialPath, isSensitivePath, looseCredentialExcludes } from "./path-credentials";
@@ -76,7 +77,7 @@ export async function resolveReadable(requested: string): Promise<string> {
   else absolute = path.resolve(requested);
   const normalized = path.resolve(absolute);
   assertNotCredential(normalized);
-  const configured = lexicalRoots(readRootList());
+  const configured = lexicalRoots(await readRootListWithWorkspace(normalized));
 
   // Keep each filesystem sink inside the SAFE branch of CodeQL's documented
   // path.relative sanitizer. Runtime-equivalent flags/helpers hide the proof from
@@ -87,7 +88,7 @@ export async function resolveReadable(requested: string): Promise<string> {
       continue;
     } else {
       const real = await fs.realpath(normalized);
-      const realRoot = await fs.realpath(root).catch(() => path.resolve(root));
+      const realRoot = await readableRootRealpath(root);
       const realRelative = path.relative(realRoot, real);
       if (
         realRelative === ".." ||

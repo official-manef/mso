@@ -82,7 +82,7 @@ export function replaceLoginPassword(text: string, next: string): string {
   return lines.join("\n");
 }
 
-async function readEnvFile(file: string): Promise<string> {
+export async function readLoginPasswordEnvironment(file: string): Promise<string> {
   let handle: Awaited<ReturnType<typeof fs.open>> | null = null;
   try {
     handle = await fs.open(file, fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW);
@@ -138,7 +138,7 @@ export async function rotateLoginPassword(input: {
   }
   if (constantTimeEq(configured, input.next)) throw new LoginPasswordError("unchanged");
   const file = input.file ?? loginPasswordPath();
-  const text = await readEnvFile(file);
+  const text = await readLoginPasswordEnvironment(file);
   const stored = extractLoginPassword(text);
   if (!constantTimeEq(stored, configured)) throw new LoginPasswordError("password_source_mismatch");
   await writeEnvFile(file, replaceLoginPassword(text, input.next));

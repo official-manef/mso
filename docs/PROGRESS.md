@@ -1,3 +1,23 @@
+## 2026-10-18: Isolate the real PTY integration fixture from owner shell state
+
+Two complete candidate gates passed before a later concurrent full run observed no PTY exit callback within the unchanged eight-second close deadline. Command execution and replay had succeeded; the exact native scheduling cause was not established. The standalone test passed under the same host load.
+
+The real integration fixture now declares a private executable shell wrapper through scoped `SHELL`, preserves the production login-shell arguments, and runs actual Bash with `--noprofile --norc`. Private history and readline files replace the owner's shell startup, history and input configuration. A `finally` block detaches listeners, closes any remaining fixture PTY, restores the scoped environment and removes temporary files. Production PTY code, signal behavior, real echo/replay/kill/exit/idempotence assertions, and the original eight-second/twenty-second time limits are unchanged.
+
+Focused validation includes ten repeated real-PTY runs and nine ownership/limit/stream tests. Full preflight, strict security and normal hooked publication must still pass on the committed candidate; earlier successful gates do not certify this new head.
+
+## 2026-10-18: Reconcile preserved laptop changes onto current main for review
+
+The laptop-only observation/connection diagnostics, agent PR-readiness policy, and hidden local password setup were preserved as five original commits and replayed onto `53fa602e`. The source changes remain a review candidate in an isolated branch; they have not been merged or deployed. Existing main already contains the custom-provider model-discovery work, which is excluded from this candidate.
+
+History-only conflicts retain both progress records. The local-maintenance extraction keeps main's shared help-before-credentials helper, including that helper in the password fixture. New word-boundary compaction tests now exercise a non-overridden tool at main's existing 24-character limit and explicitly preserve the `workflow_start` first-call override. No profile budget or production ownership guard is relaxed.
+
+Candidate checks so far: 136 focused tests across 16 files, typecheck, zero-warning lint, architecture ratchets, current-reference docs, generated MCP catalog and generated CLI reference pass. Full PR, security and hosted checks remain separate gates; this entry does not claim merge or release readiness.
+
+The first full local run executed 4,946 tests with 4,945 passing; its sole failure was the existing Termux assertion requiring group/other execute bits under the mandated private umask. The candidate adopts the already-reviewed owner-executable assertion from the concurrent foundation candidate. The pinned strict Semgrep run reported no findings but failed partial parsing of Bash's combined read/write terminal descriptor. Equivalent separate read/write descriptors retain hidden prompts and terminal-only input while allowing complete parsing; the existing real-PTY regression verifies echo suppression, confirmation and cancellation. Scanner rules and production guards remain unchanged.
+
+The preserved public observation contract is versioned as toolset `2026.10.18.3`, with the generated catalog refreshed. The concurrent foundation candidate owns `.2`; the two independent PRs still require normal version/catalog reconciliation at integration. Tool names, scopes and counts remain unchanged. Pinned strict Semgrep now parses all selected lines with zero findings, and pinned warning-level ShellCheck passes on the CLI repair; hosted checks must verify the eventual pushed SHA.
+
 ## 2026-10-18: Repair model-discovery findings and separate CodeQL from historical Scorecard posture
 
 The main push at `94c133a2aa6bcb8e54f39286d9b4993a2f47855a` completed its CodeQL analysis, then failed the open-alert gate on four CodeQL findings and Scorecard SAST alert #137. The model-discovery route already injected the pinned provider transport, but its shared helper exposed a raw-fetch default. The helper now owns the mandatory SSRF/DNS-pinned transport. Invalid credentials, provider response bodies and unexpected transport errors cannot be returned as diagnostic text containing API keys. Rejected and oversized responses cancel their bodies. The domain environment regression now checks final content and file permissions through one opened descriptor while retaining its idempotence assertion.
@@ -123,6 +143,12 @@ verb, and `docs/CLI.md` was regenerated from the help text (the same change keep
 gates passed (100% routing recall, 97.3% schema reduction, deterministic selection). Per the P7 #5 / P8 #6
 closed-loop rule, a passing corpus is not evidence of a defect, so it reported the observed gate values instead
 of inventing a speculative change.
+## 2026-10-17: Make PR readiness auditable across MSO coding agents (candidate)
+
+PR #123 showed four distinct blockers: two gateway tests failing during CI coverage, a ShellCheck SC2164 warning, strict Semgrep exiting 3 with zero findings, and two new CodeQL filesystem race alerts. Existing `AGENTS.md` and the pre-push `scripts/gates.sh` offered guidance but could not establish whether another AI surface had run it, and GitHub-only CodeQL cannot be proven before the PR exists.
+
+The candidate adds an explicit agent-facing `scripts/pr-preflight.sh` and Bun commands `pr:local`, `pr:security`, `pr:preflight`. Local mode reuses the checked-in gates and strict audit rather than defining a weaker test suite; security mode reproduces pinned Semgrep/ShellCheck CI checks and fails closed when Docker is missing. A PR template and both agent manuals require exact-commit evidence, Draft state for unavailable checks, required GitHub CodeQL/review-thread clearance before marking ready, and no bypass. Automated contracts pin scanner parity. This is a candidate branch, **not deployed or merged into main**; GitHub-required checks and review resolution remain separate.
+
 ## 2026-10-17: Handoff the managed-domain CLI candidate for a new session
 
 The owner explicitly requested a committed, pushed draft PR checkpoint and progress record before continuing in a new session. Implementation is preserved on `agent/mso-103047d38625`; the code commit is `da3ce4f69dfcdcb44a26f4522ced653194ec6172`, based on `89d61bb0d73b47047c67e51df9a6ee30351c8c3a`. The task worktree is `~/.cache/mso-worktrees/mso-103047d38625`; canonical remains `~/mso`. Keep the draft separate from release integration until the remaining checks pass.
@@ -157,6 +183,19 @@ Provisioning first checks the deployed MSO app-host authorization gate, the sele
 Nested application names require a certificate covering those exact hosts. DNS creation is not presented as TLS success, and no paid certificate is purchased automatically. Current setup, repair and migration boundaries are documented in `docs/MANAGED-DOMAINS.md`; the old RFC is retained as historical context rather than an active setup recipe.
 
 Verification on the inspected fallback-runtime host found no Docker executable, daemon socket or configured remote Docker host. The existing mandatory Tool Forge sandbox tests therefore remain an environment prerequisite for release; no live DNS, application installation or deployment is claimed from candidate-only checks.
+## 2026-10-17: Repair observation workflows and show what connection checks actually verify
+
+A hostname request could be treated as source mutation when its constraints said “do not modify files” or “jangan edit file.” The classifier now removes directly negated mutation verbs, including explicit coordinated lists, while retaining affirmative changes elsewhere and conservatively isolating ambiguous comma clauses. Declared affected paths also reach classification when there is no collision. This remains a bounded heuristic: the separate high-risk-domain policy is unchanged, and observational classification does not turn an exec grant into read-only shell access.
+
+Compact clients now receive the exact workflow workspace, canonical project path, isolation policy and available base Git identity. File reads and optimistic writes gain only the exact workspace from the authenticated session's active workflow. Read tools pin that workspace only when a bounded filesystem read needs additional authority, so status and configured-root reads remain available when the workspace is missing. Concurrent reads share one pin; cleanup revokes additional authority before awaiting its closure, including detached continuations. The kernel clears inherited additional read authority before nested dispatch. Write and exec isolation still pin eagerly. Configured read roots, credential checks, descriptor validation and write boundaries remain in force.
+
+Settings → MCP → Connection details now shows owner-only hostname, service user, runtime instance and an optional operator-declared environment from OS_INSTANCE_ENVIRONMENT. The environment is independent of NODE_ENV; a production build does not identify a production host. The public health response is unchanged. Connection checks record the observed origin, configured endpoint and time; health, HTTPS, MCP descriptor, OAuth challenge and metadata have separate evidence. Each request has an eight-second deadline and JSON has a 64 KiB limit. A changed or missing expected runtime identity prompts target verification. The selected external AI account and its cached tools stay unknown; a local discovery pass is not evidence that those client states are current.
+
+When project discovery returns no matched rows, its recovery hint explains child-directory scanning and continuation, then points to exact configured-container-path inspection when that path matches the target. It does not rename root-project identities. Root enumeration needs a separate compatibility change because project IDs also key Vault storage, skill references and flow idempotency. LAUNCH-READINESS records that acceptance scope and corrects the earlier inference that an empty rulesets list meant unprotected main.
+
+Compact tool descriptions now end at a word boundary where possible, preserving the existing character cap and full descriptor. The ChatGPT profile retains all 120 tools and serializes to 94,001 bytes, below the existing 92 KiB limit; schemas and budget limits are unchanged. Gateway child-process fixtures explicitly select test mode so an inherited production NODE_ENV does not change their expected behavior. The dedicated production listener-ownership regression still selects production mode explicitly.
+
+Recorded WSL verification passed typecheck and lint, then ran 4,551 tests across 742 files: 4,548 passed and three Forge tests failed because the required Docker sandbox was unavailable. The full verify gate therefore remains failed; no Forge test is skipped or substituted. Focused filesystem/status verification passed 50 tests across five files, including workspace replacement, ownership, concurrent and nested calls, missing workspaces and pending pin cleanup. The connection browser journey is included in the existing mandatory release fixture at desktop, phone and landscape sizes. Build, required CI and live deployment evidence remain separate gates. These changes do not satisfy the off-host restore, fresh-user cohort, sustained SLO or dedicated agent-abuse readiness gates; Alpha/Developer Preview remains the release label.
 
 ## 2026-10-17: Deploying on a host with no `mso.service`, and why `bun run ship` cannot finalize there
 
@@ -184,6 +223,10 @@ The consent page rejected every `client_id` it had not minted itself with "This 
 The Security Core gate was failing deterministically at `bff30987` on the Semgrep job with exit code 3 despite zero findings. Semgrep's bash parser rejects a one-line `case` whose pattern list contains `|` alternation, and `--strict` promotes that parse warning to a fatal exit; the trigger was `scripts/cli/ai-provider-auth.sh:63`. The arm is expanded to three lines, which parses clean, so the strict gate keeps catching genuinely unparseable shells instead of being relaxed.
 
 A ChatGPT connector therefore reconnects against the callback it already holds; no re-add is required.
+
+## 2026-10-17: Local hidden-prompt login password setup
+
+`mso passwd` creates or changes the local installation login password without an HTTP session, password arguments, env-file execution or cookie-jar creation. It reuses login password validation and rotation; fresh configuration is published without overwriting another writer, mode 0600, with a random session signing secret and MCP disabled. Existing signing secrets and other configuration remain unchanged. Changing an existing password requires its current value. `mso passwd status` exposes configuration metadata only; no password read/delete operation is provided. The user must start/restart MSO explicitly to apply local file changes; existing sessions are not revoked. Tests use temporary installation fixtures, including a real PTY to verify hidden input and cancellation. No live installation credentials are created by development or tests.
 
 ## 2026-10-14: Fix the provider picker and make `mso models add` scriptable
 

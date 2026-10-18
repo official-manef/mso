@@ -4,6 +4,17 @@ export const WORKFLOW_START_OUTPUT = {
   ...WORKFLOW_PROGRESS_OUTPUT,
   properties: {
     ...WORKFLOW_PROGRESS_OUTPUT.properties,
+    workspace: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "Exact authorized path for source files and exec cwd." },
+        projectPath: { type: "string", description: "Canonical project path." },
+        isolation: { type: "string", enum: ["direct", "optional-worktree", "isolated-worktree"] },
+        baseCommit: { type: "string" },
+        baseBranch: { type: "string" },
+      },
+      required: ["path", "isolation"], additionalProperties: false,
+    },
     context: {
       type: "object",
       properties: {
@@ -51,6 +62,19 @@ export function workflowStartProjection(result: unknown): Record<string, unknown
   const row = result as Record<string, unknown>;
   const progress = workflowProgress(row.workflow, true);
   if (!progress) return undefined;
+  const workflow = row.workflow as Record<string, unknown>;
+  const snapshot = workflow.orchestration && typeof workflow.orchestration === "object"
+    ? workflow.orchestration as Record<string, unknown> : {};
+  const workspace = typeof snapshot.workspacePath === "string" && snapshot.workspacePath
+    && ["direct", "optional-worktree", "isolated-worktree"].includes(String(snapshot.isolation))
+    ? {
+        path: snapshot.workspacePath,
+        isolation: snapshot.isolation,
+        ...(typeof workflow.project === "string" ? { projectPath: workflow.project } : {}),
+        ...(typeof snapshot.baseCommit === "string" ? { baseCommit: snapshot.baseCommit } : {}),
+        ...(typeof snapshot.baseBranch === "string" ? { baseBranch: snapshot.baseBranch } : {}),
+      }
+    : undefined;
   const bootstrap = row.bootstrap && typeof row.bootstrap === "object" ? row.bootstrap as Record<string, unknown> : {};
   const orchestration = bootstrap.orchestration && typeof bootstrap.orchestration === "object"
     ? bootstrap.orchestration as Record<string, unknown> : {};
@@ -112,6 +136,7 @@ export function workflowStartProjection(result: unknown): Record<string, unknown
   }
   return {
     ...progress,
+    ...(workspace ? { workspace } : {}),
     context: {
       memory: memory.slice(0, 10),
       memoryHits: Number.isFinite(Number(orchestration.memoryHits))

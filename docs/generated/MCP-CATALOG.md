@@ -4,13 +4,13 @@
 
 ## Full MSO catalog
 
-<!-- mcp-toolset: server=1.17.0 version=2026.10.18.1 tools=119 read=59 write=37 exec=23 -->
+<!-- mcp-toolset: server=1.17.0 version=2026.10.18.3 tools=119 read=59 write=37 exec=23 -->
 
 | Fact | Current source value |
 |---|---:|
 | MCP server | `1.17.0` |
-| Toolset | `2026.10.18.1` |
-| Toolset changed at | `2026-10-18T00:00:00+00:00` |
+| Toolset | `2026.10.18.3` |
+| Toolset changed at | `2026-10-18T13:24:00+00:00` |
 | Transport tools | **121** |
 | Model/operator tools | **119** |
 | Read | **59** |
@@ -153,7 +153,7 @@
 
 ## ChatGPT model profile
 
-<!-- mcp-chatgpt-profile: server=1.17.0 version=2026.10.18.1 tools=119 read=59 write=37 exec=23 app-only=2 total=121 -->
+<!-- mcp-chatgpt-profile: server=1.17.0 version=2026.10.18.3 tools=119 read=59 write=37 exec=23 app-only=2 total=121 -->
 
 The ChatGPT profile automatically projects the complete MSO-owned generic model/operator catalog. OAuth scope is still enforced independently; app-only compatibility bridges stay app-only, and project-owned MCP tool names remain dynamic data behind the generic project bridge.
 

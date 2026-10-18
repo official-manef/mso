@@ -99,6 +99,7 @@
 #   approve <id> [label] [--role ...]  Approve a device id
 #   revoke <id>          Revoke one device
 #   whoami               This CLI's device id + session state
+#   passwd [status]      Set/change local login password with hidden prompts; status is metadata only
 #   login                Force a fresh login
 #   logout               Drop the session (server-side + local jar)
 #
@@ -169,27 +170,9 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-# Help and local maintenance do not source credentials or create a cookie jar.
-case "${1-}" in
-  help|-h|--help)
-    # shellcheck source=../scripts/cli/help.sh
-    source "$ROOT/scripts/cli/help.sh"; usage; exit 0 ;;
-  heartbeat)
-    [ -z "$BASE_OVERRIDE" ] || die "heartbeat is local-only; omit --base"
-    shift
-    MSO_GATEWAY_ROOT="$ROOT" MSO_GATEWAY_ENV="${ENV_OVERRIDE:-${MSO_ENV:-${OS_ENV:-$ROOT/.env.local}}}" exec "$ROOT/scripts/mso-heartbeat" "$@" ;;
-  reset|uninstall)
-    [ -z "$BASE_OVERRIDE$ENV_OVERRIDE${MSO_BASE:-}${OS_BASE:-}${MSO_ENV:-}${OS_ENV:-}" ] \
-      || die "maintenance is local-only; omit --base/--env and run over SSH on the intended host"
-    exec node "$ROOT/scripts/mso-maintenance.mjs" "$@" ;;
-  tenant)
-    [ -z "$BASE_OVERRIDE$ENV_OVERRIDE${MSO_BASE:-}${OS_BASE:-}${MSO_ENV:-}${OS_ENV:-}" ] \
-      || die "tenant enrollment is local-only; omit --base/--env and run over SSH on the intended host"
-    shift
-    set -a; . "$ROOT/.env.local" 2>/dev/null || true; set +a
-    export PATH="$HOME/.bun/bin:$PATH"
-    exec bun "$ROOT/scripts/mso-tenant.ts" "$@" ;;
-esac
+# Help and local maintenance run before credentials or HTTP session state.
+# shellcheck source=../scripts/cli/local-maintenance.sh
+source "$ROOT/scripts/cli/local-maintenance.sh"
 
 B="${BASE_OVERRIDE:-${MSO_BASE:-${OS_BASE:-http://127.0.0.1:4005}}}"
 ENVF="${ENV_OVERRIDE:-${MSO_ENV:-${OS_ENV:-$ROOT/.env.local}}}"

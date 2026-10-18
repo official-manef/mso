@@ -52,6 +52,7 @@ describe("workflow_start source isolation", () => {
     const actor = "mcp:source-isolation";
     const started = await start.run({
       intent: "fix the source value and verify the repository",
+      constraints: "Do not modify unrelated files.",
       project,
       affected_paths: ["src/value.ts"],
     }, { actor, scope: "exec" }) as {
@@ -64,6 +65,9 @@ describe("workflow_start source isolation", () => {
     expect(workspace).toBeTruthy(); expect(workspace).not.toBe(project); expect(workspace!.startsWith(worktrees + path.sep)).toBe(true);
     expect(started.bootstrap.trace).toEqual(expect.arrayContaining([expect.stringContaining("[Workspace] task-owned worktree")]));
     expect(started.bootstrap.policy.workspace).toContain(workspace!);
+    expect(start.toStructuredContent?.(started)).toMatchObject({
+      workspace: { path: workspace, projectPath: project, isolation: "isolated-worktree", baseCommit: git("rev-parse", "HEAD") },
+    });
 
     const context = { actor, workflowActor: actor, workflowId: started.workflow.id, scope: "exec" as const };
     await expect(write.run({ path: path.join(project, "src/value.ts"), content: "export const value = 2;\n" }, context)).rejects.toThrow(/source-isolated/i);
@@ -75,6 +79,40 @@ describe("workflow_start source isolation", () => {
     expect(shell.code).toBe(0); expect(shell.stdout).toContain("src/value.ts");
     expect(await fs.readFile(path.join(project, "src/value.ts"), "utf8")).toBe("export const value = 1;\n");
     expect(await fs.readFile(path.join(workspace!, "src/value.ts"), "utf8")).toBe("export const value = 2;\n");
+    expect(git("status", "--porcelain")).toBe("");
+  });
+
+  it("allows hostname observation with a negative source constraint in the canonical project", async () => {
+    const { LEARNING_TOOLS } = await import("./tools-learning");
+    const { MUTATE_TOOLS } = await import("./tools-mutate");
+    const start = LEARNING_TOOLS.find((tool) => tool.name === "workflow_start")!;
+    const exec = MUTATE_TOOLS.find((tool) => tool.name === "exec_run")!;
+    const actor = "mcp:hostname-observation";
+    const before = git("worktree", "list", "--porcelain");
+    const started = await start.run({
+      intent: "Check hostname.", constraints: "Read only; do not modify files.", project,
+    }, { actor, scope: "exec" }) as { workflow: { id: string; orchestration: { isolation: string; workspacePath: string } } };
+    expect(started.workflow.orchestration).toMatchObject({ isolation: "optional-worktree", workspacePath: project });
+    expect(start.toStructuredContent?.(started)).toMatchObject({
+      workspace: { path: project, projectPath: project, isolation: "optional-worktree" },
+    });
+    const result = await exec.run({ command: "hostname", cwd: project }, {
+      actor, workflowActor: actor, workflowId: started.workflow.id, scope: "exec",
+    }) as { code: number; stdout: string };
+    expect(result.code).toBe(0);
+    expect(result.stdout.trim()).toBe(os.hostname());
+    expect(git("worktree", "list", "--porcelain")).toBe(before);
+    expect(git("status", "--porcelain")).toBe("");
+  });
+
+  it("isolates a declared source path even without a recognized mutation verb", async () => {
+    const { LEARNING_TOOLS } = await import("./tools-learning");
+    const start = LEARNING_TOOLS.find((tool) => tool.name === "workflow_start")!;
+    const started = await start.run({
+      intent: "Sesuaikan nilai sumber.", project, affected_paths: ["src/declared.ts"],
+    }, { actor: "mcp:declared-path", scope: "exec" }) as { workflow: { orchestration: { isolation: string; workspacePath: string } } };
+    expect(started.workflow.orchestration.isolation).toBe("isolated-worktree");
+    expect(started.workflow.orchestration.workspacePath).not.toBe(project);
     expect(git("status", "--porcelain")).toBe("");
   });
 

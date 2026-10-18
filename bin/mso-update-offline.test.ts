@@ -37,6 +37,7 @@ function fixture() {
     "scripts/cli/service.sh",
     "scripts/cli/transport.sh",
     "scripts/cli/onboarding.sh", "scripts/cli/onboarding-ai.sh",
+    "scripts/cli/local-maintenance.sh",
     "scripts/cli/commands.sh",
     "scripts/cli/help.sh",
     "scripts/cli/commands-host.sh",
