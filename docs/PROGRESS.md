@@ -1,8 +1,9 @@
-## 2026-10-18: Five agent-surface improvements, and one benchmark that said "no change"
+## 2026-10-18: Four agent-surface improvements, a CLI verb, and one benchmark that said "no change"
 
 A parallel agent run (one coordinator, disposable worktrees under `~/.cache/mso-worktrees/mso-*`, each worker
-owning a disjoint file set) landed five independent improvements to the agent surface, plus one benchmark run
-that correctly produced no code. Everything below was reviewed as a diff, merged to `main`, and gated.
+owning a disjoint file set) landed four independent improvements to the agent surface plus one CLI verb, plus
+one benchmark run that correctly produced no code. Everything below was reviewed as a diff, merged to `main`,
+and gated.
 
 **`/api/skills` is cached now.** `lib/skills/catalog-ttl.ts` is a value-level memo (`createCatalogTtl`, 15 s
 default, injected clock, single-flight) wired into the list branch of `app/api/skills/route.ts`. The Cockpit and
@@ -11,11 +12,15 @@ name lookup would be a trust bug), `?refresh=1` forces a re-walk, and the `scan`
 through byte-identical so `scan.truncated` still means incomplete-not-absent. This closes the one gap the
 assistant contract named.
 
-**`fs_stat` is a new read-scope MCP tool.** External MCP clients had no way to learn a file's true size or
-mtime without `exec_run` or reading binary content (`fs_list` reports size `0` by design). `lib/host/fs.ts`
-gained `statReadableMeta` behind the `resolveReadable()` guard, `lib/mcp/tools-read.ts` declares `fs_stat`
-reusing the standard `{ path }` schema, and parity records the deliberate `MCP_ONLY` exemption. The toolset
-moved to `2026.10.18.1` (119 model tools) and `docs/generated/MCP-CATALOG.md` was regenerated.
+**A read-scope `fs_stat` tool was prototyped and then reverted.** External MCP clients had no way to learn a
+file's true size or mtime without `exec_run` or reading binary content (`fs_list` reports size `0` by design),
+so a guarded `statReadableMeta` host facade and an `fs_stat` declaration were added — but the added descriptor
+pushed the complete ChatGPT profile to 94,584 bytes, past the in-repo **92 KiB** budget gate asserted in
+`lib/mcp/chatgpt-profile.test.ts`. That gate is deliberately stricter than the documented 96 KiB scanner budget
+(`docs/CHATGPT-PLUGIN.md`), and MSO's established way to admit a tool is to compact the profile, not to raise
+the gate. No compaction left the asserted compact descriptions intact at the required saving, so the change was
+reverted rather than weakening the budget; the toolset returns to `2026.10.10.1` (118 model tools). Re-adding
+`fs_stat` needs a profile-budget plan first (reclaim ~400 bytes, or an owner decision on the 92→94 KiB gate).
 
 **Alfa's saved-chat drawer is searchable and safe.** It rendered `updatedAt` but never showed it, had no
 search, could not rename, and deleted a chat with no confirmation. `lib/ai/threads.ts` gained `renameThread`
@@ -35,6 +40,10 @@ is untouched — unattended authority is still `web:*`-only with a live device r
 client threw it away. `AgentTurn`/`AgentLoopResult` now carry an optional `ProviderUsage` (additive only, so the
 image editor that also calls `runToolAgent` is unaffected), accumulated across tool rounds with `addProviderUsage`,
 and rendered per turn plus as a running thread total.
+
+**The new rename route needs a reachable CLI verb.** `bin/mso.test.ts` requires every `app/api` `(method, path)`
+to map to a named verb, so `PATCH /api/threads` added a `jpatch` transport helper and a `threads rename <json>`
+verb, and `docs/CLI.md` was regenerated from the help text (the same change keeps `docs/CLI.md` fresh).
 
 **The cognitive-routing task produced no code, on purpose.** The worker ran `bun run bench:cognitive`; all 17
 gates passed (100% routing recall, 97.3% schema reduction, deterministic selection). Per the P7 #5 / P8 #6
