@@ -1,3 +1,24 @@
+## 2026-10-18c: A service-owned listener no longer dead-ends an update; Alfa lint restored
+
+Two follow-ups after the agent-surface batch.
+
+**Service-active updates.** An interrupted update could leave a gateway restore inventory naming an origin
+that this checkout's own `mso.service` now serves; the quiesce step then failed closed ("a loopback MSO
+runtime is active but is not gateway-owned") and every retry failed identically. The service-active quiesce
+path now reports `runtime: service-owned` when `gateway_service_owns_local_listener` *proves* the healthy
+listener belongs to this checkout's own active unit — that listener is not a fallback runtime, the service
+lifecycle keeps it, and `scripts/self-update.sh` replaces it by signalling its same-UID MainPID, so there is
+nothing to quiesce. The offline preflight (`runtime-assert-update-safe`) keeps the strict form, and any
+listener not proven to be this checkout's unit still fails closed. Regressions:
+`scripts/mso-gateway-service-owned.test.ts` plus a service-owned case in `scripts/mso-service-update.test.ts`.
+
+**Lint.** The batch above shipped two `bun run lint` failures that neither a `--no-verify` push nor the
+build-only verify stage catches: a `react-hooks/set-state-in-effect` error in the saved-chat drawer and a
+`max-lines` breach in `chat-panel.tsx` (239 counted lines). The drawer now resets with a render-time state
+adjustment (its History button opens the sheet without routing through `onOpenChange`), and the token-usage
+state moved into a new `useTurnUsage` hook, returning `chat-panel.tsx` to 217 counted lines.
+`docs/CHANGELOG.md` was regenerated.
+
 ## 2026-10-18b: `fs_stat` returns, paid for by a tighter ChatGPT description cap
 
 The read-scope `fs_stat` tool (true size/mtime without `exec_run` or reading binary content) was reverted
