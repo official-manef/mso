@@ -4,21 +4,21 @@
 
 ## Full MSO catalog
 
-<!-- mcp-toolset: server=1.17.0 version=2026.10.10.1 tools=118 read=58 write=37 exec=23 -->
+<!-- mcp-toolset: server=1.17.0 version=2026.10.18.1 tools=119 read=59 write=37 exec=23 -->
 
 | Fact | Current source value |
 |---|---:|
 | MCP server | `1.17.0` |
-| Toolset | `2026.10.10.1` |
-| Toolset changed at | `2026-10-10T07:40:00+00:00` |
-| Transport tools | **120** |
-| Model/operator tools | **118** |
-| Read | **58** |
+| Toolset | `2026.10.18.1` |
+| Toolset changed at | `2026-10-18T00:00:00+00:00` |
+| Transport tools | **121** |
+| Model/operator tools | **119** |
+| Read | **59** |
 | Write | **37** |
 | Exec | **23** |
 | App-only bridges | **2** |
 
-### Read (58)
+### Read (59)
 
 - `a2a_agent_discover`
 - `a2a_agents_list`
@@ -44,6 +44,7 @@
 - `fs_list`
 - `fs_read`
 - `fs_search`
+- `fs_stat`
 - `fs_usage`
 - `infra_provider_doctor`
 - `infra_providers_list`
@@ -152,20 +153,20 @@
 
 ## ChatGPT model profile
 
-<!-- mcp-chatgpt-profile: server=1.17.0 version=2026.10.10.1 tools=118 read=58 write=37 exec=23 app-only=2 total=120 -->
+<!-- mcp-chatgpt-profile: server=1.17.0 version=2026.10.18.1 tools=119 read=59 write=37 exec=23 app-only=2 total=121 -->
 
 The ChatGPT profile automatically projects the complete MSO-owned generic model/operator catalog. OAuth scope is still enforced independently; app-only compatibility bridges stay app-only, and project-owned MCP tool names remain dynamic data behind the generic project bridge.
 
 | Fact | Current source value |
 |---|---:|
-| ChatGPT transport tools | **120** |
-| ChatGPT model/operator tools | **118** |
-| Read | **58** |
+| ChatGPT transport tools | **121** |
+| ChatGPT model/operator tools | **119** |
+| Read | **59** |
 | Write | **37** |
 | Exec | **23** |
 | App-only bridges | **2** |
 
-### ChatGPT read (58)
+### ChatGPT read (59)
 
 - `a2a_agent_discover`
 - `a2a_agents_list`
@@ -191,6 +192,7 @@ The ChatGPT profile automatically projects the complete MSO-owned generic model/
 - `fs_list`
 - `fs_read`
 - `fs_search`
+- `fs_stat`
 - `fs_usage`
 - `infra_provider_doctor`
 - `infra_providers_list`
