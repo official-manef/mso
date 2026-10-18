@@ -42,6 +42,7 @@ this is the *what*, and it is what Settings → Account → About shows as “Wh
 
 **Tests**
 
+- `terminal` isolate real PTY fixture from owner shell state
 - `mcp` add unit tests for fs_stat read capability
 - `api` cover GET and POST handlers in threads route test
 
