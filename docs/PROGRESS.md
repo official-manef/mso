@@ -1,3 +1,11 @@
+## 2026-10-18: Isolate the real PTY integration fixture from owner shell state
+
+Two complete candidate gates passed before a later concurrent full run observed no PTY exit callback within the unchanged eight-second close deadline. Command execution and replay had succeeded; the exact native scheduling cause was not established. The standalone test passed under the same host load.
+
+The real integration fixture now declares a private executable shell wrapper through scoped `SHELL`, preserves the production login-shell arguments, and runs actual Bash with `--noprofile --norc`. Private history and readline files replace the owner's shell startup, history and input configuration. A `finally` block detaches listeners, closes any remaining fixture PTY, restores the scoped environment and removes temporary files. Production PTY code, signal behavior, real echo/replay/kill/exit/idempotence assertions, and the original eight-second/twenty-second time limits are unchanged.
+
+Focused validation includes ten repeated real-PTY runs and nine ownership/limit/stream tests. Full preflight, strict security and normal hooked publication must still pass on the committed candidate; earlier successful gates do not certify this new head.
+
 ## 2026-10-18: Reconcile preserved laptop changes onto current main for review
 
 The laptop-only observation/connection diagnostics, agent PR-readiness policy, and hidden local password setup were preserved as five original commits and replayed onto `53fa602e`. The source changes remain a review candidate in an isolated branch; they have not been merged or deployed. Existing main already contains the custom-provider model-discovery work, which is excluded from this candidate.
