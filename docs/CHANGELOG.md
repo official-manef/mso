@@ -55,6 +55,7 @@ this is the *what*, and it is what Settings → Account → About shows as “Wh
 
 **Chores**
 
+- `mcp` version preserved observation contract
 - `repo` reconcile preserved laptop work on current main
 - `ci` require agent PR readiness evidence
 
