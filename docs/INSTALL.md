@@ -630,7 +630,13 @@ The updater then runs outside that service cgroup so it survives the restart. Wi
 service (including WSL without systemd), it performs the clean fast-forward/dependency/verify/build
 path locally. Before an offline build mutates dependencies or `.next`, MSO also verifies the selected
 loopback origin is either down or represented by gateway-owned lifecycle state; a manually started or
-otherwise unowned healthy MSO runtime is refused and must be stopped first. Before either the
+otherwise unowned healthy MSO runtime is refused and must be stopped first. The service-active
+quiesce path additionally treats a healthy listener that is *proven* to be this checkout's own active
+`mso.service` as update-safe (`runtime: service-owned`): that listener is not a fallback runtime, the
+service lifecycle keeps it, and `scripts/self-update.sh` replaces it by signalling its same-UID MainPID,
+so there is nothing to quiesce and an interrupted service update can be retried instead of dead-ending on
+stale restore inventory. The offline preflight keeps the strict form and still refuses any listener that
+is not proven to belong to this checkout's unit. Before either the
 service-active or offline in-place build, update inventories every gateway state for the canonical checkout, quiesces each verified owned fallback runtime, leaves active tunnel identities intact, rebuilds, then restores every previously-owned origin with the exact env-file identity recorded for that fallback. Older owned state that predates env identity is refused before the runtime is stopped; run the same `mso --env ... web`/gateway path once to migrate it safely. A
 checkout-scoped private deployment receipt and restart marker mean a dependency/build failure after
 Git already reached `origin/main` is retried by the next ordinary `mso update` instead of being

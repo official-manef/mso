@@ -115,7 +115,7 @@ update_gateway_quiesce_all() {
   for entry in "${entries[@]}"; do
     out="$(update_gateway_entry_call runtime-stop "$entry")" || fail "could not safely quiesce gateway runtime at $(jq -r .url <<<"$entry")"
     case "$out" in
-      *'runtime: stopped-owned'*|*'runtime: recovered-stale-owned'*|*'runtime: recovery-pending'*|*'runtime: already-down'*) ;;
+      *'runtime: stopped-owned'*|*'runtime: recovered-stale-owned'*|*'runtime: recovery-pending'*|*'runtime: already-down'*|*'runtime: service-owned'*) ;;
       *) fail "unexpected gateway runtime-stop result for $(jq -r .url <<<"$entry")" ;;
     esac
   done

@@ -29,7 +29,7 @@ function state(home: string, name: string, root: string, localUrl: string, envFi
   fs.writeFileSync(path.join(dir, "state.json"), `${JSON.stringify({ root, localUrl, runtimeOwned, envFile: envIdentity(envFile) })}\n`, { mode: 0o600 });
 }
 
-function fixture(delayMs = 0, failRestoreUrl = "") {
+function fixture(delayMs = 0, failRestoreUrl = "", stopToken = "runtime: stopped-owned") {
   const base = fs.mkdtempSync(path.join(os.tmpdir(), "mso-service-update-")); roots.push(base);
   const repo = path.join(base, "repo"), home = path.join(base, "home"), capture = path.join(base, "capture");
   fs.mkdirSync(path.join(repo, "scripts/lib"), { recursive: true }); fs.mkdirSync(home);
@@ -37,7 +37,7 @@ function fixture(delayMs = 0, failRestoreUrl = "") {
   copy(repo, "scripts/lib/runtime-exclusion.sh", RUNTIME_EXCLUSION); copy(repo, "scripts/lib/update-gateway-runtimes.sh", UPDATE_GATEWAYS);
   fs.writeFileSync(path.join(repo, "scripts/mso-gateway"), `#!/bin/sh
 printf '%s %s env=%s expected=%s\n' "$1" "\${MSO_GATEWAY_LOCAL_URL:-}" "\${MSO_GATEWAY_ENV:-}" "\${MSO_GATEWAY_EXPECT_ENV_IDENTITY:-}" >> ${JSON.stringify(capture)}
-if [ "$1" = runtime-stop ]; then printf '1\n' > "$MSO_GATEWAY_RECOVERY_MARKER"; chmod 600 "$MSO_GATEWAY_RECOVERY_MARKER"; echo 'runtime: stopped-owned'; exit 0; fi
+if [ "$1" = runtime-stop ]; then printf '1\n' > "$MSO_GATEWAY_RECOVERY_MARKER"; chmod 600 "$MSO_GATEWAY_RECOVERY_MARKER"; echo ${JSON.stringify(stopToken)}; exit 0; fi
 [ "$1" = local-start ] && { [ "${failRestoreUrl}" = "\${MSO_GATEWAY_LOCAL_URL:-}" ] && exit 31; exit 0; }
 exit 2
 `, { mode: 0o755 });
@@ -145,6 +145,20 @@ describe("service-active update lifecycle", () => {
     expect(out.status).not.toBe(0);
     expect(out.stderr).toMatch(/restore inventory|inventory checkout gateway runtimes/);
     expect(fs.existsSync(f.capture) ? fs.readFileSync(f.capture, "utf8") : "").not.toContain("self-start");
+  });
+
+  it("accepts a service-owned quiesce result and clears the restore inventory", () => {
+    const f = fixture(0, "", "runtime: service-owned");
+    const key = createHash("sha256").update(fs.realpathSync(f.repo)).digest("hex");
+    const dir = path.join(f.base, "update-state", key); fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
+    fs.chmodSync(path.join(f.base, "update-state"), 0o700);
+    fs.writeFileSync(path.join(dir, "gateway-runtimes.json"),
+      `${JSON.stringify([{ url: "http://127.0.0.1:4999", envFile: envIdentity(f.envOne) }])}\n`, { mode: 0o600 });
+    const out = spawnSync(WRAPPER, [], { env: f.env, encoding: "utf8" });
+    expect(out.status).toBe(0);
+    const calls = fs.readFileSync(f.capture, "utf8");
+    expect(calls).toContain("runtime-stop http://127.0.0.1:4999");
+    expect(fs.existsSync(path.join(dir, "gateway-runtimes.json"))).toBe(false);
   });
 
   it("serializes two synchronous service updates under the same checkout transaction lock", async () => {
