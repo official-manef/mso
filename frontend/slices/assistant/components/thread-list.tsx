@@ -116,12 +116,12 @@ export function ThreadList({
           </Button>
         </SheetHeader>
         <div className="border-b border-border p-2">
-          <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search chats..." aria-label="Search chats" className="h-8 text-xs" />
+          <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search chats..." aria-label="Search chats" className="text-xs" />
         </div>
         {error ? (
-          <div role="alert" className="flex items-center justify-between bg-destructive/10 px-3 py-1.5 text-xs text-destructive">
+          <div role="alert" className="flex items-center justify-between bg-muted px-3 py-1.5 text-xs text-destructive">
             <span>{error}</span>
-            <button type="button" onClick={() => setError(null)} className="ml-2 hover:opacity-75" aria-label="Dismiss error">✕</button>
+            <button type="button" onClick={() => setError(null)} className="hover:text-foreground" aria-label="Dismiss error">✕</button>
           </div>
         ) : null}
         <div className="min-h-0 flex-1 overflow-auto">
@@ -133,11 +133,11 @@ export function ThreadList({
             visibleThreads.map((t) => (
               <div key={t.id} className="border-b border-border">
                 {confirmDeleteId === t.id ? (
-                  <div className="flex items-center justify-between gap-2 bg-destructive/10 px-3 py-2 text-xs">
+                  <div className="flex items-center justify-between gap-2 bg-muted px-3 py-2 text-xs">
                     <span className="truncate text-destructive font-medium">Delete chat?</span>
                     <div className="flex items-center gap-1 shrink-0">
-                      <Button size="sm" variant="destructive" className="h-6 px-2 text-xs" onClick={() => void del(t.id)}>Confirm</Button>
-                      <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => setConfirmDeleteId(null)}>Cancel</Button>
+                      <Button size="sm" variant="destructive" className="px-2 text-xs" onClick={() => void del(t.id)}>Confirm</Button>
+                      <Button size="sm" variant="ghost" className="px-2 text-xs" onClick={() => setConfirmDeleteId(null)}>Cancel</Button>
                     </div>
                   </div>
                 ) : editingId === t.id ? (
@@ -147,11 +147,11 @@ export function ThreadList({
                       onChange={(e) => setEditingTitle(e.target.value)}
                       onKeyDown={(e) => { if (e.key === "Enter") void saveRename(t.id); if (e.key === "Escape") setEditingId(null); }}
                       autoFocus
-                      className="h-7 text-xs"
+                      className="text-xs"
                       aria-label="Rename chat"
                     />
-                    <Button size="icon" variant="ghost" className="size-7 shrink-0" aria-label="Save title" onClick={() => void saveRename(t.id)}><Check className="size-3.5" /></Button>
-                    <Button size="icon" variant="ghost" className="size-7 shrink-0" aria-label="Cancel rename" onClick={() => setEditingId(null)}><X className="size-3.5" /></Button>
+                    <Button size="icon" variant="ghost" className="size-7 shrink-0" aria-label="Save title" onClick={() => void saveRename(t.id)}><Check className="size-4" /></Button>
+                    <Button size="icon" variant="ghost" className="size-7 shrink-0" aria-label="Cancel rename" onClick={() => setEditingId(null)}><X className="size-4" /></Button>
                   </div>
                 ) : (
                   <div className="flex items-center">
@@ -159,7 +159,7 @@ export function ThreadList({
                       <div className="truncate text-sm font-medium">{t.title}</div>
                       <div className="text-xs text-muted-foreground">{formatRelativeTime(t.updatedAt)}</div>
                     </button>
-                    <Button size="icon" variant="ghost" aria-label={`Rename ${t.title}`} onClick={() => startRename(t)} className="size-7 shrink-0 text-muted-foreground hover:text-foreground [@media(pointer:coarse)]:size-[44px]"><Pencil className="size-3.5" /></Button>
+                    <Button size="icon" variant="ghost" aria-label={`Rename ${t.title}`} onClick={() => startRename(t)} className="size-7 shrink-0 text-muted-foreground hover:text-foreground [@media(pointer:coarse)]:size-[44px]"><Pencil className="size-4" /></Button>
                     <Button size="icon" variant="ghost" aria-label={`Delete ${t.title}`} onClick={() => { setConfirmDeleteId(t.id); setEditingId(null); }} className="mr-1 size-7 shrink-0 text-muted-foreground hover:text-destructive [@media(pointer:coarse)]:size-[44px]"><Trash2 className="size-4" /></Button>
                   </div>
                 )}

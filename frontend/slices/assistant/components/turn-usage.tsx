@@ -48,7 +48,7 @@ export function TurnUsage({
       data-testid="turn-usage"
       aria-label="Token usage"
       className={cn(
-        "flex flex-wrap items-center gap-x-2 gap-y-0.5 border-t border-border/40 bg-card/20 px-4 py-1 text-[11px] text-muted-foreground",
+        "flex items-center gap-2 border-t border-border px-4 py-1 text-xs text-muted-foreground",
         className,
       )}
     >
