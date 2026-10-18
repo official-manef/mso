@@ -11,6 +11,15 @@ const base = () => ({
 
 describe("workflow graph schema", () => {
   it("accepts a bounded acyclic metadata-only graph", () => expect(parseWorkflowGraphDefinition(base()).nodes).toHaveLength(2));
+  it("preserves a valid offset schedule and rejects invalid schedules before save", () => {
+    const config = { mode: "runAt", runAt: "2026-10-19T09:00:30+07:00", missedPolicy: "run_once" };
+    const definition = { ...base(), nodes: [{ ...base().nodes[0], type: "schedule", config }, base().nodes[1]] };
+    expect(parseWorkflowGraphDefinition(definition).nodes[0].config).toEqual(config);
+    for (const invalid of [{ ...config, runAt: "2026-10-19T09:00:30" }, { ...config, mode: "once" }, { ...config, missedPolicy: "skip" }, { ...config, timezone: "Mars/Olympus" }]) {
+      expect(() => parseWorkflowGraphDefinition({ ...definition, nodes: [{ ...definition.nodes[0], config: invalid }, definition.nodes[1]] })).toThrow();
+    }
+    expect(() => parseWorkflowGraphDefinition({ ...definition, metadata: { timezone: "Mars/Olympus" } })).toThrow(/timezone/);
+  });
   it("rejects cycles", () => expect(() => parseWorkflowGraphDefinition({ ...base(), nodes: [{ id: "a", name: "A", type: "tool", position: { x: 0, y: 0 }, config: { tool: "x" } }, { id: "b", name: "B", type: "output", position: { x: 200, y: 0 }, config: {} }], edges: [{ id: "e1", source: "a", target: "b" }, { id: "e2", source: "b", target: "a" }] })).toThrow("cycle"));
   it("rejects secret-like config fields recursively", () => expect(() => parseWorkflowGraphDefinition({ ...base(), nodes: [{ id: "start", name: "Start", type: "tool", position: { x: 0, y: 0 }, config: { nested: { accessToken: "x" } } }, base().nodes[1]] })).toThrow("secret_input_forbidden"));
 

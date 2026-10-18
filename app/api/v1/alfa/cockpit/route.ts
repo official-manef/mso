@@ -39,8 +39,8 @@ export async function GET(req: NextRequest) {
   const projectQuery = String(req.nextUrl.searchParams.get("q") || "").trim().slice(0, 120);
 
   try {
-    if (projectQuery) {
-      const projectList = await listProjects({ query: projectQuery, limit: 30 });
+    if (projectQuery || req.nextUrl.searchParams.get("view") === "projects") {
+      const projectList = await listProjects({ ...(projectQuery ? { query: projectQuery } : {}), limit: 30 });
       return NextResponse.json({
         projects: {
           total: projectList.total, hasMore: projectList.hasMore, scan: projectList.scan,

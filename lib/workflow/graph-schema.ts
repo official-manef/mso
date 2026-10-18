@@ -1,4 +1,5 @@
 import { parseGraphCustomNodes } from "@/lib/contracts/graph-custom-nodes";
+import { validateWorkflowSchedule, validateWorkflowTimezone } from "@/lib/contracts/workflow-schedule";
 import { WORKFLOW_GRAPH_NODE_TYPES, type WorkflowGraphEdge, type WorkflowGraphMetadata, type WorkflowGraphNode, type WorkflowGraphStatus } from "@/lib/contracts/workflow-graph";
 
 const ID = /^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$/;
@@ -49,6 +50,7 @@ function parseNode(value: unknown): WorkflowGraphNode {
   if (typeof value.type !== "string" || !NODE_TYPES.has(value.type)) throw new Error("invalid workflow node type");
   if (!graphObject(value.config)) throw new Error("workflow node config must be an object");
   assertWorkflowMetadataOnly(value.config);
+  if (value.type === "schedule") validateWorkflowSchedule(value.config);
   if (value.disabled !== undefined && typeof value.disabled !== "boolean") throw new Error("invalid workflow node disabled flag");
   return { id: value.id, name: value.name, type: value.type as WorkflowGraphNode["type"], position: safePosition(value.position), config: structuredClone(value.config), ...(value.disabled ? { disabled: true } : {}) };
 }
@@ -86,6 +88,7 @@ function parseMetadata(value: unknown, nodeIds: ReadonlySet<string>): WorkflowGr
   if (!graphObject(value)) throw new Error("workflow metadata must be an object");
   assertWorkflowMetadataOnly(value);
   const out: WorkflowGraphMetadata = {};
+  if (value.timezone !== undefined) validateWorkflowTimezone(value.timezone);
   if (value.customNodes !== undefined) out.customNodes = parseGraphCustomNodes(value.customNodes, nodeIds);
   for (const key of ["intent", "normalizedIntent", "project", "fingerprint", "folder", "errorWorkflowId", "timezone"] as const) if (typeof value[key] === "string" && value[key]) out[key] = String(value[key]).slice(0, 1000);
   if (["user", "learned-from-session", "clone", "import", "template", "ai-assisted"].includes(String(value.provenance))) out.provenance = value.provenance as WorkflowGraphMetadata["provenance"];

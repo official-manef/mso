@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 # User-facing command usage + dispatch. Sourced by bin/mso.
-# Print the header block verbatim — stops at the first non-comment line, so the
-# help can never drift out of sync with the comment above.
-usage() { awk 'NR>1 { if ($0 !~ /^#/) exit; sub(/^# ?/, ""); print }' "$0"; }
+# shellcheck source=help.sh
+source "$ROOT/scripts/cli/help.sh"
 
 # Every verb the dispatch table implements, one per line, aliases split out. Read
 # from the table itself so a new arm can never be missing from did-you-mean.
@@ -44,6 +43,7 @@ U_update="update [--rebuild] | status | reconcile | log"
 U_cockpit="cockpit [project] | cockpit show [project] | cockpit search <query…>"
 U_threads="threads list|show <id>|save <json>|rename <json>|rm <id>"
 U_agent_sessions="agent-sessions list [limit]|show <id>|create [title]"
+U_agent_profiles="agent-profiles list|create|edit|clone|default|enable|disable <JSON|@file>|run <JSON|@file>"
 U_agents="agents list [current-session-id]|send <source-session-id> <target> <message> [message|task]|inbox <session-id> [--all]"
 U_org="org flow-custom-nodes|flow-nodes-move|flow-update|flow-replace|flow-node-upsert|flow-node-delete|flow-edge-upsert|flow-edge-delete <revision> <JSON with unitId|@file>|show|unit-upsert <revision> <JSON|@file>|seat-upsert <revision> <JSON|@file>|unit-delete <revision> <id>|seat-delete <revision> <id>|replace <revision> <JSON|@file>"
 U_a2a="a2a list|state|sessions|spawn <source-session> <objective> [title]|inbox <session>|discover <url>|add <url> [alias]|rm <target>|send <target> <message> [--wait]|stream <target> <message>|task <target> <taskId> [history]|cancel <target> <taskId>|handoff <target> <objective> [context] [--wait]|local sessions|local handoff <session> <objective>|local spawn <sourceSession> <objective> [title]|local inbox <session>|trace <start|progress|plan|action|evidence|blocker|result|handoff|status|context|attach|finish|cancel|list> [...]|auth list [target]|auth add <target> [label] [bearer|api-key|oauth2]|auth use <target> <credentialId|none>|auth rm <credentialId>|inbound list|inbound create [label] [read|write|exec]|inbound rm <tokenId>"
@@ -106,7 +106,7 @@ mso_cli_main() {
       mso_cmd_host "$cmd" "$@" ;;
     agent|chat|model|setup|onboard|provider|providers|integrations|channels|agent-groups|flow|workflow|gateway|domain|heartbeat|web|camoufox|apps|mapp|term)
       mso_cmd_runtime "$cmd" "$@" ;;
-    ai|cockpit|threads|agent-sessions|agents|org|a2a|memory|memory-graph|agent-vault|config|prefs|federation|models|jev|skills|changelog|stock)
+    ai|cockpit|threads|agent-sessions|agent-profiles|agents|org|a2a|memory|memory-graph|agent-vault|config|prefs|federation|models|jev|skills|changelog|stock)
       mso_cmd_state "$cmd" "$@" ;;
     devices|device|approve|revoke|oauth|mcp|audit|whoami|login|logout|service|build|deploy|update|reset|uninstall|crud|api|completion)
       mso_cmd_admin "$cmd" "$@" ;;

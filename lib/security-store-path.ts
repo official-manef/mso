@@ -13,10 +13,10 @@ const STORE_ENV = [
   "OS_CONFIG_STORE", "OS_PREFS_PATH", "OS_SKILL_MEMORY_STORE", "MSO_SURFACE_APPS_FILE",
   "OS_MANAGED_DOMAINS_STORE",
 ] as const;
-const DIRECTORY_ENV = ["OS_TOOL_FORGE_DIR", "OS_AGENT_MEMORY_DIR", "OS_AGENT_SESSIONS_DIR", "OS_PROJECT_AGENT_TASKS_DIR"] as const;
+const DIRECTORY_ENV = ["OS_TOOL_FORGE_DIR", "OS_AGENT_MEMORY_DIR", "OS_AGENT_SESSIONS_DIR", "OS_PROJECT_AGENT_TASKS_DIR", "OS_AGENT_PROFILES_DIR"] as const;
 const expand = (value: string) => path.resolve(expandOwnerStorePath(value));
 
-export async function pinSecurityStorePath(storePath: string) {
+export async function pinSecurityStorePath(storePath: string, { durable = false }: { durable?: boolean } = {}) {
   if (process.platform !== "linux") throw new Error("Pinned security-store operations require Linux or WSL");
   storePath = expandOwnerStorePath(storePath);
   if (typeof storePath !== "string" || storePath.includes("\0") || !path.isAbsolute(storePath)) throw new Error("Security store needs an absolute path");
@@ -30,7 +30,7 @@ export async function pinSecurityStorePath(storePath: string) {
     ...(process.env.VITEST ? [os.tmpdir()] : [])];
   if (!allowed.some((root) => absolute.startsWith(`${expand(root)}${path.sep}`))) throw new Error("Security store is outside configured owner roots");
   const parent = path.dirname(absolute);
-  const directory = await openDirectoryChain(parent);
+  const directory = await openDirectoryChain(parent, durable);
   try {
     const stat = await directory.stat();
     if (!stat.isDirectory() || stat.uid !== process.getuid?.() || (stat.mode & 0o022)) throw new Error("Security-store parent must be owned and not writable by others");
@@ -46,7 +46,7 @@ export async function pinSecurityStorePath(storePath: string) {
 
 // Walk from a stable descriptor, opening one basename at a time with O_NOFOLLOW.
 // Creating a missing parent must not follow an attacker-controlled intermediate link.
-async function openDirectoryChain(parent: string) {
+async function openDirectoryChain(parent: string, durable: boolean) {
   let directory = await fs.open("/", constants.O_RDONLY | constants.O_DIRECTORY);
   try {
     const parts = parent.split(path.sep).filter(Boolean);
@@ -61,9 +61,13 @@ async function openDirectoryChain(parent: string) {
         await fs.mkdir(child, { mode: 0o700 }).catch((cause: NodeJS.ErrnoException) => { if (cause.code !== "EEXIST") throw cause; });
         next = await fs.open(child, constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW);
       }
-      await directory.close();
+      try {
+        // A prior lock/read may have created this child; flush its parent entry even if it already exists.
+        if (durable) await directory.sync();
+        await directory.close();
+      } catch (error) { await next.close().catch(() => undefined); throw error; }
       directory = next;
     }
     return directory;
-  } catch (error) { await directory.close(); throw error; }
+  } catch (error) { await directory.close().catch(() => undefined); throw error; }
 }

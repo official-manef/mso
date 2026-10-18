@@ -1,0 +1,806 @@
+{
+  "schema_version": "mso.nakama-parity-sources.v1",
+  "meaning": "Pinned file identities establish source availability, not runtime behavior.",
+  "files": [
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "ARCHITECTURE.md",
+      "sha256": "a13b3ed94e506cda50974bcd09d9ea33d895ba7edfa6e297178ed1f6024be95e",
+      "bytes": 11435,
+      "lines": 249
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "Dockerfile",
+      "sha256": "c6b09f780c3c9e34a61f6ba274b60e1ec294d8fceba96e98ddb25f86c8cbb2d5",
+      "bytes": 8148,
+      "lines": 157
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/desktop/README.md",
+      "sha256": "b6fcef72b100d42d9cca1e46a2fad7b74c35fcc140cdb0b3e5975138314a5f47",
+      "bytes": 10870,
+      "lines": 134
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/desktop/electron-builder.yml",
+      "sha256": "60707b0e72e761d7998a0e460ac86c30e93788610d5754fa1332bc7771caeb20",
+      "bytes": 1128,
+      "lines": 47
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/platform/discord/src/bot.ts",
+      "sha256": "690f2246220c12c487fdfa91f1b0babf96cd9d9a82d15a4c761ecbcf57b1b3d1",
+      "bytes": 4593,
+      "lines": 158
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/platform/slack/src/socket.ts",
+      "sha256": "6d9e200a7a2b92470b1e3da15cc01218ab46b61dde23b0b09ff0d36f48af58f7",
+      "bytes": 3307,
+      "lines": 143
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/platform/telegram/src/index.ts",
+      "sha256": "4836bf0b913c6b89b60c79358b838f88b09f93b0278bcf48c8fda3c5e0d370f8",
+      "bytes": 6471,
+      "lines": 245
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/platform/whatsapp/package.json",
+      "sha256": "6856e99bec35af2769edf2105de47f1bc534ffc8ae19f3192a1a42d146c8a378",
+      "bytes": 532,
+      "lines": 16
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/server/src/http/routes/audit-events.ts",
+      "sha256": "3da21b811e0a0dbb4b58c18557bc4246818f305d3347357a0e0f534891e26025",
+      "bytes": 2337,
+      "lines": 85
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/server/src/http/routes/auth.ts",
+      "sha256": "06360c7044eb96cbada498e5705b72a1babada84b2207345b7bc713ae7cdac7e",
+      "bytes": 53262,
+      "lines": 1922
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/server/src/http/routes/data-portability.ts",
+      "sha256": "3852904881524ea98e5960934150951b8e85ad425dbd2903722c1b8c9c01399f",
+      "bytes": 10347,
+      "lines": 361
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/server/src/http/routes/models.ts",
+      "sha256": "eaa4721b194dc1263d9850d635a507b527e1248cc26c0797f876bf2736e8db1e",
+      "bytes": 73767,
+      "lines": 2625
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/server/src/http/routes/org-members.ts",
+      "sha256": "2db1530767818d2609f1fa056e792ee04a6b034f3b018530ae06de9eddd69b90",
+      "bytes": 30917,
+      "lines": 1048
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/server/src/http/routes/platform-orgs.ts",
+      "sha256": "1cb10366a8c2dbe1af1760ac72dfc31dd24107e909580685011d3423a4a03af1",
+      "bytes": 15742,
+      "lines": 541
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/server/src/http/routes/profile-portability.ts",
+      "sha256": "6dc552c72660d85af64aa4ef80aab2176cfcb7ff2bc6e0ccda7fc51d1165cb41",
+      "bytes": 8038,
+      "lines": 284
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/server/src/http/routes/profiles.ts",
+      "sha256": "4c015d86a84bb483be657c5f8c40a369265e328a63f8b44675f445a9b2e4fd10",
+      "bytes": 68088,
+      "lines": 2249
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/server/src/http/routes/sessions.ts",
+      "sha256": "1494eece48937a84967d1836a695523c38905b96273e2abc18b9669fc70864be",
+      "bytes": 31024,
+      "lines": 1115
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/server/src/http/routes/skills.ts",
+      "sha256": "2f7afc928d68e2e1b1e91e0b110cdf26b113899dc965c0c2fc2b7ac0461cc0c1",
+      "bytes": 19830,
+      "lines": 694
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/server/src/http/routes/token-optimization.ts",
+      "sha256": "ebc7f2ad023d779a50d6cf149b33e22216b5894c16968bb10c33b21daedfb552",
+      "bytes": 6550,
+      "lines": 208
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/server/src/http/routes/tools.ts",
+      "sha256": "e99f2ad199a1c99e32c166f0a4a986870833a3a4d669e0e7fae2ff2deb5b60c2",
+      "bytes": 19653,
+      "lines": 699
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/server/src/http/routes/user-context.ts",
+      "sha256": "18a0ac087f3edd74a16da049a6858a5cab741b3ed244e180bdfd43c873445b45",
+      "bytes": 3645,
+      "lines": 135
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/server/src/providers/acp/acp-agent-presets.ts",
+      "sha256": "92f6db25c3e8fd2fa329309365407586034acfe27a13dcf6bbcdd09ed2bf75f8",
+      "bytes": 1894,
+      "lines": 71
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/server/src/providers/create.ts",
+      "sha256": "b8c36bdb8fbc73a3177c3cd18620fa4b34fa89e032abcfcbea2636b8037eaed5",
+      "bytes": 11761,
+      "lines": 425
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/server/src/providers/model-catalog.ts",
+      "sha256": "7c3134f52ac2d453f5b7eb689ea8cd4b298a3ffadbe9f75f309d55a2cf8bfc8b",
+      "bytes": 23097,
+      "lines": 925
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/server/src/services/agent-service.ts",
+      "sha256": "34abffbe34b72316e1b62eca029a86b2c26441bd692553ac3aba32463cc59bb1",
+      "bytes": 183103,
+      "lines": 6513
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/server/src/services/automation-runner.ts",
+      "sha256": "34482673ed64761903accdf376c3e0f14eebfe3aaeb4d30b9914a0cb6715845a",
+      "bytes": 7178,
+      "lines": 256
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/server/src/services/coding-agent-command.ts",
+      "sha256": "a8cd2a2eafbdcbc2d751c5258b675ff29239a9fcf60e37c28ca99c97dd34d6cb",
+      "bytes": 7933,
+      "lines": 298
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/server/src/services/google-meet/actions.ts",
+      "sha256": "6b509a7219b792bd70cfac87c2ea922914fcf16d94b876c2594b95b5dcbf9ec5",
+      "bytes": 10677,
+      "lines": 401
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/server/src/services/google-meet/service.ts",
+      "sha256": "583338dd99f41d0798c6e93df4a915f1d9ae258398a7f90cc7782defb2d6b2ab",
+      "bytes": 20210,
+      "lines": 720
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/server/src/services/notification-webhook-service.ts",
+      "sha256": "f50a480c06b027e1dd88edf3a27a15c72f83dc01f219ee83b2da53efd35d0dae",
+      "bytes": 5921,
+      "lines": 204
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/server/src/services/org-memory-service.ts",
+      "sha256": "5a23fde889382ad6a3004d98c32bb57aa7029caf9664155c94fda69dde3cff79",
+      "bytes": 25179,
+      "lines": 957
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/server/src/services/org-usage-quota-service.ts",
+      "sha256": "f7c012dfd4042c4b40f0c9706d6aa37c6a738c2348ed636e7ac8d468fcaa1c53",
+      "bytes": 3532,
+      "lines": 116
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/server/src/services/skill-curator-service.ts",
+      "sha256": "5d521f89c025bc68d1b0977563be0ff8418f93c382d8f2be78d70181f6a38a71",
+      "bytes": 15866,
+      "lines": 606
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/server/src/services/skill-post-turn-review-service.ts",
+      "sha256": "96118c07cb504b74393e4c5a374baede7ab04d75bc7afa162cda9ade08af0361",
+      "bytes": 7708,
+      "lines": 299
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/server/src/tools/ask-user-question-tool.ts",
+      "sha256": "f2b53eef9cdec4503e3e87420437013fdad5bc8c185f85ca550201f0913c641d",
+      "bytes": 3891,
+      "lines": 144
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/server/src/tools/bash-config.ts",
+      "sha256": "843b3deee007c1e664c539c7798104d05a7e45a39a228fd1239c441e5873a3e2",
+      "bytes": 1881,
+      "lines": 77
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/server/src/tools/bash.ts",
+      "sha256": "47e6f94f2a877eda94bf913b5ef6185b3f2c68b6576ecd99edf00d24203138bf",
+      "bytes": 21352,
+      "lines": 751
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/server/src/tools/session-tools.ts",
+      "sha256": "cde28f63fa8bd8a44b8e1e23c8580dca11e4a4a21361cdf6853f7232075e0dcd",
+      "bytes": 7003,
+      "lines": 234
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/server/src/tools/sub-agent-tool.ts",
+      "sha256": "dbd813437bdbfcfc6e01eb9c1ea381ba23d4182dca669c2caa9af8dea6ab4154",
+      "bytes": 3558,
+      "lines": 113
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/web/src/components/CommandPalette.tsx",
+      "sha256": "a5797c4fb058b37396584e55efd50f7566671fb93dfbbad7a6804114db6f2a82",
+      "bytes": 13019,
+      "lines": 470
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/web/src/components/chat/ChatMessageQueuePanel.tsx",
+      "sha256": "8d05a3d6fd00baf97eb3a7a9859492c5de1d9e3b520dcc04d7266c97f4a887c9",
+      "bytes": 3480,
+      "lines": 141
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/web/src/components/setup-wizard/SetupWizard.tsx",
+      "sha256": "2306e840fe4af41890d98f445a14ac403224da200bbb2b9207cc10751f7d7fcc",
+      "bytes": 4504,
+      "lines": 162
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/web/src/hooks/use-notifications.ts",
+      "sha256": "478c12b95c8055d0457595b2a747552697abfd2502505bd94170686d0e4d9e2a",
+      "bytes": 4371,
+      "lines": 140
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/web/src/lib/sw-strategy.ts",
+      "sha256": "aed9daadb4617c23dcf0190cf651a25794d1d3d7f7551a8412e45da43f36fbea",
+      "bytes": 2418,
+      "lines": 98
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "apps/web/sw/service-worker.ts",
+      "sha256": "d62710efb97537e539c0aa670ce9f49e762f8987010c2e25f405abaf035f22eb",
+      "bytes": 3551,
+      "lines": 154
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "docs/website/content/docs/agent-browser.mdx",
+      "sha256": "2e107273e6f2d7274b7da90d3194222c2262129bb08634918a4b65a15fa56e13",
+      "bytes": 8228,
+      "lines": 161
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "docs/website/content/docs/artifacts.mdx",
+      "sha256": "1f16b75099e630a0f500e85d38cbb80469b72ca6a9fb9aa3a8a4795c66a888ee",
+      "bytes": 7907,
+      "lines": 112
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "docs/website/content/docs/automations.mdx",
+      "sha256": "8fed0eab74b8e147554123332a50d287ffc60944089e3df9f3169d5e52556070",
+      "bytes": 5941,
+      "lines": 81
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "docs/website/content/docs/backup-restore.mdx",
+      "sha256": "16bc1cde130434a4ec32e4f595cb75800a94a8302d9368a46fb4bb5bccaea324",
+      "bytes": 4259,
+      "lines": 73
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "docs/website/content/docs/builtin-tools.mdx",
+      "sha256": "8cf3ed926083f691e09f340ffd3ae40e539afd566875baace370f709011128b4",
+      "bytes": 34099,
+      "lines": 608
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "docs/website/content/docs/cli.mdx",
+      "sha256": "3ee428e739e41654dfaf7d9d460eed3ab1239c3f41eb6de357ae18054af9ef73",
+      "bytes": 3936,
+      "lines": 104
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "docs/website/content/docs/composio.mdx",
+      "sha256": "98f416f97b25daf0dbcaf34e5e553ee1391107a5f211b26df05ce5b619deb283",
+      "bytes": 7566,
+      "lines": 103
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "docs/website/content/docs/desktop.mdx",
+      "sha256": "a94ed7de886ed42c592e0812b7ba4246cf4de14f6978e186e6bfda31762ae8e3",
+      "bytes": 2653,
+      "lines": 40
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "docs/website/content/docs/discord.mdx",
+      "sha256": "280d8e8efcddc86ddac9a1bb771370cd603ca80b08f511998d10aab481d3923d",
+      "bytes": 12512,
+      "lines": 249
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "docs/website/content/docs/error-tracking.mdx",
+      "sha256": "d08085315502411f78e64c1da8a5f4df518562e7127cb844950ecd2fa93ebf60",
+      "bytes": 8280,
+      "lines": 112
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "docs/website/content/docs/google-meet.mdx",
+      "sha256": "f560b51faaafe5884022ba28c22d3fb3be0b306b43c556a2d9b5eea94d921cb6",
+      "bytes": 6255,
+      "lines": 134
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "docs/website/content/docs/image-generation.mdx",
+      "sha256": "fb7fb65172eb470756e14756669c6972f1d4a206c0493019ceb3ffee06e7094d",
+      "bytes": 4689,
+      "lines": 56
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "docs/website/content/docs/mcp.mdx",
+      "sha256": "c3444d6e9315dd6bae003bd7499f6d0394e2b9297d0f659ca79e5f99d7c236e5",
+      "bytes": 12054,
+      "lines": 258
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "docs/website/content/docs/multi-tenancy.mdx",
+      "sha256": "02fb1fad51ea92845a089cc58808d1f1d9a7e2fd3e5257611badc46f5adc02fd",
+      "bytes": 9156,
+      "lines": 193
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "docs/website/content/docs/plugins.mdx",
+      "sha256": "f316917a154cb1ab4e7a9bc3c786339443cf657afcdea0a1910345f268fd5912",
+      "bytes": 9568,
+      "lines": 130
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "docs/website/content/docs/profiles.mdx",
+      "sha256": "74f13c8e0bc2c5f6af58c497106044c883caa0041f9a97bd27e1615e43a9f095",
+      "bytes": 16813,
+      "lines": 299
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "docs/website/content/docs/providers.mdx",
+      "sha256": "00efb65785e44ba65f17b5a9daedaae251ae8203c81a0c46b8203ecf44d94dd6",
+      "bytes": 10840,
+      "lines": 176
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "docs/website/content/docs/skills.mdx",
+      "sha256": "f5d4622af386ba998171693d77ab9f0071ea02fd38b5ac79dd1a9ce21aa3d07c",
+      "bytes": 19513,
+      "lines": 402
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "docs/website/content/docs/slack.mdx",
+      "sha256": "5375abc1df3a86374a3ac554703ed5bf9eb784bda87506d00f0b087a06cceec0",
+      "bytes": 12442,
+      "lines": 240
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "docs/website/content/docs/telegram/chat.mdx",
+      "sha256": "71598826c109fcc4ddd44fb0bfe7aefd69cc39cad26b5a4213c03e586e4875b8",
+      "bytes": 3461,
+      "lines": 97
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "docs/website/content/docs/whatsapp.mdx",
+      "sha256": "09fe5b84100aec054051795851ac25b9ce9df0b63e35c5643aabba6d5a2e4878",
+      "bytes": 9537,
+      "lines": 209
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "packages/core/src/contract.ts",
+      "sha256": "2b521a3b87a88675966217afbce3c3dd4e5f9dc67e640c0f41a19d65277613b2",
+      "bytes": 87190,
+      "lines": 3584
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "packages/core/src/soul/compose.ts",
+      "sha256": "d103c0fb232ab5bf6307a440391a6b9e99aaa17d1716b40b1c9c06337eeb6a38",
+      "bytes": 1268,
+      "lines": 45
+    },
+    {
+      "repository": "ahmadrosid/nakama",
+      "commit": "f6c8f26f8a831e690016ec70429c3cb5cb114cec",
+      "path": "packages/plugins/workflows/src/workflow-runner.ts",
+      "sha256": "e4127720aab20d525e4987465f686887adff44939254859527c65d377fdd755a",
+      "bytes": 7343,
+      "lines": 299
+    },
+    {
+      "repository": "rahmanef63/mso",
+      "commit": "89d61bb0d73b47047c67e51df9a6ee30351c8c3a",
+      "path": "README.md",
+      "sha256": "8219da8af9588379c92c394cea6455702f7dfe1a33387eb1c2937eb3b4e6f2e9",
+      "bytes": 7034,
+      "lines": 119
+    },
+    {
+      "repository": "rahmanef63/mso",
+      "commit": "89d61bb0d73b47047c67e51df9a6ee30351c8c3a",
+      "path": "app/api/assistant/route.ts",
+      "sha256": "7cee3a24783914ba81ea199744daeabe3852e5c365425ce25a4ddbd73096bf58",
+      "bytes": 6377,
+      "lines": 180
+    },
+    {
+      "repository": "rahmanef63/mso",
+      "commit": "89d61bb0d73b47047c67e51df9a6ee30351c8c3a",
+      "path": "app/register-sw.tsx",
+      "sha256": "75259a5cd5b60e72c7a6b9a1fce54a6bcc3423226e3a9ff30a8104d2627a5bea",
+      "bytes": 5685,
+      "lines": 150
+    },
+    {
+      "repository": "rahmanef63/mso",
+      "commit": "89d61bb0d73b47047c67e51df9a6ee30351c8c3a",
+      "path": "docs/AGENT-VAULT.md",
+      "sha256": "2b8979530939ed9e7e2e0728da12b3c4077aeb998d77c112ef410a6dbc0bded8",
+      "bytes": 4805,
+      "lines": 86
+    },
+    {
+      "repository": "rahmanef63/mso",
+      "commit": "89d61bb0d73b47047c67e51df9a6ee30351c8c3a",
+      "path": "docs/ARCHITECTURE.md",
+      "sha256": "f1b843f2736ffc3bc440a408fc7070345fb7c46146daa467706d012dd4686e11",
+      "bytes": 28333,
+      "lines": 355
+    },
+    {
+      "repository": "rahmanef63/mso",
+      "commit": "89d61bb0d73b47047c67e51df9a6ee30351c8c3a",
+      "path": "docs/CHANNELS.md",
+      "sha256": "6b394d3ed2d66ff104af48da2b7649f36d7d71b730856ab7e9ac6c9c681d8d72",
+      "bytes": 4276,
+      "lines": 112
+    },
+    {
+      "repository": "rahmanef63/mso",
+      "commit": "89d61bb0d73b47047c67e51df9a6ee30351c8c3a",
+      "path": "docs/LAUNCH-READINESS.md",
+      "sha256": "f9fb8b84d68b0ec5af4345a5998cf44dec00b130ea500f75428a1d7fbaba3500",
+      "bytes": 9063,
+      "lines": 72
+    },
+    {
+      "repository": "rahmanef63/mso",
+      "commit": "89d61bb0d73b47047c67e51df9a6ee30351c8c3a",
+      "path": "docs/MEMORY-SAFETY.md",
+      "sha256": "a0353e16ec1eb0248eaa37015018f13ea4b73677a0c8f7f25ab5b6de5c078df0",
+      "bytes": 6415,
+      "lines": 108
+    },
+    {
+      "repository": "rahmanef63/mso",
+      "commit": "89d61bb0d73b47047c67e51df9a6ee30351c8c3a",
+      "path": "docs/PLATFORMS.md",
+      "sha256": "510578be72f596266cf92c38af5465470071b88dbab1d8fe6d2dd418865928b3",
+      "bytes": 5653,
+      "lines": 130
+    },
+    {
+      "repository": "rahmanef63/mso",
+      "commit": "89d61bb0d73b47047c67e51df9a6ee30351c8c3a",
+      "path": "docs/PROJECT-MCP-CONNECTIONS.md",
+      "sha256": "583fdaa49e2d3d838e9a74f2a6888a6a3bdebb70c75504f5d41a0c3b3129ef96",
+      "bytes": 8878,
+      "lines": 149
+    },
+    {
+      "repository": "rahmanef63/mso",
+      "commit": "89d61bb0d73b47047c67e51df9a6ee30351c8c3a",
+      "path": "docs/SESSION-ARTIFACTS.md",
+      "sha256": "4b3c0b9a89bbf81299501a92a775aac392db391f5dfb930810a29fb5c1c39553",
+      "bytes": 7701,
+      "lines": 85
+    },
+    {
+      "repository": "rahmanef63/mso",
+      "commit": "89d61bb0d73b47047c67e51df9a6ee30351c8c3a",
+      "path": "docs/SUBAGENTS.md",
+      "sha256": "728e8a7ea58437f2e70ab39d44666705429a4033b9dff727857c3e1cdca7ce0f",
+      "bytes": 4429,
+      "lines": 88
+    },
+    {
+      "repository": "rahmanef63/mso",
+      "commit": "89d61bb0d73b47047c67e51df9a6ee30351c8c3a",
+      "path": "docs/TENANT-PREVIEW.md",
+      "sha256": "8e1cd12e177752300389b92034e017891dcd67955eb62faf24a220e913fd2f0d",
+      "bytes": 10656,
+      "lines": 175
+    },
+    {
+      "repository": "rahmanef63/mso",
+      "commit": "89d61bb0d73b47047c67e51df9a6ee30351c8c3a",
+      "path": "frontend/slices/assistant/lib/types.ts",
+      "sha256": "28e6b2d6654425aa270e2ab93b9a7dea5cbf538c883cb6100d4596f04a209cbd",
+      "bytes": 1301,
+      "lines": 50
+    },
+    {
+      "repository": "rahmanef63/mso",
+      "commit": "89d61bb0d73b47047c67e51df9a6ee30351c8c3a",
+      "path": "frontend/slices/os-shell/shell.manifest.ts",
+      "sha256": "dde44f7f02ec9718354a6587d345da4f611a38e6a1aa5b3d9a7a6c18ba4fc619",
+      "bytes": 5821,
+      "lines": 102
+    },
+    {
+      "repository": "rahmanef63/mso",
+      "commit": "89d61bb0d73b47047c67e51df9a6ee30351c8c3a",
+      "path": "frontend/slices/os-shell/theme-quick-picker.tsx",
+      "sha256": "24fba6f034e05751023477c37d8795c927adb091230690d704a4d7bcf68a113d",
+      "bytes": 4011,
+      "lines": 104
+    },
+    {
+      "repository": "rahmanef63/mso",
+      "commit": "89d61bb0d73b47047c67e51df9a6ee30351c8c3a",
+      "path": "lib/agent/memory-resolution.ts",
+      "sha256": "678423f59e319dc5648474dd23b22adfe8ba43ab82989b0e063639670871c4fd",
+      "bytes": 3810,
+      "lines": 80
+    },
+    {
+      "repository": "rahmanef63/mso",
+      "commit": "89d61bb0d73b47047c67e51df9a6ee30351c8c3a",
+      "path": "lib/agent/memory-store.ts",
+      "sha256": "d51624e898df0c108842c49c8eda33af10eda1fd2beb559ef91a23d0bbe5e55c",
+      "bytes": 11839,
+      "lines": 189
+    },
+    {
+      "repository": "rahmanef63/mso",
+      "commit": "89d61bb0d73b47047c67e51df9a6ee30351c8c3a",
+      "path": "lib/agent/session-create.ts",
+      "sha256": "ae83c929545ee7680b6769a283f33402e5585ea3dd0db8ebb08140cfa22c5a96",
+      "bytes": 3530,
+      "lines": 94
+    },
+    {
+      "repository": "rahmanef63/mso",
+      "commit": "89d61bb0d73b47047c67e51df9a6ee30351c8c3a",
+      "path": "lib/agent/subagent-runner.ts",
+      "sha256": "9ed1f8866383d6d309ff8e86135527cd6b0e5cad465dbbb9c90538d2a543dbf3",
+      "bytes": 7799,
+      "lines": 134
+    },
+    {
+      "repository": "rahmanef63/mso",
+      "commit": "89d61bb0d73b47047c67e51df9a6ee30351c8c3a",
+      "path": "lib/ai/selected-model-stream.ts",
+      "sha256": "2216c43fcab6d11c229f15eb31b4fddde55af88c4286f08fac4ffc7d764957a5",
+      "bytes": 5921,
+      "lines": 199
+    },
+    {
+      "repository": "rahmanef63/mso",
+      "commit": "89d61bb0d73b47047c67e51df9a6ee30351c8c3a",
+      "path": "lib/auth/login-password.ts",
+      "sha256": "0d052fa414fc21af5e361f9dbdf6bcdfd9ae8e43b5f2357006c91e52eb744749",
+      "bytes": 5720,
+      "lines": 147
+    },
+    {
+      "repository": "rahmanef63/mso",
+      "commit": "89d61bb0d73b47047c67e51df9a6ee30351c8c3a",
+      "path": "lib/auth/roles.ts",
+      "sha256": "ab2c6d03aa9f6d74121e5693601b5a974bf4f6a17e864ce8f0cea8931bfad1af",
+      "bytes": 1468,
+      "lines": 43
+    },
+    {
+      "repository": "rahmanef63/mso",
+      "commit": "89d61bb0d73b47047c67e51df9a6ee30351c8c3a",
+      "path": "lib/host/audit.ts",
+      "sha256": "550943a5d7465613163037f71e7fbab68c86d38403611226390dfd90552a49f7",
+      "bytes": 7663,
+      "lines": 214
+    },
+    {
+      "repository": "rahmanef63/mso",
+      "commit": "89d61bb0d73b47047c67e51df9a6ee30351c8c3a",
+      "path": "lib/host/project-worktree.ts",
+      "sha256": "31784cdb7afe226a824c9c5b4a6ff028429b11933281156a244d5a48824eaa73",
+      "bytes": 8834,
+      "lines": 165
+    },
+    {
+      "repository": "rahmanef63/mso",
+      "commit": "89d61bb0d73b47047c67e51df9a6ee30351c8c3a",
+      "path": "lib/infra/connection-dispatch.ts",
+      "sha256": "3e0a71a0185e6ddd1a2b818e12335d5ecca562e580423b014cc2f293bb783c5b",
+      "bytes": 12593,
+      "lines": 94
+    },
+    {
+      "repository": "rahmanef63/mso",
+      "commit": "89d61bb0d73b47047c67e51df9a6ee30351c8c3a",
+      "path": "lib/mcp/tools-forge.ts",
+      "sha256": "9b320ae4c5ad6ef94ad250a5f272e59be96673f510a6155d19eedf4e1c5abe0e",
+      "bytes": 8760,
+      "lines": 141
+    },
+    {
+      "repository": "rahmanef63/mso",
+      "commit": "89d61bb0d73b47047c67e51df9a6ee30351c8c3a",
+      "path": "lib/workflow/graph-engine.ts",
+      "sha256": "c7dd541ae7be0f6170f929cd02089e360f91a635a8e860ea37083731c771e08a",
+      "bytes": 15609,
+      "lines": 102
+    },
+    {
+      "repository": "rahmanef63/mso",
+      "commit": "89d61bb0d73b47047c67e51df9a6ee30351c8c3a",
+      "path": "lib/workflow/graph-runtime.ts",
+      "sha256": "619bd52d5c3a189cabf76bc2ce142e875ac8f8522f269e358e55262abf243994",
+      "bytes": 22649,
+      "lines": 206
+    },
+    {
+      "repository": "rahmanef63/mso",
+      "commit": "89d61bb0d73b47047c67e51df9a6ee30351c8c3a",
+      "path": "lib/workflow/graph-triggers.ts",
+      "sha256": "7501ea5207f44acad46ea8972dec203d6f981402fdbd2e608661f2417640c8f7",
+      "bytes": 4574,
+      "lines": 44
+    },
+    {
+      "repository": "rahmanef63/mso",
+      "commit": "89d61bb0d73b47047c67e51df9a6ee30351c8c3a",
+      "path": "lib/workflow/learning.ts",
+      "sha256": "e78bc9493e42bad8ae70d60952d570e3f795c9a28c7ad75d47df1e625ea0e18c",
+      "bytes": 11590,
+      "lines": 208
+    }
+  ]
+}

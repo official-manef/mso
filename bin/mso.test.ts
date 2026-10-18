@@ -19,6 +19,7 @@ const commandOwnerFiles = [
   "scripts/cli/agent-groups.sh",
   "scripts/cli/commands-state.sh",
   "scripts/cli/organization.sh",
+  "scripts/cli/agent-profiles.sh",
   "scripts/cli/config-command.sh",
   "scripts/cli/commands-admin.sh",
 ];
@@ -61,9 +62,9 @@ describe("bin/mso", () => {
 
   it("documents the owner-only memory backup command", () => { expect(run("memory-backup", "--help")).toContain("create --confirm"); });
 
-  it("prints memory-graph usage instead of the assistant memory verb", () => {
-    expect(run("memory-graph", "--help")).toContain("memory-graph [project]");
-  });
+  it("prints memory-graph usage instead of the assistant memory verb", () => { expect(run("memory-graph", "--help")).toContain("memory-graph [project]"); });
+
+  it("documents saved-profile lifecycle without starting a request", () => { expect(run("agent-profiles", "--help")).toContain("agent-profiles list|create|edit|clone|default|enable|disable"); });
 
   it("exits non-zero on an unknown command", () => {
     expect(() => run("definitely-not-a-verb")).toThrow();

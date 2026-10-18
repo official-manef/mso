@@ -2,8 +2,9 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import YAML from "yaml";
+import { atomicReplace, readConfig } from "./lib/gateway-named-config.mjs";
 
 const ROOT = path.resolve(__dirname, "..");
 const HELPER = path.join(__dirname, "lib/gateway-named-config.mjs");
@@ -73,5 +74,43 @@ describe("named gateway YAML policy", () => {
     const result = run(fifo);
     expect(result.error).toBeUndefined();
     expect(result.status).toBe(1);
+  });
+
+  it("rejects a different inode before rereading its contents", () => {
+    const f = fixture(), snapshot = readConfig(ROOT, f.file);
+    fs.renameSync(f.file, path.join(f.dir, "original.yml"));
+    fs.writeFileSync(f.file, snapshot.text, { mode: 0o600 });
+    const read = vi.spyOn(fs, "readFileSync");
+    try {
+      expect(() => atomicReplace(f.file, snapshot, snapshot.text)).toThrow(/changed concurrently/);
+      expect(read).not.toHaveBeenCalled();
+    } finally { read.mockRestore(); }
+  });
+
+  it("does not read a replacement symlink target during the final config comparison", () => {
+    const f = fixture(), snapshot = readConfig(ROOT, f.file);
+    const target = path.join(f.dir, "unrelated.yml"), retained = path.join(f.dir, "original.yml");
+    const unrelated = "unrelated private fixture\n", next = snapshot.text + "# retained configuration\n";
+    fs.writeFileSync(target, unrelated, { mode: 0o600 });
+    const originalRead = fs.readFileSync;
+    let swapped = false, followed = false, failure: unknown;
+    const read = vi.spyOn(fs, "readFileSync").mockImplementation((...args) => {
+      if (!swapped) {
+        fs.renameSync(f.file, retained);
+        fs.symlinkSync(target, f.file);
+        swapped = true;
+      }
+      const value = originalRead(...args);
+      if (value === unrelated) followed = true;
+      return value;
+    });
+    try { atomicReplace(f.file, snapshot, next); }
+    catch (error) { failure = error; }
+    finally { read.mockRestore(); }
+    expect(swapped).toBe(true);
+    expect(followed).toBe(false);
+    expect(failure).toBeUndefined();
+    expect(fs.readFileSync(target, "utf8")).toBe(unrelated);
+    expect(fs.readFileSync(f.file, "utf8")).toBe(next);
   });
 });

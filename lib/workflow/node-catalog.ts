@@ -2,7 +2,7 @@ import type { WorkflowGraphNodeType } from "@/lib/contracts/workflow-graph";
 export type WorkflowNodeCatalogItem={type:WorkflowGraphNodeType;title:string;category:string;description:string;handles?:string[];defaults:Record<string,unknown>};
 export const WORKFLOW_NODE_CATALOG:WorkflowNodeCatalogItem[]=[
  {type:"manual",title:"Manual Trigger",category:"Triggers",description:"Start from UI, CLI or MCP.",defaults:{}},
- {type:"schedule",title:"Schedule Trigger",category:"Triggers",description:"Run by cron or minute interval on the MSO server.",defaults:{mode:"interval",everyMinutes:60}},
+ {type:"schedule",title:"Schedule Trigger",category:"Triggers",description:"Run once at a date and time, or by cron or minute interval on the MSO server.",defaults:{mode:"interval",everyMinutes:60}},
  {type:"webhook",title:"Webhook Trigger",category:"Triggers",description:"Public HTTP trigger with optional private-variable bearer auth.",defaults:{methods:["POST"],responseMode:"onReceived"}},
  {type:"channel_trigger",title:"Channel Trigger",category:"Triggers",description:"Start from a verified MSO Channel inbound event. Bind a Channel ID from the Channels app.",defaults:{channelId:""}},
  {type:"condition",title:"If",category:"Flow",description:"Route to true/false handles.",handles:["true","false"],defaults:{path:"input"}},

@@ -51,8 +51,10 @@ evidence and review freshness. The repository quality gate runs both automatical
 | [`PROJECT-MCP-CONNECTIONS.md`](./PROJECT-MCP-CONNECTIONS.md) | Named private connections, endpoint binding and identity for modular project MCPs |
 | [`BATONLY-FEDERATION.md`](./BATONLY-FEDERATION.md) | Pull-based Batonly capability federation worker, MSO/SI-Coder execution boundary, polling, security and acceptance contract |
 | [`AUTOMATION-FLOWS.md`](./AUTOMATION-FLOWS.md) | Versioned project API/MCP flows, CLI, sessions, Add MCP, assets and limits |
+| [`WORKFLOW-SCHEDULES.md`](./WORKFLOW-SCHEDULES.md) | Interval, cron and durable one-shot scheduling semantics, missed ticks and recovery limits |
 | [`WORKFLOW-GRAPH.md`](./WORKFLOW-GRAPH.md) | Private server-native Workflow Graph v2 with n8n-core triggers/flow control, versions/history, variables, integrations, visual execution and automatic learning |
 | [`SHARED-GRAPH-FOUNDATION.md`](./SHARED-GRAPH-FOUNDATION.md) | Canonical shared graph mechanics, feature adapters, ownership matrix and dense-graph Focus/Map interaction boundary |
+| [`NAKAMA-PARITY.md`](./NAKAMA-PARITY.md) | Frozen Nakama scope, current implementation mappings and candidate evidence limits |
 | [`N8N-PARITY.md`](./N8N-PARITY.md) | Core n8n capability map across native Workflows, Organization, Integrations and the dedicated external n8n workspace |
 | [`ORGANIZATION.md`](./ORGANIZATION.md) | Owner-private organization units, seats, reporting lines, live agent bindings, and workflow routing references |
 | [`MCP-HOW-TO.md`](./MCP-HOW-TO.md) | Bahasa Indonesia onboarding: client connection, prompts, workflow, project MCP and troubleshooting |
@@ -60,6 +62,7 @@ evidence and review freshness. The repository quality gate runs both automatical
 | [`A2A.md`](./A2A.md) | A2A v1 peer discovery, delegation/task lifecycle, CLI/MCP surface and trust boundary |
 | [`LOCAL-AGENTS.md`](./LOCAL-AGENTS.md) | Native same-host session presence, identity, mailbox delivery, TUI/tools/API and isolation |
 | [`SUBAGENTS.md`](./SUBAGENTS.md) | Same-session foreground isolated worker lifecycle, context, tool authority and limits |
+| [`AGENT-PROFILES.md`](./AGENT-PROFILES.md) | Saved Owner profiles, exact model binding, revision history and bounded read tasks |
 | [`MCP-FEATURE-IMPLEMENTATION.md`](./MCP-FEATURE-IMPLEMENTATION.md) | Stepwise reverse-engineering workflow for MCP tools, trusted skills and project capabilities |
 | [`CHATGPT-PLUGIN.md`](./CHATGPT-PLUGIN.md) | ChatGPT custom MCP app setup, diagrams, scopes and file bridge |
 | [`PLUGIN-REFERENCE-MATRIX.md`](./PLUGIN-REFERENCE-MATRIX.md) | Living cross-plugin architecture matrix, audit decisions and candidate generic primitives |

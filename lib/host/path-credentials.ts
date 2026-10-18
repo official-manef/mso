@@ -1,5 +1,6 @@
 import { realpathSync } from "fs";
 import path from "path";
+import { expandOwnerStorePath } from "@/lib/owner-store-path.js";
 import { homeDir, isUnderRoot } from "./path-roots";
 
 // Credential denylist: even inside a legal root, the app's OWN secret files are
@@ -92,8 +93,10 @@ export function isAppSecret(real: string): boolean {
  *  rather than discover it one `resolveReadable` too late. */
 export function credentialRoots(): string[] {
   const names = process.env.OS_FS_ALLOW_SENSITIVE === "1" ? [".mso"] : [".mso", ...SENSITIVE_HOME];
-  return names.flatMap((name) => {
-    const lexical = path.join(homeDir(), name);
+  const roots = names.map(name => path.join(homeDir(), name));
+  // Saved tool policy stays private even when its configured directory is outside ~/.mso.
+  if (process.env.OS_AGENT_PROFILES_DIR !== undefined) roots.push(path.resolve(expandOwnerStorePath(process.env.OS_AGENT_PROFILES_DIR)));
+  return roots.flatMap((lexical) => {
     try { return [lexical, realpathSync.native(lexical)]; } catch { return [lexical]; }
   });
 }
@@ -122,4 +125,3 @@ export function looseCredentialExcludes(): string[] {
   // SENSITIVE_HOME escape hatch; keep that contract while extending id_* safely.
   return ["*.pem", ".env*", "*/.env*", ...[".mcp.json", ".npmrc", ".pypirc", ".netrc"].flatMap((name) => [name, `*/${name}`, `${name}.*`, `*/${name}.*`]), ...privateNames];
 }
-

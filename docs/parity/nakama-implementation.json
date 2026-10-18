@@ -1,0 +1,676 @@
+{
+  "schema_version": "mso.nakama-parity-implementation.v1",
+  "baseline": "nakama-v0.1.json",
+  "requirements": [
+    {
+      "id": "NK-001",
+      "status": "partial",
+      "source_paths": [
+        "README.md"
+      ],
+      "implementation_paths": [
+        "frontend/slices/auth/components/first-login-onboarding.tsx",
+        "frontend/slices/auth/lib/onboarding-api.ts",
+        "frontend/slices/auth/lib/onboarding-state.ts",
+        "app/api/v1/alfa/cockpit/route.ts",
+        "app/api/v1/workflows/route.ts"
+      ],
+      "test_paths": [
+        "frontend/slices/auth/lib/onboarding-state.test.ts",
+        "frontend/slices/auth/lib/onboarding-api.test.ts",
+        "frontend/slices/auth/lib/onboarding-runtime.test.ts",
+        "app/api/v1/workflows/run-revision.test.ts",
+        "scripts/e2e/onboarding.mjs"
+      ],
+      "remaining": [
+        "Akun manusia, organisasi, migrasi owner dan konteks pengguna yang dapat disunting masih memerlukan PK04–PK06.",
+        "Pemulihan instalasi penuh, installer lintas platform dan kesiapan provider nyata belum dibuktikan; panduan ini memakai instalasi dan perangkat Owner yang sudah ada."
+      ]
+    },
+    {
+      "id": "NK-002",
+      "status": "pending",
+      "source_paths": [
+        "lib/auth/login-password.ts"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-003",
+      "status": "pending",
+      "source_paths": [],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-004",
+      "status": "pending",
+      "source_paths": [
+        "docs/ARCHITECTURE.md"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-005",
+      "status": "pending",
+      "source_paths": [
+        "docs/TENANT-PREVIEW.md"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-006",
+      "status": "pending",
+      "source_paths": [
+        "lib/auth/roles.ts"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-007",
+      "status": "pending",
+      "source_paths": [],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-008",
+      "status": "pending",
+      "source_paths": [],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-009",
+      "status": "partial",
+      "source_paths": [
+        "frontend/slices/assistant/lib/types.ts"
+      ],
+      "implementation_paths": [
+        "lib/contracts/agent-profile.ts",
+        "lib/agent/profile-store.ts",
+        "lib/agent/profile-runtime.ts",
+        "lib/agent/bounded-runner.ts",
+        "app/api/v1/agent-profiles/run/route.ts",
+        "frontend/slices/assistant/components/profiles-panel.tsx"
+      ],
+      "test_paths": [
+        "lib/agent/profile-store.test.ts",
+        "lib/agent/profile-runtime.test.ts",
+        "lib/ai/profile-model-binding.test.ts",
+        "app/api/v1/agent-profiles/route.test.ts",
+        "app/api/v1/agent-profiles/run/route.test.ts",
+        "scripts/e2e/agent-profiles.mjs"
+      ],
+      "remaining": [
+        "Penugasan skill/MCP/soul/memory/knowledge per profil, hak tulis/exec, organisasi, runtime eksternal dan kesetaraan seluruh transport masih terbuka.",
+        "Profil saat ini milik perangkat Owner dan memakai runtime MSO dengan sembilan alat baca yang diizinkan; inferensi provider nyata serta seluruh varian belum dibuktikan."
+      ]
+    },
+    {
+      "id": "NK-010",
+      "status": "partial",
+      "source_paths": [],
+      "implementation_paths": [
+        "lib/agent/profile-store.ts",
+        "lib/agent/profile-storage.ts",
+        "lib/agent/profile-schema.ts",
+        "lib/host/path-credentials.ts",
+        "lib/host/path-recursive.ts"
+      ],
+      "test_paths": [
+        "lib/agent/profile-store.test.ts",
+        "lib/host/profile-path.test.ts",
+        "scripts/e2e/agent-profiles.mjs"
+      ],
+      "remaining": [
+        "Pemindahan antarorganisasi, pemetaan ulang grant, export/import, paket agen dan pemulihan instalasi nyata belum tersedia dalam slice ini."
+      ]
+    },
+    {
+      "id": "NK-011",
+      "status": "pending",
+      "source_paths": [
+        "lib/ai/selected-model-stream.ts"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-012",
+      "status": "pending",
+      "source_paths": [
+        "lib/ai/selected-model-stream.ts"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-013",
+      "status": "pending",
+      "source_paths": [],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-014",
+      "status": "pending",
+      "source_paths": [
+        "lib/host/project-worktree.ts"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-015",
+      "status": "pending",
+      "source_paths": [
+        "lib/agent/subagent-runner.ts"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-016",
+      "status": "pending",
+      "source_paths": [
+        "app/api/assistant/route.ts"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-017",
+      "status": "pending",
+      "source_paths": [
+        "lib/agent/session-create.ts"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-018",
+      "status": "pending",
+      "source_paths": [],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-019",
+      "status": "pending",
+      "source_paths": [
+        "docs/SESSION-ARTIFACTS.md"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-020",
+      "status": "pending",
+      "source_paths": [],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-021",
+      "status": "pending",
+      "source_paths": [
+        "lib/workflow/graph-runtime.ts"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-022",
+      "status": "pending",
+      "source_paths": [
+        "lib/agent/memory-store.ts"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-023",
+      "status": "pending",
+      "source_paths": [
+        "lib/agent/memory-resolution.ts"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-024",
+      "status": "pending",
+      "source_paths": [
+        "docs/ARCHITECTURE.md"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-025",
+      "status": "pending",
+      "source_paths": [
+        "docs/AGENT-VAULT.md"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-026",
+      "status": "pending",
+      "source_paths": [],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-027",
+      "status": "pending",
+      "source_paths": [
+        "docs/ARCHITECTURE.md"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-028",
+      "status": "pending",
+      "source_paths": [],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-029",
+      "status": "pending",
+      "source_paths": [],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-030",
+      "status": "pending",
+      "source_paths": [
+        "lib/mcp/tools-forge.ts"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-031",
+      "status": "pending",
+      "source_paths": [
+        "docs/ARCHITECTURE.md"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-032",
+      "status": "pending",
+      "source_paths": [
+        "lib/mcp/tools-forge.ts"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-033",
+      "status": "pending",
+      "source_paths": [
+        "docs/PROJECT-MCP-CONNECTIONS.md"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-034",
+      "status": "pending",
+      "source_paths": [
+        "lib/infra/connection-dispatch.ts"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-035",
+      "status": "pending",
+      "source_paths": [
+        "docs/PROJECT-MCP-CONNECTIONS.md"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-036",
+      "status": "pending",
+      "source_paths": [
+        "lib/mcp/tools-forge.ts"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-037",
+      "status": "pending",
+      "source_paths": [
+        "lib/workflow/learning.ts"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-038",
+      "status": "pending",
+      "source_paths": [],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-039",
+      "status": "pending",
+      "source_paths": [],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-040",
+      "status": "pending",
+      "source_paths": [
+        "docs/CHANNELS.md"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-041",
+      "status": "pending",
+      "source_paths": [],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-042",
+      "status": "pending",
+      "source_paths": [
+        "docs/CHANNELS.md"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-043",
+      "status": "pending",
+      "source_paths": [],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-044",
+      "status": "pending",
+      "source_paths": [
+        "docs/CHANNELS.md"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-045",
+      "status": "partial",
+      "source_paths": [
+        "lib/workflow/graph-triggers.ts"
+      ],
+      "implementation_paths": [
+        "lib/contracts/workflow-schedule.ts",
+        "lib/workflow/schedule.ts",
+        "lib/workflow/graph-triggers.ts",
+        "lib/workflow/graph-run-store.ts",
+        "lib/workflow/private-file.ts",
+        "frontend/slices/workflows/components/workflow-schedule-fields.tsx"
+      ],
+      "test_paths": [
+        "lib/contracts/workflow-schedule.test.ts",
+        "lib/workflow/schedule.test.ts",
+        "lib/workflow/schedule-runtime.test.ts",
+        "lib/workflow/private-file-durable.test.ts",
+        "scripts/e2e/workflow-schedules.mjs"
+      ],
+      "remaining": [
+        "Pemilih saved prompt/profil, pratinjau waktu berikutnya, batas kuota, UI rekonsiliasi dan fencing terdistribusi masih terbuka.",
+        "Durable intent mencegah pengulangan otomatis pada state tidak pasti; hasil efek eksternal, pemulihan deployment nyata dan eksekusi tenant belum diklaim."
+      ]
+    },
+    {
+      "id": "NK-046",
+      "status": "pending",
+      "source_paths": [
+        "lib/workflow/graph-engine.ts"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-047",
+      "status": "pending",
+      "source_paths": [
+        "lib/workflow/graph-engine.ts"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-048",
+      "status": "pending",
+      "source_paths": [
+        "docs/ARCHITECTURE.md"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-049",
+      "status": "pending",
+      "source_paths": [],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-050",
+      "status": "pending",
+      "source_paths": [
+        "docs/SESSION-ARTIFACTS.md"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-051",
+      "status": "pending",
+      "source_paths": [],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-052",
+      "status": "pending",
+      "source_paths": [
+        "frontend/slices/os-shell/shell.manifest.ts"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-053",
+      "status": "pending",
+      "source_paths": [],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-054",
+      "status": "pending",
+      "source_paths": [],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-055",
+      "status": "pending",
+      "source_paths": [
+        "docs/MEMORY-SAFETY.md"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-056",
+      "status": "pending",
+      "source_paths": [],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-057",
+      "status": "partial",
+      "source_paths": [
+        "docs/ARCHITECTURE.md"
+      ],
+      "implementation_paths": [
+        "bin/mso",
+        "scripts/cli/help.sh",
+        "scripts/cli/agent-profiles.sh"
+      ],
+      "test_paths": [
+        "scripts/cli/help.test.ts",
+        "bin/mso.test.ts",
+        "bin/mso-update-offline.test.ts"
+      ],
+      "remaining": [
+        "Org/reasoning/skill/clipboard, rotasi token, streaming/reconnect serta identitas workspace lokal/jarak jauh penuh masih memerlukan pembuktian kontrak CLI."
+      ]
+    },
+    {
+      "id": "NK-058",
+      "status": "pending",
+      "source_paths": [
+        "docs/PLATFORMS.md"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-059",
+      "status": "pending",
+      "source_paths": [
+        "docs/ARCHITECTURE.md"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-060",
+      "status": "pending",
+      "source_paths": [
+        "docs/ARCHITECTURE.md"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-061",
+      "status": "pending",
+      "source_paths": [
+        "app/register-sw.tsx"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-062",
+      "status": "pending",
+      "source_paths": [
+        "lib/host/audit.ts"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-063",
+      "status": "pending",
+      "source_paths": [],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    },
+    {
+      "id": "NK-064",
+      "status": "pending",
+      "source_paths": [
+        "frontend/slices/os-shell/theme-quick-picker.tsx"
+      ],
+      "implementation_paths": [],
+      "test_paths": [],
+      "remaining": []
+    }
+  ]
+}

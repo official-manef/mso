@@ -81,6 +81,21 @@ describe("Alfa cockpit read model", () => {
     expect(mocks.typed).not.toHaveBeenCalled();
   });
 
+  it("returns a bounded project-only page without reading other cockpit domains", async () => {
+    const response = await GET(new NextRequest("http://localhost/api/v1/alfa/cockpit?view=projects"));
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({ projects: { rows: [{ id: "root/mso", name: "mso" }], hasMore: false, scan: { truncated: false } } });
+    expect(mocks.listProjects).toHaveBeenCalledWith({ limit: 30 });
+    for (const read of [mocks.readConfig, mocks.sessions, mocks.agents, mocks.memories, mocks.typed]) expect(read).not.toHaveBeenCalled();
+  });
+
+  it("requires the live Owner role for the project-only view", async () => {
+    mocks.context.current = { role: "viewer", session: { device_id: "viewer-device" } };
+    const response = await GET(new NextRequest("http://localhost/api/v1/alfa/cockpit?view=projects"));
+    expect(response.status).toBe(403);
+    expect(mocks.listProjects).not.toHaveBeenCalled();
+  });
+
   it("adds a compact selected-project snapshot without returning raw knowledge content", async () => {
     mocks.resolveProjectHint.mockResolvedValue({ id: "root/mso", name: "mso", path: "/srv/mso", rootId: "root", root: "/srv", aliases: [] });
     mocks.projectGitSnapshot.mockResolvedValue({ available: true, branch: "main", clean: false, head: { sha: "abcdef123456", subject: "change" } });
