@@ -79,4 +79,13 @@ describe("same-session subagent runner", () => {
     expect(names).not.toContain("project_agent_run");
     expect(result.status).toBe("completed");
   });
+  it("preserves the existing subagent behavior beyond the profile-only tool budget", async () => {
+    stream.mockImplementationOnce(async ({ emit }) => {
+      for (let index = 0; index < 17; index++) emit("tool_use", { id: `read-${index}`, name: "fs_read", input: {} });
+    }).mockImplementationOnce(async ({ emit }) => emit("delta", "done"));
+    dispatch.mockResolvedValue({ content: [{ type: "text", text: "evidence" }] });
+    const result = await runSessionSubagent({ principal: "mcp-client:x", parentSessionId: "session-a", objective: "inspect", capabilities, authority: { principal: "mcp-client:x", scope: "read" } });
+    expect(dispatch).toHaveBeenCalledTimes(17); expect(result.toolCalls).toHaveLength(17);
+    expect(result).toMatchObject({ status: "completed", rounds: 2, text: "done" });
+  });
 });

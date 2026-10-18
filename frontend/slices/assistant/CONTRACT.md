@@ -100,9 +100,9 @@ complete. See [`docs/MCP.md`](../../../docs/MCP.md) and [`skills/README.md`](../
 
 Organization is a first-class app/domain with a secondary **Organization** tab inside Alfa. Both render the same server-side owner-private SSOT at `~/.mso/private/organization.json` via `lib/agent/organization-store.ts`; Alfa does not own or duplicate it. Units and seats define stable hierarchy/reporting context; a seat can point at an existing Project Agent, Local Agent/session, or A2A peer. Those references grant no extra tools or credentials. Workflows may resolve `orgSeatId` at execution time. See [`docs/ORGANIZATION.md`](../../../docs/ORGANIZATION.md).
 
-## Agent
+## Browser persona (the localStorage `Agent` type)
 
-**A persona.** Currently that, and only that.
+**A browser persona.** This legacy type does not select a saved server profile.
 
 | | |
 |---|---|
@@ -117,6 +117,24 @@ mounted. Read it with `activeAgent()` — **never** cache it in a ref: `sendToAl
 can invoke the engine synchronously in the same tick as a switch, so a ref would
 still hold the previous agent and the first turn after an `@mention` would carry
 the wrong persona.
+
+## Saved agent profile
+
+**An Owner device's persistent configuration for a foreground read task.** The
+Agents tab opens `ProfilesPanel`; Browser personas remains a separate selection.
+`lib/contracts/agent-profile.ts` defines the DTO, `lib/agent/profile-store.ts` owns
+private revisioned state, and `/api/v1/agent-profiles` derives the principal from
+the live Owner session. Create, edit, clone, default, enable and disable persist
+through compare-and-swap revisions. Browser backup does not include this state.
+
+`/api/v1/agent-profiles/run` binds an exact saved revision and model connection to
+the shared provider-neutral bounded runner. The server enforces the saved subset
+of nine reviewed read capabilities and rechecks Owner authorization, enabled state
+and revision before and after model/tool steps and before returning the result.
+Each task starts a native session with no inherited browser history or memory.
+This is partial NK009–NK010: organization moves, assignment, writes, execution,
+external workers and process isolation remain unsupported. See
+[`docs/AGENT-PROFILES.md`](../../../docs/AGENT-PROFILES.md) for the exact contract.
 
 ---
 
@@ -136,7 +154,7 @@ The Assistant chat now has a compact **Cockpit** bar + responsive panel (desktop
 
 Browser Automations likewise do not introduce a second executor. `Run` turns the saved ordered recipe into one Alfa task; the normal host-tool schemas, server guards, and approval rendezvous remain the execution path.
 
-## What actually reaches the model
+## What reaches the legacy browser-chat model
 
 Exactly three things, assembled in `chat-panel.tsx`:
 
@@ -149,14 +167,18 @@ Callers with their own tools pass their own system prompt. The image editor does
 **not**, so it runs on the route default in `app/api/assistant/route.ts` — that
 constant is reachable and must not be deleted as dead.
 
-## Decided: tool scoping is deleted, not repaired
+## Legacy browser persona and public MCP catalog contract
 
-Every agent gets **every** tool, on every turn — no per-agent, no per-playbook, and no
-per-project filter. This is the contract, not a gap. `registry.test.ts` pins it: the
+Every browser persona gets **every** legacy host tool, on every turn — no
+per-persona, per-playbook or per-project filter. `registry.test.ts` pins it: the
 `HOST_AI_TOOLS` array is the whole catalog in catalog order, it is the same object on
 every turn, and `registry.ts` exports nothing that could narrow it. MCP holds the same
 invariant on its own side — an `exec` token sees and can call the entire catalog, and
 the read/write/exec ladder is the only thing that narrows it (`lib/mcp/global-tools.test.ts`).
+
+Saved profiles use their explicit read-task endpoint and server-side capability
+authority. They do not reinterpret the persisted `Agent.allTools` or `Agent.skills`
+fields, change `HOST_AI_TOOLS`, or alter the public MCP catalog/cache signature.
 
 Four reasons, and the third is the one that settles it:
 

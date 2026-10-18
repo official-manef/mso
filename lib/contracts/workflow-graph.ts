@@ -102,7 +102,7 @@ export type WorkflowGraphRun = {
   instance: string;
   nodes: WorkflowGraphRunNode[];
   edges?: WorkflowGraphRunEdge[];
-  trigger?: { type: "manual" | "schedule" | "webhook" | "channel" | "system"; nodeId?: string; receivedAt: string };
+  trigger?: { type: "manual" | "schedule" | "webhook" | "channel" | "system"; nodeId?: string; receivedAt: string; scheduleMode?: "interval" | "cron" | "runAt"; scheduledAt?: string };
   ancestry?: string[];
   /** Owner-private runtime input retained only so an execution can be retried safely. Public receipts strip this field. */
   runtimeInput?: Record<string, unknown>;

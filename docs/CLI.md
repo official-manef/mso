@@ -113,6 +113,7 @@ Commands:
   cockpit [project]    Alfa/MSO runtime context; search with `cockpit search <query>`
   threads *            Conversation history: list | show | save | rename | rm
   agent-sessions *     Durable MSO Agent sessions: list | show | create
+  agent-profiles *     Saved owner profiles: create | edit | clone | default | enable | disable | run
   agents *             Native local session agents: list | send | inbox
   org *                Organization chart: units, seats, reporting lines, targets
   a2a *                Agent-to-Agent v1 + workflow trace: list | discover | send | handoff | trace

@@ -28,7 +28,7 @@ Delegated write authority excludes the live MSO checkout, Git control files, use
 ### Triggers
 
 - `manual` — UI/CLI/MCP run
-- `schedule` — interval or five-field cron, with IANA timezone support
+- `schedule` — interval, five-field cron, or one explicit-offset `runAt` instant; see [schedule semantics and recovery](./WORKFLOW-SCHEDULES.md)
 - `webhook` — GET/POST/PUT/PATCH/DELETE server endpoint; requires a bearer token from a private secret variable
 
 Trigger nodes must be roots. Activating a workflow enables its server-side schedule/webhook behavior; drafts remain inert. Stored graphs are data rather than durable privilege grants: execution rechecks the live device role and deployment scope, and unattended stored non-web principals fail closed instead of acquiring fresh exec authority.
@@ -146,6 +146,12 @@ Private run receipts retain up to 1000 recent executions and expose:
 - failed node id/name
 
 The Workflows canvas reflects live node state and pulses edges while related nodes run. The Executions panel filters one graph's persisted executions and can reopen a complete receipt. A running local execution can be stopped after its current bounded action. Finished/stopped executions can be retried with their owner-private retained input only while the graph revision still matches, and finished receipts can be deleted.
+
+`POST /api/v1/workflows` with `action: "run"` may include `expected_revision`, the exact saved
+SHA-256 graph revision reviewed by its caller. A malformed revision is rejected with 400 and a
+changed revision with 409 before an agent session or run is created. Callers that omit this field
+retain the existing current-graph behavior. The onboarding project check uses this guard alongside
+its stable idempotency key; local progress never substitutes for the server run receipt.
 
 ## Versions and rollback
 

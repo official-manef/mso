@@ -5,6 +5,7 @@ import {
   readConfig,
   readOAuthBundle,
   resolveModelRef,
+  safeProviderId,
   selectedCustomConn,
   writeOAuthBundle,
   type OAuthBundle,
@@ -51,9 +52,11 @@ export class SelectedModelConfigError extends Error {
   }
 }
 
-export async function prepareSelectedModel(): Promise<PreparedSelectedModel> {
+export async function prepareSelectedModel(binding?: { provider: string; model: string }): Promise<PreparedSelectedModel> {
   const cfg = await readConfig();
-  const provider = cfg.provider || DEFAULT_PROVIDER;
+  const provider = binding ? safeProviderId(binding.provider) : cfg.provider || DEFAULT_PROVIDER;
+  const model = binding?.model ?? cfg.model;
+  if (binding && (!model || model.length > 200 || /\s|\0/.test(model))) throw new SelectedModelConfigError("invalid_model_binding", 400);
   if (provider === "openai-codex") {
     const existing = await readOAuthBundle("openai-codex");
     if (!existing)
@@ -61,9 +64,9 @@ export async function prepareSelectedModel(): Promise<PreparedSelectedModel> {
     try {
       const bundle = await ensureFreshCodex(existing);
       if (bundle !== existing) await writeOAuthBundle("openai-codex", bundle);
-      if (!cfg.model)
+      if (!model)
         throw new SelectedModelConfigError("model_not_selected", 400);
-      return { kind: "codex", provider, model: cfg.model, bundle };
+      return { kind: "codex", provider, model, bundle };
     } catch (error) {
       if (error instanceof SelectedModelConfigError) throw error;
       throw new SelectedModelConfigError("oauth_refresh_failed", 502);
@@ -71,8 +74,8 @@ export async function prepareSelectedModel(): Promise<PreparedSelectedModel> {
   }
 
   try {
-    const custom = await selectedCustomConn();
-    const resolved = await resolveModel(await resolveModelRef(), {
+    const custom = binding ? Object.entries(cfg.customProviders ?? {}).find(([id]) => id === provider)?.[1] ?? null : await selectedCustomConn();
+    const resolved = await resolveModel(binding ? `${provider}/${model}` : await resolveModelRef(), {
       store: hostCredentialStore(),
       baseUrl: custom?.baseUrl,
       protocol: custom?.protocol,

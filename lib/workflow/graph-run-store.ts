@@ -2,6 +2,7 @@ import path from "node:path";
 import { agentSessionsDir } from "@/lib/agent/session-paths";
 import { withSecurityStoreLock } from "@/lib/security-store-lock";
 import type { WorkflowGraphRun } from "@/lib/contracts/workflow-graph";
+import { normalizeWorkflowRunAt } from "@/lib/contracts/workflow-schedule";
 
 import { listWorkflowFiles, readWorkflowJson, removeWorkflowFile, workflowFileMtime, writeWorkflowFile } from "./private-file";
 
@@ -25,9 +26,42 @@ export async function readWorkflowGraphRun(owner: string, id: string): Promise<W
   }
 }
 
+export type WorkflowScheduleClaim = {
+  version: 1; owner: string; id: string; graphId: string; nodeId: string; scheduledAt: string;
+  committedAt: string; updatedAt: string; phase: "intent_committed" | "run_finished"; runState: WorkflowGraphRun["state"];
+};
+
+export async function readWorkflowGraphScheduleClaim(owner: string, id: string): Promise<WorkflowScheduleClaim | null> {
+  try {
+    const claim = await readWorkflowJson(`${file(owner, id)}.schedule-claim`, 4096, "workflow schedule claim") as WorkflowScheduleClaim;
+    if (claim.version !== 1 || claim.owner !== owner || claim.id !== id || typeof claim.graphId !== "string" || typeof claim.nodeId !== "string" || !["intent_committed", "run_finished"].includes(claim.phase)) throw new Error("invalid workflow schedule claim");
+    normalizeWorkflowRunAt(claim.scheduledAt);
+    return claim;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
+    throw error;
+  }
+}
+
+async function recordScheduleClaim(run: WorkflowGraphRun): Promise<void> {
+  if (run.trigger?.type !== "schedule" || run.trigger.scheduleMode !== "runAt") return;
+  if (!run.trigger.nodeId) throw new Error("one-shot schedule requires a trigger node");
+  const scheduledAt = normalizeWorkflowRunAt(run.trigger.scheduledAt), existing = await readWorkflowGraphScheduleClaim(run.owner, run.id);
+  if (existing && (existing.graphId !== run.graphId || existing.nodeId !== run.trigger.nodeId || existing.scheduledAt !== scheduledAt)) throw new Error("workflow schedule claim identity changed");
+  if (existing && run.state === "running") return;
+  const claim: WorkflowScheduleClaim = {
+    version: 1, owner: run.owner, id: run.id, graphId: run.graphId, nodeId: run.trigger.nodeId, scheduledAt,
+    committedAt: existing?.committedAt ?? run.startedAt, updatedAt: run.updatedAt,
+    phase: run.state === "running" ? "intent_committed" : "run_finished", runState: run.state,
+  };
+  await writeWorkflowFile(`${file(run.owner, run.id)}.schedule-claim`, JSON.stringify(claim), { durable: true });
+}
+
 export async function writeWorkflowGraphRun(run: WorkflowGraphRun): Promise<void> {
   const body = JSON.stringify(run);
   if (Buffer.byteLength(body) > MAX_RUN_BYTES) throw new Error("workflow graph run receipt exceeds 1 MiB");
+  // Retain the committed intent before dispatch, even when receipt retention removes the detailed run.
+  await recordScheduleClaim(run);
   await writeWorkflowFile(file(run.owner, run.id), body);
 }
 

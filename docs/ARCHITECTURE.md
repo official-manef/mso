@@ -45,6 +45,7 @@ flowchart LR
 | Terminal MSO Agent | `scripts/mso-agent.mjs`, `mso-agent-turn.mjs`, `mso-agent-layout.mjs`, `mso-agent-errors.mjs`, `/api/v1/agent-tools` | Streams through `/api/assistant`, discovers the canonical MCP catalog, renders sectioned Assistant/work/local/error output, and preserves exact approval + recoverable mutation-outcome semantics. |
 | Local Agent messaging | `lib/agent/local-agent-*`, `/api/v1/local-agents`, `scripts/mso-agent-local.mjs` | Same-principal presence + durable mailbox + SSE delivery; active human mentions require a live receiver and never require an Agent Card. |
 | Same-session subagents | `lib/agent/subagent-runner.ts`, `lib/mcp/tools-subagents.ts` | Bounded foreground isolated child runs behind an exec-scope delegation boundary; no recursive/background worker is created. |
+| Saved agent profiles | `lib/agent/profile-*`, `bounded-runner.ts`, `/api/v1/agent-profiles` | Owner-device revisioned configuration and foreground read tasks; exact model binding, server-enforced tools and live authorization. See [AGENT-PROFILES.md](./AGENT-PROFILES.md). |
 | Infrastructure providers | `lib/infra/*`, `/api/v1/infra/*` | Owner-private Dokploy/Cloudflare/Hostinger state and bounded provider clients; secrets never enter model tool arguments. |
 | Alfa | `frontend/slices/assistant/host-tools/*` | Stable tool catalog; reads run immediately, mutations require human approval. |
 | MCP | `lib/mcp/*`, `/mcp`, `/oauth/*` | OAuth 2.1 + PKCE; `read < write < exec` token scope. |

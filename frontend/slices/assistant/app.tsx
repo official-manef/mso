@@ -9,6 +9,7 @@ import { usePublishInspector } from "./lib/host";
 import { useAIStore } from "./lib/store";
 import type { Agent, Automation, Skill } from "./lib/types";
 import { AgentForm } from "./components/agent-form";
+import { AgentLibrary } from "./components/agent-library";
 import { AgentSwitcher } from "./components/agent-switcher";
 import { AutomationForm } from "./components/automation-form";
 import { AutomationView } from "./components/automation-view";
@@ -37,8 +38,7 @@ const TABS: [Tab, string][] = [
   ["mcp", "Activity"],
 ];
 
-// Alfa: tabbed assistant. Chat keeps the real Claude stream; the other tabs
-// manage agents/skills/automations entirely in localStorage (no Convex).
+// Saved profiles use server state; legacy personas and playbooks retain local storage.
 export default function Assistant({ payload }: AppProps) {
   const store = useAIStore();
   const route = assistantRouteFromPayload(payload);
@@ -147,11 +147,10 @@ export default function Assistant({ payload }: AppProps) {
       />
 
       {tab === "agents" ? (
-        <LibraryGrid
-          kind="agent"
+        <AgentLibrary
           store={store}
           onNew={() => setForm({ kind: "agent" })}
-          onEdit={(it) => setForm({ kind: "agent", item: it as Agent })}
+          onEdit={(item) => setForm({ kind: "agent", item })}
         />
       ) : tab === "organization" ? (
         <OrganizationView />

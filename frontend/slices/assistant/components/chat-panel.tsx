@@ -9,22 +9,18 @@ import {
   useState,
   type Ref
 } from "react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
 import { errText } from "./error-text";
 import {
   updateAlfa,
-  useActiveShell,
   useAlfaMessages,
   awaitAlfaApproval,
   resolveAlfaApproval,
   clearAlfaApprovals,
   useAlfaBusy,
   sendToAlfa,
-  ChatComposer,
   type AlfaMessage
 } from "@/features/appshell";
-import { AlfaRunProgress, AlfaApprovalGrants, alfaRunState, setAlfaOperation, pulseAlfaRun, recordAlfaRunActivity, endAlfaRunState, stopAlfaRunState } from "@/features/appshell";
+import { alfaRunState, setAlfaOperation, pulseAlfaRun, recordAlfaRunActivity, endAlfaRunState, stopAlfaRunState } from "@/features/appshell";
 import { runToolAgent, useOsApi, type AgentMsg } from "../lib/host";
 import type { Agent, Automation } from "../lib/types";
 import { activeAgent } from "../lib/store";
@@ -32,16 +28,13 @@ import { composeSystem } from "../lib/agent-request";
 import { composeAutomationRequest } from "../lib/automation-request";
 import { useHostCommands, type HostToolUi } from "../host-tools/use-host-commands";
 import { type ChatMessage, type ToolCard } from "@/features/appshell";
-import { ChatTranscript } from "./chat-transcript";
-import { TurnUsage, addUsage, type ProviderUsage } from "./turn-usage";
+import { ChatPanelView } from "./chat-panel-view";
+import { addUsage, type ProviderUsage } from "./turn-usage";
 
-import { EmptyState } from "./empty-state";
 import { useThreadPersistence } from "./use-thread-persistence";
 import { useAlfaRunner } from "./use-alfa-runner";
 import { beginAlfaRun, finishAlfaRun } from "../lib/alfa-activity";
 import { alfaProjectContext } from "@/features/appshell";
-
-const SUGGESTED = ["Show system stats", "List ~/projects", "Create notes.txt in ~/projects with a TODO"];
 
 let seq = 0;
 const nextId = () => `m${Date.now()}-${seq++}`;
@@ -74,7 +67,6 @@ export function ChatPanel({
   ref?: Ref<ChatHandle>;
 }) {
   const api = useOsApi();
-  const ios = useActiveShell().id === "ios";
   // The display list lives in the SHARED Alfa store, not in this component. That
   // is what makes the per-app Alfa sheet show this very conversation instead of a
   // second, disconnected one — and it is less memory, not more: one array for
@@ -93,19 +85,10 @@ export function ChatPanel({
   const streaming = useAlfaBusy();
   const [turnUsage, setTurnUsage] = useState<ProviderUsage | null>(null);
   const [threadUsage, setThreadUsage] = useState<ProviderUsage | null>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const agentRef = useRef(agent);
   const historyRef = useRef<AgentMsg[]>([]);
   useEffect(() => { agentRef.current = agent; }, [agent]);
-
-  useEffect(() => {
-    // Coalesce into one rAF (streaming appends `messages` per token) and use
-    // instant behavior — a smooth scroll restarted every token both janks and
-    // forces a layout each frame.
-    const id = requestAnimationFrame(() => bottomRef.current?.scrollIntoView({ behavior: "auto", block: "end" }));
-    return () => cancelAnimationFrame(id);
-  }, [messages]);
 
   // Stable UI seam for the tool binding: push/patch tool cards + await approval.
   const pushCard = useCallback((id: string, card: ToolCard) => {
@@ -256,44 +239,6 @@ export function ChatPanel({
     newThread: handleNewThread,
   }));
 
-  return (
-    <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 overflow-x-auto border-b border-border bg-card/40 px-3 py-2 [scrollbar-width:none]">
-        {switcher}
-      </div>
-      {cockpit}
-      <AlfaRunProgress />
-      <AlfaApprovalGrants />
-      <div
-        className={cn(
-          "px-3 py-1 text-center text-[11px] font-medium",
-          api.mode === "live" ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground",
-        )}
-      >
-        {api.mode === "live"
-          ? "● LIVE — Alfa acts on your real VPS; every change needs your approval"
-          : "MOCK — actions are simulated (switch to Live in Settings → Server)"}
-      </div>
-      {messages.length === 0 ? (
-        <div className="flex-1 overflow-y-auto">
-          <EmptyState prompts={[...new Set([...prompts, ...SUGGESTED])].slice(0, 6)} onPick={(t) => void sendToAlfa(t)} />
-        </div>
-      ) : (
-        <ScrollArea className="flex-1">
-          <div
-            data-native-context-menu
-            onContextMenu={(e) => e.stopPropagation()}
-            className={cn("flex flex-col p-4", ios ? "gap-1.5" : "gap-4")}
-          >
-            <ChatTranscript messages={messages} ios={ios} onResolve={resolve}/>
-            <div ref={bottomRef} />
-          </div>
-        </ScrollArea>
-      )}
-      <TurnUsage turnUsage={messages.length > 0 ? turnUsage : null} threadTotal={messages.length > 0 ? threadUsage : null} />
-      {/* Through sendToAlfa, not send(): one entry point means one single-flight
-          guard and one busy flag for every surface. */}
-      <ChatComposer onSend={(t) => void sendToAlfa(t)} streaming={streaming} onStop={stop} />
-    </div>
-  );
+  return <ChatPanelView mode={api.mode} messages={messages} prompts={prompts} switcher={switcher} cockpit={cockpit}
+    streaming={streaming} turnUsage={turnUsage} threadUsage={threadUsage} onResolve={resolve} onStop={stop} />;
 }

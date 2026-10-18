@@ -31,7 +31,13 @@ export function ThreadList({
   const [editingTitle, setEditingTitle] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [previousOpen, setPreviousOpen] = useState(open);
   const design = useShellDesign();
+
+  if (open !== previousOpen) {
+    setPreviousOpen(open);
+    if (open) { setEditingId(null); setConfirmDeleteId(null); setError(null); }
+  }
 
   const load = useCallback(() => {
     fetch("/api/threads", { cache: "no-store" })
@@ -41,12 +47,7 @@ export function ThreadList({
   }, []);
 
   useEffect(() => {
-    if (open) {
-      load();
-      setEditingId(null);
-      setConfirmDeleteId(null);
-      setError(null);
-    }
+    if (open) load();
   }, [open, load]);
 
   async function resume(id: string) {

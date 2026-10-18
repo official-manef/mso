@@ -1,3 +1,23 @@
+## 2026-10-18: Implement the first three bounded Nakama journeys
+
+Owner onboarding now advances from installation readiness to a selected project and a saved, read-only Workflow receipt. Its first action uses a fixed graph and exact graph revision; it stores the attempt identity before dispatch, reconciles lost responses and reopens the existing receipt after reload. Optional model checks disclose their cost, while the initial project action needs no inference. Viewer and Operator devices can inspect readiness without receiving Owner controls. The backup link describes the actual browser and memory restore surfaces; it does not imply a full installation restore.
+
+Saved Owner profiles now have a private server store, revision history, stale-write protection, same-device cloning, default selection and enable/disable controls in Alfa and the CLI. A foreground run binds the saved provider/model and exact enabled revision, narrows execution to nine reviewed read tools, and uses the canonical capability kernel. Live authority is checked around model and tool work and again after session persistence before returning a result. The shared loop retains existing subagent behavior while profile runs have six turns, sixteen tools and sixty seconds. This establishes a device-owned configuration lifecycle, not human-account, organization or process isolation; the remaining assignment and worker requirements stay explicit in `AGENT-PROFILES.md`.
+
+Workflow schedules now support explicit-offset one-shot timestamps with a required `run_once` missed-tick policy. A private durable intent precedes dispatch and survives receipt deletion or pruning; equivalent timestamp spellings cannot replay the same occurrence. Ancestor, file and parent-directory sync failures block dispatch, and an uncertain post-rename intent requires reconciliation. Existing recurring fields remain readable and inert after old editor mode changes; selected-mode validation still applies. `WORKFLOW-SCHEDULES.md` documents cron day matching, timezone behavior and the limits of local claims and physical durability evidence.
+
+The implementation map records five partial requirement groups and 59 pending groups, with no group marked complete. All 64 frozen groups, 24 packages, eight stages, 30 acceptance journeys and 69 derived compatibility variants remain in scope. The new browser journeys use their own synthetic stores because their real persisted sessions would otherwise contaminate the existing session-monitor pagination fixture.
+
+Integration preserves the current upstream session-turn runner, provider usage accounting, thread search/rename, skills cache and compact `fs_stat` catalog. Two existing UI lint failures prevented the combined gate: the chat controller exceeded the line limit, and the thread drawer synchronously reset state in an effect. Its presentation and scroll handling now live in a same-slice view, and drawer reset follows its open transition. Controller behavior and the upstream CSS budget remain intact.
+
+## 2026-10-18: Freeze the complete Nakama target and separate inventory from runtime proof
+
+The approved v0.1 draft spans 64 requirement groups, 24 packages, eight stages and 30 acceptance journeys. The immutable snapshot preserves all original contracts and variants; the generated current reference reads a separate implementation map so progress cannot silently reduce the target. Source receipts identify all 100 distinct referenced files at the pinned Nakama and MSO commits. File identity proves source availability, not runtime behavior.
+
+The repository checks now validate the snapshot digest, exact requirement mappings, source identities and generated reference. A separate full-parity candidate gate requires clean HEAD, regular tracked source/test blobs, complete acceptance and compatibility records, all eight completion dimensions and six passing gates. Every receipt is bound to the candidate and hashed artifact bytes. A complete manifest cannot establish that its statements are true: release reviewers must inspect real runtime/provider evidence. Pending or partial scope keeps that release gate blocked.
+
+CLI help previously loaded HTTP credentials and attempted to create a private cookie jar before printing recovery guidance. Help now reads the existing entrypoint header before credential loading; grouped usage shares that helper and the offline-update fixture copies it. Regression tests use an executable synthetic env file and unusable private storage to prove help stays available without either side effect.
+
 ## 2026-10-18b: `fs_stat` returns, paid for by a tighter ChatGPT description cap
 
 The read-scope `fs_stat` tool (true size/mtime without `exec_run` or reading binary content) was reverted

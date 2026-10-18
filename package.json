@@ -14,7 +14,7 @@
     "typecheck": "tsc --noEmit",
     "test": "node scripts/check-test-toolchain.mjs && vitest run",
     "coverage": "node scripts/check-test-toolchain.mjs && vitest run --coverage",
-    "check": "node scripts/check-cycles.mjs && node scripts/check-architecture.mjs && node scripts/check-docs.mjs && node scripts/gen-comparison.mjs --check && node scripts/check-contrast.mjs && bun scripts/check-skill-flows.mjs && bun run check:instance-literals && bun run test:ci",
+    "check": "node scripts/check-cycles.mjs && node scripts/check-architecture.mjs && node scripts/check-docs.mjs && node scripts/gen-comparison.mjs --check && node scripts/check-contrast.mjs && bun scripts/check-skill-flows.mjs && bun run check:instance-literals && bun run test:ci && bun run parity:nakama && bun run test:parity",
     "audit": "node scripts/audit.mjs",
     "verify": "bun run typecheck && bun run lint && bun run coverage && bun run check && bun run audit",
     "security:ultimate": "bash scripts/security-ultimate.sh",
@@ -54,7 +54,10 @@
     "ci:verify": "node scripts/ci/run.mjs --profile verify",
     "ci:security": "node scripts/ci/run.mjs --profile security",
     "ci:release": "node scripts/ci/run.mjs --profile release",
-    "test:ci": "node --test scripts/ci/contract.node.mjs"
+    "test:ci": "node --test scripts/ci/contract.node.mjs",
+    "parity:nakama": "node scripts/check-nakama-parity.mjs && node scripts/gen-nakama-parity.mjs --check",
+    "parity:nakama:release": "node scripts/check-nakama-parity.mjs --release",
+    "test:parity": "node --test scripts/parity/inventory.node.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",

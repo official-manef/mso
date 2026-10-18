@@ -1,13 +1,11 @@
 import { randomUUID } from "node:crypto";
 import { getAgentSession } from "./session-store";
-import { prepareSelectedModel, streamPreparedSelectedModel } from "@/lib/ai/selected-model-stream";
-import type { OaMsg, OaTool, OaToolUse } from "@/lib/ai/openai-stream";
+import { prepareSelectedModel } from "@/lib/ai/selected-model-stream";
 import { allows, parseScope, type Scope } from "@/lib/capabilities/scope";
 import type { CapabilityRuntime } from "@/lib/capabilities/runtime";
 import type { CapabilityRunContext } from "@/lib/capabilities/tool";
-import { liveCapabilityContext } from "@/lib/capabilities/live-authority";
+import { runBoundedAgent, type BoundedAgentProgress } from "./bounded-runner";
 
-const MAX_RESULT_BYTES = 64 * 1024;
 const DEFAULT_TURNS = 6;
 const ABSOLUTE_MAX_TURNS = 48;
 function maxTurnsLimit(): number {
@@ -20,25 +18,9 @@ const DEFAULT_TIMEOUT_MS = 60_000;
 const MAX_TIMEOUT_MS = 120_000;
 const DENY_PREFIXES = ["agent_session_", "agent_memory_", "local_agent_", "a2a_"];
 const DENY_EXACT = new Set(["agent_subagent_run", "project_agent_run"]);
-
-function bounded(value: string, max = MAX_RESULT_BYTES): string {
-  if (Buffer.byteLength(value, "utf8") <= max) return value;
-  let out = value;
-  while (Buffer.byteLength(out, "utf8") > max - 80) out = out.slice(0, Math.floor(out.length * 0.9));
-  return `${out}\n…[truncated by MSO subagent result budget]`;
-}
-
 function allowedTool(name: string): boolean {
-  return !DENY_EXACT.has(name) && !DENY_PREFIXES.some((prefix) => name.startsWith(prefix));
+  return !DENY_EXACT.has(name) && !DENY_PREFIXES.some(prefix => name.startsWith(prefix));
 }
-
-function resultText(rpc: Record<string, unknown>): { content: string; isError: boolean } {
-  if (rpc.error) return { content: bounded(`error: ${JSON.stringify(rpc.error)}`), isError: true };
-  const result = (rpc.result ?? {}) as { content?: Array<{ type?: string; text?: string }>; isError?: boolean };
-  const text = (result.content ?? []).filter((row) => row.type === "text").map((row) => row.text ?? "").join("\n");
-  return { content: bounded(text || JSON.stringify(result.content ?? [])), isError: Boolean(result.isError) };
-}
-
 function systemPrompt(input: { name: string; objective: string; cwd?: string; maxScope: Scope; explicitContext?: string }): string {
   return [
     `You are MSO subagent ${input.name}, a focused worker spawned inside one parent MSO Agent session.`,
@@ -51,7 +33,6 @@ function systemPrompt(input: { name: string; objective: string; cwd?: string; ma
     "Do not spawn another subagent. Do not message other sessions. Never expose credentials, authorization headers, private keys, tool arguments, or hidden reasoning.",
   ].filter(Boolean).join(" ");
 }
-
 export async function runSessionSubagent(input: {
   principal: string;
   parentSessionId: string;
@@ -76,59 +57,19 @@ export async function runSessionSubagent(input: {
   const timeoutMs = Math.max(1_000, Math.min(MAX_TIMEOUT_MS, Math.trunc(input.timeoutMs || DEFAULT_TIMEOUT_MS)));
   const subagentId = `subagent_${randomUUID()}`;
   const authority = { ...input.authority, principal: input.authority.principal ?? input.principal, scope: maxScope, capabilities: input.capabilities };
-  const toolDefs = (context: CapabilityRunContext) => input.capabilities.list(context.scope, context).filter((tool) => allows(context.scope, tool.scope) && allowedTool(tool.name) && (!context.allowedTools || context.allowedTools.includes(tool.name)));
+  const toolDefs = (context: CapabilityRunContext) => input.capabilities.list(context.scope, context).filter(tool => allows(context.scope, tool.scope) && allowedTool(tool.name) && (!context.allowedTools || context.allowedTools.includes(tool.name)));
   const prepared = await prepareSelectedModel();
-  const messages: OaMsg[] = [{ role: "user", text: objective }];
-  const toolCalls: Array<{ name: string; ok: boolean }> = [];
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(new Error("subagent timeout")), timeoutMs);
   const signal = AbortSignal.any([controller.signal, ...(authority.signal ? [authority.signal] : [])]);
-  authority.signal = signal;
-  let finalText = "";
+  const progress: BoundedAgentProgress = { text: "", toolCalls: [] };
   try {
-    for (let round = 1; round <= maxTurns; round += 1) {
-      const live = await liveCapabilityContext(authority);
-      const tools: OaTool[] = toolDefs(live).map((tool) => ({ name: tool.name, description: tool.description, input_schema: tool.inputSchema }));
-      let text = "";
-      const uses: OaToolUse[] = [];
-      await streamPreparedSelectedModel({
-        prepared, messages, tools,
-        system: systemPrompt({ name, objective, cwd: parent.cwd, maxScope, explicitContext: input.explicitContext }),
-        signal,
-        emit(event, data) {
-          if (event === "delta") text += String(data ?? "");
-          else if (event === "tool_use") uses.push(data as OaToolUse);
-        },
-      });
-      await liveCapabilityContext(authority);
-      if (controller.signal.aborted) throw controller.signal.reason;
-      if (text) finalText = bounded(text);
-      messages.push({ role: "assistant", text, toolUses: uses });
-      if (!uses.length) return { subagentId, name, status: "completed" as const, text: finalText.trim(), rounds: round, toolCalls, maxScope };
-      const results: { id: string; content: string; isError?: boolean }[] = [];
-      for (const call of uses) {
-        const current = await liveCapabilityContext(authority, call.name, call.input ?? {});
-        const tool = toolDefs(current).find((entry) => entry.name === call.name);
-        if (!tool) {
-          results.push({ id: call.id, content: "error: tool unavailable to this subagent", isError: true });
-          toolCalls.push({ name: call.name, ok: false });
-          continue;
-        }
-        const invoked = await input.capabilities.invoke({
-          ...current, name: call.name, args: call.input ?? {},
-          actor: `${input.principal}#${subagentId}`, principal: current.principal,
-        });
-        const outcome = resultText({ result: invoked });
-        results.push({ id: call.id, content: outcome.content, ...(outcome.isError ? { isError: true } : {}) });
-        toolCalls.push({ name: call.name, ok: !outcome.isError });
-      }
-      messages.push({ role: "tool", results });
-    }
-    return { subagentId, name, status: "partial" as const, text: finalText.trim() || "Subagent reached its turn limit before a final answer.", rounds: maxTurns, toolCalls, maxScope };
+    const result = await runBoundedAgent({ prepared, objective, system: systemPrompt({ name, objective, cwd: parent.cwd, maxScope, explicitContext: input.explicitContext }),
+      capabilities: input.capabilities, authority, actor: `${input.principal}#${subagentId}`, tools: toolDefs, maxTurns, signal, progress });
+    const text = result.status === "partial" && !progress.text.trim() ? "Subagent reached its turn limit before a final answer." : result.text;
+    return { subagentId, name, status: result.status, text, rounds: result.rounds, toolCalls: result.toolCalls, maxScope };
   } catch (error) {
-    if (controller.signal.aborted) return { subagentId, name, status: "timeout" as const, text: finalText.trim(), rounds: 0, toolCalls, maxScope };
+    if (controller.signal.aborted) return { subagentId, name, status: "timeout" as const, text: progress.text.trim(), rounds: 0, toolCalls: progress.toolCalls, maxScope };
     throw error;
-  } finally {
-    clearTimeout(timeout);
-  }
+  } finally { clearTimeout(timeout); }
 }

@@ -1,0 +1,102 @@
+import { expect } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
+
+export async function onboardingJourney(page, fixture) {
+  const maintenance = fixture.base + "/settings?section=about&page=maintenance";
+  const errors = [];
+  const captureError = error => errors.push(error.message);
+  page.on("pageerror", captureError);
+  await page.goto(maintenance);
+  await page.evaluate(() => { localStorage.removeItem("mso:onboarding:progress:v2"); localStorage.setItem("mso:onboarding:v1", "done"); });
+  await page.reload();
+  const open = () => page.getByRole("button", { name: "Open onboarding", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Set up MSO", exact: true });
+  await expect(dialog).toHaveCount(0);
+  await open();
+  await expect(dialog.getByRole("heading", { name: "Use this installation as it is" })).toBeVisible();
+  await dialog.getByRole("button", { name: "Open backup options" }).click();
+  await expect(page).toHaveURL(fixture.base + "/settings?section=backup");
+  await expect(page.getByText("Browser backup", { exact: true })).toBeVisible();
+  await page.goto(maintenance);
+  await open();
+  await dialog.getByRole("button", { name: "Check readiness", exact: true }).click();
+  await expect(dialog.getByText("Service user", { exact: true })).toBeVisible();
+  await page.route("**/api/config", route => route.fulfill({ status: 503, contentType: "application/json", body: '{"error":"fixture configuration unavailable"}' }));
+  await dialog.getByRole("button", { name: "Refresh readiness" }).click();
+  await expect(dialog.getByRole("alert")).toContainText("Model settings unavailable");
+  await expect(dialog.getByText("Service user", { exact: true })).toBeVisible();
+  await page.unroute("**/api/config");
+  await dialog.getByRole("button", { name: "Refresh readiness" }).click();
+  await expect(dialog.getByText("Selected provider", { exact: true })).toBeVisible();
+  const providerLink = dialog.getByRole("link", { name: "Open model connections" });
+  await expect(providerLink).toHaveAttribute("href", "/integrations?section=ai-providers");
+  const [connections] = await Promise.all([page.waitForEvent("popup"), providerLink.click()]);
+  await expect(connections).toHaveURL(fixture.base + "/integrations");
+  await expect(connections.getByRole("heading", { name: "AI Providers", exact: true })).toBeVisible();
+  await connections.close();
+  await dialog.getByRole("button", { name: "Choose a project", exact: true }).click();
+  await expect(dialog.getByRole("radio", { name: /fixture-project/ })).toBeVisible();
+  await dialog.getByRole("textbox", { name: "Search host projects" }).fill("onboarding-no-such-project");
+  await dialog.getByRole("button", { name: "Search", exact: true }).click();
+  await expect(dialog.getByText("No project matches this search.", { exact: false })).toBeVisible();
+  await dialog.getByRole("textbox", { name: "Search host projects" }).fill("fixture-project");
+  await dialog.getByRole("button", { name: "Search", exact: true }).click();
+  await dialog.getByRole("radio", { name: /fixture-project/ }).check();
+  await dialog.getByRole("button", { name: "Review first action", exact: true }).click();
+  let dispatches = 0;
+  const captureDispatch = request => {
+    if (request.url() === fixture.base + "/api/v1/workflows" && request.method() === "POST" && request.postDataJSON()?.action === "run") dispatches++;
+  };
+  page.on("request", captureDispatch);
+  await dialog.getByRole("button", { name: "Run project check", exact: true }).dblclick();
+  await expect(dialog.getByText("Project check completed with a saved receipt.", { exact: true })).toBeVisible({ timeout: 30_000 });
+  expect(dispatches).toBe(1);
+  const progress = await page.evaluate(() => JSON.parse(localStorage.getItem("mso:onboarding:progress:v2")));
+  expect(progress.attempt.runId).toBeTruthy();
+  await page.reload();
+  await open();
+  await expect(dialog.getByText("Project check completed with a saved receipt.", { exact: true })).toBeVisible();
+  await dialog.getByRole("button", { name: "Refresh receipt" }).click();
+  expect(dispatches).toBe(1);
+  await dialog.getByText("Receipt reference", { exact: true }).click();
+  await expect(dialog.getByText(progress.attempt.runId, { exact: true })).toBeVisible();
+  for (const colorScheme of ["light", "dark"]) {
+    await page.emulateMedia({ colorScheme });
+    await page.evaluate(theme => { document.documentElement.dataset.theme = theme; }, colorScheme);
+    expect(await page.locator("body").evaluate(element => getComputedStyle(element).colorScheme)).toBe(colorScheme);
+    for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 }]) {
+      await page.setViewportSize(viewport);
+      await expect(dialog).toBeVisible();
+      const dimensions = await dialog.evaluate(element => ({ scroll: element.scrollWidth, client: element.clientWidth, width: element.getBoundingClientRect().width }));
+      expect(dimensions.scroll).toBeLessThanOrEqual(dimensions.client + 1);
+      expect(dimensions.width).toBeLessThanOrEqual(viewport.width);
+      const axe = await new AxeBuilder({ page }).include('[role="dialog"]').withTags(["wcag2a", "wcag2aa"]).analyze();
+      expect(axe.violations).toEqual([]);
+    }
+  }
+  await dialog.getByRole("button", { name: "Close guide", exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  await open();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await fixture.setRole("viewer");
+  await page.reload();
+  await open();
+  await expect(dialog.getByText("Device role: Viewer.", { exact: false })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Project", exact: true })).toHaveCount(0);
+  await expect(dialog.getByRole("link", { name: "Open model connections" })).toHaveCount(0);
+  const denied = await page.evaluate(async runId => {
+    const response = await fetch(`/api/v1/workflows?run_id=${runId}`);
+    return response.status;
+  }, progress.attempt.runId);
+  expect(denied).toBeGreaterThanOrEqual(400);
+  await dialog.getByRole("button", { name: "Close guide", exact: true }).click();
+  await fixture.setRole("owner");
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.emulateMedia({ colorScheme: "light" });
+  await page.reload();
+  page.off("request", captureDispatch);
+  page.off("pageerror", captureError);
+  expect(errors).toEqual([]);
+  console.log("PASS onboarding: legacy skip/reopen, backup route, model setup link/error, project search, one persisted read-only run, reload, responsive themes, keyboard and live role denial");
+}

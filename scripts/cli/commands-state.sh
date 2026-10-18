@@ -55,6 +55,7 @@ case "$cmd" in
       *) die "usage: mso $U_agents" ;;
     esac ;;
   org) source "$ROOT/scripts/cli/organization.sh"; run_org "$@" ;;
+  agent-profiles) source "$ROOT/scripts/cli/agent-profiles.sh"; run_agent_profiles "$@" ;;
   a2a)
     sub="${1:-list}"; shift || true
     case "$sub" in

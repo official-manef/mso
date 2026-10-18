@@ -40,20 +40,27 @@ export async function readWorkflowJson(file: string, maximumBytes: number, label
 }
 
 /** Preserve the existing atomic JSON format; never chmod or reopen a renamed pathname. */
-export async function writeWorkflowFile(file: string, body: string): Promise<void> {
-  const pinned = await pinSecurityStorePath(file);
+export async function writeWorkflowFile(file: string, body: string, { durable = false }: { durable?: boolean } = {}): Promise<void> {
+  const pinned = await pinSecurityStorePath(file, { durable });
   const temporary = `${pinned.file}.${randomUUID()}.tmp`;
   let handle: Awaited<ReturnType<typeof fs.open>> | undefined;
+  let renamed = false;
   try {
     await pinned.directory.chmod(0o700);
     handle = await fs.open(temporary, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW, 0o600);
     await handle.writeFile(body, "utf8");
+    if (durable) await handle.sync();
     await handle.close(); handle = undefined;
     await fs.rename(temporary, pinned.file);
+    renamed = true;
+    if (durable) await pinned.directory.sync();
+  } catch (error) {
+    if (durable && renamed) throw new Error("workflow file commit uncertain; reconcile before retrying", { cause: error });
+    throw error;
   } finally {
-    await handle?.close();
+    await handle?.close().catch(() => undefined);
     await fs.unlink(temporary).catch(() => undefined);
-    await pinned.directory.close();
+    await pinned.directory.close().catch(() => undefined);
   }
 }
 
