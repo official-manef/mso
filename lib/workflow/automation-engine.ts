@@ -91,11 +91,13 @@ export async function startFlow(flow: AutomationFlow, project: string, raw: unkn
 export async function flowStatus(id: string, context: CapabilityRunContext, waitMs = 0) {
   if (!Number.isSafeInteger(waitMs) || waitMs < 0 || waitMs > 25_000) throw new Error("wait_ms must be an integer from 0 to 25000");
   const owner = flowOwner(principal(context));
+  // Retain completion even if execution settles while the receipt read is in flight.
+  const work = pending.get(id);
   let run = await readFlowRun(owner, id);
   if (!run) throw new Error("flow run not found for this principal");
-  if (run.state === "running" && pending.has(id) && waitMs > 0) {
+  if (run.state === "running" && work && waitMs > 0) {
     let timer: ReturnType<typeof setTimeout> | undefined;
-    await Promise.race([pending.get(id), new Promise(resolve => { timer = setTimeout(resolve, waitMs); })]);
+    await Promise.race([work, new Promise(resolve => { timer = setTimeout(resolve, waitMs); })]);
     clearTimeout(timer); run = await readFlowRun(owner, id) ?? run;
   }
   if (run.state === "running" && run.instance !== INSTANCE) {
