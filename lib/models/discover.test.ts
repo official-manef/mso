@@ -1,10 +1,15 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { safeProviderFetch } from "../host/ssrf";
 import {
   discoverEndpointModels,
   modelDiscoveryHeaders,
   modelsEndpoint,
   parseDiscoveredModels,
 } from "./discover.js";
+
+vi.mock("../host/ssrf", () => ({ safeProviderFetch: vi.fn() }));
+const fetchModels = vi.mocked(safeProviderFetch);
+beforeEach(() => { fetchModels.mockReset(); });
 
 describe("endpoint model discovery", () => {
   it("builds the list URL per protocol and avoids a doubled /v1", () => {
@@ -36,40 +41,61 @@ describe("endpoint model discovery", () => {
     expect(parseDiscoveredModels(null)).toEqual([]);
   });
 
-  it("discovers through the injected fetch, without leaking the key elsewhere", async () => {
-    const fetchImpl = vi.fn(async (_url: string, _init?: RequestInit) =>
-      new Response(JSON.stringify({ data: [{ id: "gpt-oss" }] }), { status: 200 }),
-    );
+  it("always discovers through the pinned provider transport", async () => {
+    fetchModels.mockResolvedValue(new Response(JSON.stringify({ data: [{ id: "gpt-oss" }] })));
     const models = await discoverEndpointModels(
       { baseUrl: "https://gateway.example/v1", apiKey: "sk-secret", protocol: "openai" },
-      { fetchImpl: fetchImpl as unknown as typeof fetch },
     );
     expect(models).toEqual([{ id: "gpt-oss", name: "gpt-oss" }]);
-    const [url, init] = fetchImpl.mock.calls[0];
+    const [url, init] = fetchModels.mock.calls[0];
     expect(url).toBe("https://gateway.example/v1/models");
     expect(init).toMatchObject({ method: "GET", redirect: "error" });
     expect((init?.headers as Record<string, string>).authorization).toBe("Bearer sk-secret");
   });
 
-  it("surfaces a bounded provider error instead of the response body", async () => {
-    const fetchImpl = vi.fn(async () =>
-      new Response("denied ".repeat(1000), { status: 401 }),
-    );
+  it("cancels provider errors without exposing an echoed credential", async () => {
+    const cancel = vi.fn();
+    const body = new ReadableStream({ cancel });
+    fetchModels.mockResolvedValue(new Response(body, { status: 401 }));
     await expect(
       discoverEndpointModels(
         { baseUrl: "https://gateway.example/v1", apiKey: "sk-secret" },
-        { fetchImpl: fetchImpl as unknown as typeof fetch },
       ),
-    ).rejects.toThrow(/model discovery HTTP 401/);
+    ).rejects.toThrow(/^model discovery HTTP 401$/);
+    expect(cancel).toHaveBeenCalledOnce();
+    fetchModels.mockResolvedValue(new Response("Unauthorized: Bearer sk-secret", { status: 401 }));
+    await expect(discoverEndpointModels({ baseUrl: "https://gateway.example/v1", apiKey: "sk-secret" }))
+      .rejects.toThrow(/^model discovery HTTP 401$/);
   });
 
   it("rejects a non-JSON success body", async () => {
-    const fetchImpl = vi.fn(async () => new Response("<html>", { status: 200 }));
+    fetchModels.mockResolvedValue(new Response("<html>", { status: 200 }));
     await expect(
       discoverEndpointModels(
         { baseUrl: "https://gateway.example/v1", apiKey: "sk-secret" },
-        { fetchImpl: fetchImpl as unknown as typeof fetch },
       ),
     ).rejects.toThrow(/invalid JSON/);
+  });
+
+  it("does not expose a transport exception containing a credential", async () => {
+    fetchModels.mockRejectedValue(new Error('invalid header: Bearer sk-secret'));
+    await expect(discoverEndpointModels({ baseUrl: "https://gateway.example/v1", apiKey: "sk-secret" }))
+      .rejects.toThrow(/^model discovery request failed$/);
+  });
+
+  it("rejects declared and streamed oversized model lists", async () => {
+    const declaredCancel = vi.fn();
+    fetchModels.mockResolvedValue(new Response(new ReadableStream({ cancel: declaredCancel }), {
+      headers: { "content-length": String(3 * 1024 * 1024) },
+    }));
+    const connection = { baseUrl: "https://gateway.example/v1", apiKey: "sk-secret" };
+    await expect(discoverEndpointModels(connection)).rejects.toThrow(/size limit/);
+    expect(declaredCancel).toHaveBeenCalledOnce();
+    const cancel = vi.fn();
+    fetchModels.mockResolvedValue(new Response(new ReadableStream({
+      start(controller) { controller.enqueue(new Uint8Array(2 * 1024 * 1024 + 1)); }, cancel,
+    })));
+    await expect(discoverEndpointModels(connection)).rejects.toThrow(/size limit/);
+    expect(cancel).toHaveBeenCalledOnce();
   });
 });

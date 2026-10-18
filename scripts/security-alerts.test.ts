@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 const roots: string[] = [];
 afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }); });
-function run(options: { count?: number; denied?: boolean; noAnalysis?: boolean; paginate?: boolean; stale?: boolean; hostile?: boolean; args?: string[]; readyAfter?: number; branchMoved?: boolean; wrongRef?: boolean; analysisError?: boolean; invalidAnalysis?: boolean } = {}) {
+function run(options: { count?: number; scorecard?: boolean; filterIgnored?: boolean; denied?: boolean; noAnalysis?: boolean; paginate?: boolean; stale?: boolean; hostile?: boolean; args?: string[]; readyAfter?: number; branchMoved?: boolean; wrongRef?: boolean; analysisError?: boolean; invalidAnalysis?: boolean } = {}) {
   const root = mkdtempSync(path.join(tmpdir(), "mso-alert-report-test-")); roots.push(root);
   const stub = `const options=${JSON.stringify(options)};
     process.argv=['node','security-alerts.mjs',...(options.args??[])];
@@ -18,6 +18,7 @@ function run(options: { count?: number; denied?: boolean; noAnalysis?: boolean; 
       let value={default_branch:'main'};let headers={};
       if(url.includes('/branches/'))value={commit:{sha:(++branches>1&&options.branchMoved?'b':'a').repeat(40)}};
       if(url.includes('/alerts?')){inventories++;value=Array.from({length:options.count??0},(_,i)=>({number:i+1,state:'open',tool:{name:'CodeQL'},rule:{id:options.hostile?'js/test%0A::error::boom':'js/test',severity:'warning',security_severity_level:'high'}}));
+        if(options.scorecard&&(!url.includes('tool_name=CodeQL')||options.filterIgnored))value.push({number:137,state:'open',tool:{name:'Scorecard'},rule:{id:'SASTID',security_severity_level:'medium'}});
         if(options.paginate){if(url.includes('page=2'))value=[];else headers={link:'<https://api.github.com/next>; rel="next"'};}}
       if(url.includes('/instances?'))value=[{ref:'refs/heads/main',state:'open',location:{path:options.hostile?'../escape.ts':'lib/test.ts',start_line:3},message:{text:'review me'}}];
       if(url.includes('/analyses?')){analyses++;value=options.invalidAnalysis?{}:options.noAnalysis?[]:[{id:1,commit_sha:(options.stale||analyses<=(options.readyAfter??0)?'b':'a').repeat(40),tool:{name:'CodeQL'},ref:options.wrongRef?'refs/heads/other':'refs/heads/main',error:options.analysisError?'failed':''}];}
@@ -25,7 +26,7 @@ function run(options: { count?: number; denied?: boolean; noAnalysis?: boolean; 
     };await import(${JSON.stringify(path.join(process.cwd(), "scripts/security-alerts.mjs"))});console.log('FETCH_COUNTS '+JSON.stringify({analyses,branches,waits,inventories}));`;
   const result = spawnSync(process.execPath, ["--input-type=module", "-e", stub], { encoding: "utf8", timeout: 10_000,
     env: { NODE_ENV: "test", PATH: process.env.PATH, GITHUB_TOKEN: "synthetic-test-value", GITHUB_REPOSITORY: "example/repository", RUNNER_TEMP: root } });
-  let report: { openCount: number; alerts: unknown[]; ref: string } | undefined;
+  let report: { openCount: number; alerts: unknown[]; closed: unknown[]; ref: string; tool: string } | undefined;
   try { report = JSON.parse(result.stdout.split("\n").find((line) => line.startsWith("CODE_SCANNING_REPORT "))!.slice("CODE_SCANNING_REPORT ".length)); } catch { /* failed evidence is expected in negative cases */ }
   const counts = JSON.parse(result.stdout.split("\n").find((line) => line.startsWith("FETCH_COUNTS "))?.slice(13) ?? "{}");
   return { ...result, report, counts };
@@ -46,6 +47,25 @@ describe("GitHub open-alert evidence", () => {
   it("does not call an old clean scan current", () => { expect(run({ stale: true }).status).toBe(2); });
   it("does not call an unscanned repository clean", () => { expect(run({ noAnalysis: true }).status).toBe(2); });
   it("follows pagination instead of treating a first page as the complete inventory", () => { const result = run({ count: 2, paginate: true }); expect(result.status).toBe(1); expect(result.report?.alerts).toHaveLength(2); });
+  it("still fails the default all-tool inventory on Scorecard findings", () => {
+    const result = run({ scorecard: true });
+    expect(result.status).toBe(1); expect(result.report).toMatchObject({ openCount: 1, tool: "all" });
+    expect(result.stdout).toContain('"tool":"Scorecard"');
+  });
+  it("scopes CodeQL open and closed queries without masking an open CodeQL alert", () => {
+    const args = ["--tool", "CodeQL", "--include-closed"];
+    const clean = run({ scorecard: true, args });
+    expect(clean.status).toBe(0); expect(clean.report).toMatchObject({ openCount: 0, closed: [], tool: "CodeQL" });
+    const finding = run({ scorecard: true, count: 1, args });
+    expect(finding.status).toBe(1); expect(finding.report?.openCount).toBe(1);
+  });
+  it("fails closed when the API does not honor the selected tool", () => {
+    const result = run({ scorecard: true, filterIgnored: true, args: ["--tool", "CodeQL"] });
+    expect(result.status).toBe(2); expect(result.stderr).toContain("Unexpected tool");
+  });
+  it.each(["Scorecard", "", "--inventory"])("rejects unsupported tool selection: %s", (tool) => {
+    expect(run({ args: ["--tool", tool] }).status).not.toBe(0);
+  });
 });
 
 
@@ -94,7 +114,10 @@ it("keeps hosted inventories strict, bounded and pinned to the checkout SHA", ()
     }
     expect(source).not.toContain("continue-on-error: true");
     if (file === "security-alerts.yml") {
+      expect(commands.every(command => !command.includes("--tool"))).toBe(true);
       expect(source).toContain("${{ github.event_name }}-${{ github.event.workflow_run.name || 'direct' }}");
+    } else {
+      expect(commands.every(command => command.includes("--tool CodeQL"))).toBe(true);
     }
   }
 });

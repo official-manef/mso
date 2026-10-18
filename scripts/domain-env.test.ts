@@ -38,9 +38,14 @@ describe("managed-domain environment repair", () => {
     const changed = await fs.readFile(file, "utf8");
     expect(first).toMatchObject({ changed: true, applied: true, restartRequired: true });
     expect(changed).toBe(`${privateLines}OS_PUBLIC_ORIGIN=${config.publicOrigin}\nNEXT_PUBLIC_MANAGED_APP_HOST_TEMPLATE=${config.hostTemplate}\n`);
-    expect((await fs.stat(file)).mode & 0o777).toBe(0o600);
     expect(await managedDomainEnvironment(file, config, true)).toMatchObject({ changed: false, applied: true, restartRequired: false });
-    expect(await fs.readFile(file, "utf8")).toBe(changed);
+    const handle = await fs.open(file, "r");
+    try {
+      expect(await handle.readFile("utf8")).toBe(changed);
+      expect((await handle.stat()).mode & 0o777).toBe(0o600);
+    } finally {
+      await handle.close();
+    }
   });
 
   it("preserves a final unrelated line without a newline", async () => {

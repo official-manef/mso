@@ -8,9 +8,8 @@ const mocks = vi.hoisted(() => ({
   safeProviderId: vi.fn(),
   discoverEndpointModels: vi.fn(),
   assertSafeUrl: vi.fn(),
-  safeProviderFetch: vi.fn(),
 }));
-const { readConfig, getKey, safeProviderId, discoverEndpointModels, assertSafeUrl, safeProviderFetch } = mocks;
+const { readConfig, getKey, safeProviderId, discoverEndpointModels, assertSafeUrl } = mocks;
 
 vi.mock("@/lib/auth/require-session", () => ({ requireSession: vi.fn(async () => true) }));
 vi.mock("@/lib/config/store", () => ({
@@ -21,7 +20,6 @@ vi.mock("@/lib/config/store", () => ({
 vi.mock("@/lib/models/discover.js", () => ({ discoverEndpointModels: mocks.discoverEndpointModels }));
 vi.mock("@/lib/host/ssrf", () => ({
   assertSafeUrl: mocks.assertSafeUrl,
-  safeProviderFetch: mocks.safeProviderFetch,
 }));
 
 const post = (body: unknown) =>
@@ -71,7 +69,6 @@ describe("/api/models/discover", () => {
     expect(assertSafeUrl).toHaveBeenCalledWith("https://gateway.example/v1/");
     expect(discoverEndpointModels).toHaveBeenCalledWith(
       { baseUrl: "https://gateway.example/v1", apiKey: "sk-secret", protocol: "anthropic" },
-      { fetchImpl: safeProviderFetch },
     );
   });
 
@@ -80,7 +77,6 @@ describe("/api/models/discover", () => {
     await POST(post({ baseURL: "https://gateway.example/v1", apiKey: "sk-secret" }));
     expect(discoverEndpointModels).toHaveBeenCalledWith(
       { baseUrl: "https://gateway.example/v1", apiKey: "sk-secret", protocol: "openai" },
-      { fetchImpl: safeProviderFetch },
     );
   });
 
@@ -115,7 +111,6 @@ describe("/api/models/discover", () => {
     expect(assertSafeUrl).not.toHaveBeenCalled();
     expect(discoverEndpointModels).toHaveBeenCalledWith(
       { baseUrl: "https://gw.example/v1", apiKey: "stored-key", protocol: "anthropic" },
-      { fetchImpl: safeProviderFetch },
     );
   });
 
