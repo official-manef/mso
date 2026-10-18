@@ -1,3 +1,11 @@
+## 2026-10-18: Reconcile preserved laptop changes onto current main for review
+
+The laptop-only observation/connection diagnostics, agent PR-readiness policy, and hidden local password setup were preserved as five original commits and replayed onto `53fa602e`. The source changes remain a review candidate in an isolated branch; they have not been merged or deployed. Existing main already contains the custom-provider model-discovery work, which is excluded from this candidate.
+
+History-only conflicts retain both progress records. The local-maintenance extraction keeps main's shared help-before-credentials helper, including that helper in the password fixture. New word-boundary compaction tests now exercise a non-overridden tool at main's existing 24-character limit and explicitly preserve the `workflow_start` first-call override. No profile budget or production ownership guard is relaxed.
+
+Candidate checks so far: 136 focused tests across 16 files, typecheck, zero-warning lint, architecture ratchets, current-reference docs, generated MCP catalog and generated CLI reference pass. Full PR, security and hosted checks remain separate gates; this entry does not claim merge or release readiness.
+
 ## 2026-10-18: Repair model-discovery findings and separate CodeQL from historical Scorecard posture
 
 The main push at `94c133a2aa6bcb8e54f39286d9b4993a2f47855a` completed its CodeQL analysis, then failed the open-alert gate on four CodeQL findings and Scorecard SAST alert #137. The model-discovery route already injected the pinned provider transport, but its shared helper exposed a raw-fetch default. The helper now owns the mandatory SSRF/DNS-pinned transport. Invalid credentials, provider response bodies and unexpected transport errors cannot be returned as diagnostic text containing API keys. Rejected and oversized responses cancel their bodies. The domain environment regression now checks final content and file permissions through one opened descriptor while retaining its idempotence assertion.
