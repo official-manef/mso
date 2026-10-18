@@ -123,6 +123,10 @@ function compactSchema(value: unknown): unknown {
   return out;
 }
 
+const COMPACT_DESCRIPTIONS: Record<string, string> = {
+  workflow_start: "First call: multi-step",
+};
+
 export function toolDescriptor(tool: McpTool, profile: McpToolProfile = "full") {
   const securitySchemes = toolSecuritySchemes(tool);
   // ChatGPT already receives the structured contract through published skill resources.
@@ -135,7 +139,7 @@ export function toolDescriptor(tool: McpTool, profile: McpToolProfile = "full") 
   return {
     name: tool.name,
     title: tool.title ?? toolTitle(tool.name),
-    description: compact ? compactText(tool.chatgptDescription ?? tool.description, 30) : tool.description,
+    description: compact ? compactText(COMPACT_DESCRIPTIONS[tool.name] ?? tool.chatgptDescription ?? tool.description, 24) : tool.description,
     inputSchema: compact ? compactSchema(tool.inputSchema) : tool.inputSchema,
     ...(outputSchema ? { outputSchema: compact ? compactSchema(outputSchema) : outputSchema } : {}),
     securitySchemes,

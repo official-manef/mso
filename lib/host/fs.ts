@@ -153,6 +153,28 @@ export async function statReadable(
   } catch (error) { await handle.close(); throw error; }
 }
 
+export type FsReadableMeta = {
+  kind: "file" | "dir" | "symlink";
+  sizeBytes: number;
+  mtimeMs: number;
+  ctimeMs: number;
+  mode: number;
+};
+
+// Resolve + stat a readable path (within READ roots) for bounded metadata.
+export async function statReadableMeta(requested: string): Promise<FsReadableMeta> {
+  const p = await resolveReadable(requested);
+  const st = await fs.stat(p);
+  const kind: FsReadableMeta["kind"] = st.isDirectory() ? "dir" : st.isSymbolicLink() ? "symlink" : "file";
+  return {
+    kind,
+    sizeBytes: st.size,
+    mtimeMs: st.mtimeMs,
+    ctimeMs: st.ctimeMs,
+    mode: st.mode,
+  };
+}
+
 // Transfer the verified handle to the stream, optionally for a byte range.
 export function fileStream(handle: FileHandle, start?: number, end?: number): ReadStream {
   return handle.createReadStream({ autoClose: true, ...(start !== undefined ? { start, end } : {}) });
