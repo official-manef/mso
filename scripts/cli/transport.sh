@@ -92,6 +92,7 @@ enc()   { jq -rn --arg v "$1" '$v|@uri'; }
 jget()  { req "$B$1"; }
 jpost() { req -H 'content-type: application/json' -d "${2:-{\}}" "$B$1"; }
 jdel()  { req -X DELETE -H 'content-type: application/json' -d "${2:-{\}}" "$B$1"; }
+jpatch() { req -X PATCH -H 'content-type: application/json' -d "${2:-{\}}" "$B$1"; }
 # Build a JSON object from k=v pairs (numbers + booleans coerced).
 kv_args() { local j='{}' kv k v; for kv in "$@"; do k="${kv%%=*}"; v="${kv#*=}"
   if [[ "$v" =~ ^-?[0-9]+([.][0-9]+)?$ || "$v" == "true" || "$v" == "false" ]]; then

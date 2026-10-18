@@ -26,6 +26,7 @@ case "$cmd" in
       list) jget "/api/threads" ;;
       show) jget "/api/threads?id=$(enc "${2:?id}")" ;;
       save) jpost "/api/threads" "${2:?json — {id,messages:[…]}}" ;;
+      rename) jpatch "/api/threads" "${2:?json — {id,title}}" ;;
       rm)   jdel "/api/threads?id=$(enc "${2:?id}")" ;;
       *) die "usage: mso $U_threads" ;;
     esac ;;
