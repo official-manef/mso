@@ -48,6 +48,7 @@ this is the *what*, and it is what Settings → Account → About shows as “Wh
 
 **Docs**
 
+- record stopped MSO deep QA checkpoint
 - record the service-owned update fix and the lint restoration
 - `progress` record the fs_stat revival and the tighter compact cap
 - `progress` record the fs_stat revert and the threads rename CLI verb

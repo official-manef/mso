@@ -1,3 +1,40 @@
+## 2026-10-18: MSO deep QA stopped at the user's request
+
+Work and active QA were stopped on 18 October 2026 at the user's explicit request. This is a progress checkpoint directly on main, not a release of the development candidate. Resume implementation, validation or deployment only after a new user instruction.
+
+**Repository and runtime:** PR [#127](https://github.com/rahmanef63/mso/pull/127) reconciled the five unique laptop commits and is merged at `0cf5cf29caaef5ebfc0d8e73a96b06d9014c858e`. The remote installation remains at `53fa602e48d422615cf5ee127b8dedf513226920` (CLI 0.2.23); the official updater has not been run for this QA candidate. The live checkout was preserved.
+
+**Committed development work:** `fix/deep-qa-contracts-20261018` is clean at `3cc4e04f5432cc23608753f94bbd63f142999991`. The subsequent scanner-compatible, test-only fix is committed separately at `4742b6a508d9baeaffcaf5d711d9f87e8d871754` on `test/auth-semgrep-portability-20261018`, ready for integration. These development commits remain on the remote development host; they have not been pushed as a new PR or merged into official main. Existing worktrees and their commits were retained.
+
+The audited scope covers shared contracts, manifest/registry/catalog identity, serialized private configuration writes and validation, window/Space/URL lifecycle, private Code/Image/Video drafts and save guards, stale session/registry reconciliation, consumer-owned menu logout, Dock/Launcher accessibility, passive update status, opaque native modal materials and layering, first-use hydration/setup context, privacy-lock isolation, host file metadata and screenshot-browser discovery. Generic shell composition keeps application/authentication ownership outside the core.
+
+**Independent fixture evidence, with provenance:**
+
+- Root build `58d1bc30`: 78/78 safe route mounts for 26 applications at three viewport sizes, 11/11 shell checks, both Settings Axe scans clean, no page/5xx errors or horizontal overflow. This is route coverage, not a claim of every service workflow being complete.
+- The same build passed all 11 durable media outcomes, including draft/history across responsive remount, failed-save/retry with a real PNG write, real video import/split/trim/export and decoded WebM, empty New project/Undo, and popup/Cancel/focus behavior with an active update notice. Actual modal/popup/tooltip/lock layers were inspected in the browser.
+- Privacy-lock ancestry `bba93e3b`: independent delayed-chunk, repeated desktop/mobile parent-modal replacement, native pointer/keyboard/accessibility isolation, draft/focus restoration and Viewer authority revocation passed.
+- Production source `33bded1b`: all ten native shell/theme Axe cases passed across macOS, iOS, Windows, Android and Dashboard, with actual shell identities, opaque surfaces, persisted Settings theme selection, synchronized palette changes and retained entry motion. Fresh/resumed/skipped onboarding, a real persisted receipt, reload, keyboard and role-denial checks passed. Subsequent candidate changes are tests/documentation only.
+
+**Final gate state at stop:**
+
+| Check | Exact evidence | Status |
+| --- | --- | --- |
+| Production build and bundle | `3cc4e04f`: entry 156.5 KiB gzip; CSS 30,713/30,720 bytes | PASS |
+| Unit suite | `3cc4e04f`: 5,120/5,120 tests, 816 files | PASS |
+| Typecheck, lint, architecture/docs/cycles, contrast and strict dependency audit | Completed within the `3cc4e04f` local gate | PASS |
+| Complete `bun run pr:local` | Stopped by the user during the isolated build/browser stage; process exited 143 | CANCELED; not PASS |
+| Complete `bun run pr:security` | `3cc4e04f`: zero findings but strict Semgrep rejected a TypeScript type expression in the new session test | FAIL; not PASS |
+| Targeted scanner correction | `4742b6a5`: equivalent type-only namespace syntax; same pinned image/rules; author and independent validator both observed exit 0, no parser errors/findings; old source reproduced exit 3 | Targeted PASS; full-repo rerun pending |
+| Targeted auth suite on scanner correction | 37/37 auth tests, including six actual-provider lifecycle cases; typecheck/lint/docs passed | PASS |
+| Final normal hooked push, new Draft PR, hosted checks/native CodeQL/review threads | Not performed for the development candidate | PENDING |
+| Official update, doctor and independent live-runtime verification | Not performed | PENDING |
+
+The earlier `267ccd40` full unit run had two test-only failures (an undocumented E2E artifact variable and an assertion tied to old promise spelling). Both were corrected before the 5,120-test pass above. The scanner fix preserves all behavioral assertions; no image, ignore rule, threshold or scanner policy was relaxed. Independent fixture acceptance does not replace the missing final gates.
+
+**Preservation and boundaries:** 47 dirty legacy experiment files across three older worktrees and alternative OAuth refs were preserved privately; archived material is not represented as committed, PR'd or released. Real third-party provider consent, paid transactions and persistent browser profiles were not exercised. Optional Camoufox is not installed on the remote host. The design comparison uses primary documentation for macOS, Puter, OS.js, daedalOS, Windows Snap and GNOME as of 18 October, without claiming future November changes or measured competitor superiority. Landing/demo metadata for `mso.manef.dev` was prepared; DNS/hosting was not changed. Lab/bundle checks are not a field-performance or human-usability study.
+
+**Resume checklist:** integrate the ready test-only commit; regenerate the changelog; build the final clean HEAD before running full `pr:local` and `pr:security`; perform the normal hooked push and Draft PR; inspect all latest-head hosted checks, actual native CodeQL alerts and review threads before readiness/merge; then use the official remote `mso update` lifecycle and independently verify exact main/build identity, replacement PID, served assets, doctor and native-shell health. No continuation or deployment is scheduled by this checkpoint.
+
 ## 2026-10-18: Isolate the real PTY integration fixture from owner shell state
 
 Two complete candidate gates passed before a later concurrent full run observed no PTY exit callback within the unchanged eight-second close deadline. Command execution and replay had succeeded; the exact native scheduling cause was not established. The standalone test passed under the same host load.
