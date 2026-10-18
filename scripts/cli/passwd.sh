@@ -22,15 +22,15 @@ mso_passwd() {
   [ -t 0 ] || die "a terminal is required; password input cannot be piped"
   local state current='' next confirm
   state=$("$runner" "$root/scripts/mso-passwd.ts" "$root" status) || return
-  exec 3<>/dev/tty || { die "a terminal is required; password input cannot be piped"; }
+  exec 3< /dev/tty 4> /dev/tty || { die "a terminal is required; password input cannot be piped"; }
   if [[ "$state" == '{"configured":true,'* ]]; then
-    read -r -s -p 'Current password: ' -u 3 current || { exec 3>&-; return 1; }
-    printf '\n' >&3
+    read -r -s -p 'Current password: ' -u 3 current || { exec 3<&- 4>&-; return 1; }
+    printf '\n' >&4
   fi
-  read -r -s -p 'New password: ' -u 3 next || { exec 3>&-; return 1; }
-  printf '\n' >&3
-  read -r -s -p 'Confirm password: ' -u 3 confirm || { exec 3>&-; return 1; }
-  printf '\n' >&3
-  exec 3>&-
+  read -r -s -p 'New password: ' -u 3 next || { exec 3<&- 4>&-; return 1; }
+  printf '\n' >&4
+  read -r -s -p 'Confirm password: ' -u 3 confirm || { exec 3<&- 4>&-; return 1; }
+  printf '\n' >&4
+  exec 3<&- 4>&-
   printf '%s\0' "$current" "$next" "$confirm" | "$runner" "$root/scripts/mso-passwd.ts" "$root" set
 }

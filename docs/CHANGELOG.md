@@ -27,6 +27,7 @@ this is the *what*, and it is what Settings → Account → About shows as “Wh
 
 **Fixed**
 
+- `ci` keep secure CLI fixtures compatible with validation
 - `workflow` retain completion during status receipt reads
 - `security` guard model discovery and isolate CodeQL findings
 - close domain integration regressions and preserve strict gates
