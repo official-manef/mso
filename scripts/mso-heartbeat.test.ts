@@ -12,7 +12,8 @@ function fixture() {
   const root = path.join(home, "repo with spaces % ' café\t"), bin = path.join(home, "bin");
   fs.mkdirSync(path.join(root, "scripts/lib"), { recursive: true, mode: 0o700 });
   fs.mkdirSync(bin, { mode: 0o700 });
-  for (const file of ["gateway-config.sh", "gateway-common.sh", "private-state.sh", "heartbeat-cron.sh", "gateway-provider.sh", "gateway-tool.sh", "gateway-tunnel.sh", "gateway-cloudflare-edge.sh"])
+  for (const file of ["gateway-config.sh", "gateway-common.sh", "private-state.sh", "heartbeat-cron.sh", "gateway-provider.sh",
+    "gateway-tool.sh", "gateway-tunnel.sh", "gateway-named-config.mjs", "gateway-cloudflare-edge.sh"])
     fs.copyFileSync(path.join(source, "scripts/lib", file), path.join(root, "scripts/lib", file));
   fs.copyFileSync(path.join(source, "scripts/mso-heartbeat"), path.join(root, "scripts/mso-heartbeat"));
   fs.mkdirSync(path.join(root, "security"));

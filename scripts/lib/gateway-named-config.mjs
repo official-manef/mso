@@ -19,16 +19,21 @@ function appHosts(template) {
   if (!hosts.every(hostname)) reject('invalid managed app host template');
   return hosts;
 }
-function readConfig(root, file) {
-  const YAML = loadModule(path.join(root, 'node_modules/yaml'));
+function readConfigFile(file, expected) {
   const fd = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW | fs.constants.O_NONBLOCK);
   let stat, text;
   try {
     stat = fs.fstatSync(fd);
     if (!stat.isFile() || stat.uid !== process.getuid() || (stat.mode & 0o022)) reject('unsafe named tunnel config');
     if (stat.size > 1024 * 1024) reject('named tunnel config is too large');
+    if (expected && (stat.dev !== expected.dev || stat.ino !== expected.ino || stat.mode !== expected.mode)) reject('named tunnel config changed concurrently');
     text = fs.readFileSync(fd, 'utf8');
   } finally { fs.closeSync(fd); }
+  return { text, stat };
+}
+function readConfig(root, file) {
+  const YAML = loadModule(path.join(root, 'node_modules/yaml'));
+  const { text, stat } = readConfigFile(file);
   const doc = YAML.parseDocument(text, { uniqueKeys: true });
   if (doc.errors.length) reject('invalid named tunnel YAML');
   const cfg = doc.toJS({ maxAliasCount: 10 });
@@ -72,9 +77,8 @@ function validateConfig(cfg, file, publicOrigin, localOrigin, template, exact = 
   if (!st.isFile() || st.isSymbolicLink() || st.uid !== process.getuid() || (st.mode & 0o077)) reject('credentials-file must be private and owner-owned');
 }
 function atomicReplace(file, snapshot, text) {
-  const current = fs.lstatSync(file);
-  if (!current.isFile() || current.isSymbolicLink() || current.dev !== snapshot.stat.dev || current.ino !== snapshot.stat.ino ||
-    current.mode !== snapshot.stat.mode || fs.readFileSync(file, 'utf8') !== snapshot.text) reject('named tunnel config changed concurrently');
+  const current = readConfigFile(file, snapshot.stat);
+  if (current.text !== snapshot.text) reject('named tunnel config changed concurrently');
   const temp = path.join(path.dirname(file), `.mso-app-route-${process.pid}-${randomBytes(6).toString('hex')}`);
   const fd = fs.openSync(temp, fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_EXCL, snapshot.stat.mode & 0o777);
   try {

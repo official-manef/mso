@@ -52,8 +52,13 @@ describe("interrupted named connector swaps", () => {
     fs.writeFileSync(path.join(f.dir, "deny-connector"), "1", { mode: 0o600 });
     const first = ensure(f);
     expect(first.status, first.stderr).toBe(1);
-    expect(first.stderr).toContain("replacement connector did not start");
+    // The immediate-exit fixture can die before PID capture or during registration checks.
+    expect([
+      "mso gateway: replacement connector did not start; existing connector remains active",
+      "mso gateway: replacement connector did not register a tunnel connection; previous connector remains active",
+    ]).toContain(first.stderr.trim());
     expect(JSON.parse(fs.readFileSync(f.stateFile, "utf8"))).toEqual(f.original);
+    expect(JSON.parse(fs.readFileSync(f.recordFile, "utf8"))).toEqual(f.record);
     expect(() => process.kill(f.original.tunnelIdentity.pid, 0)).not.toThrow();
     fs.unlinkSync(path.join(f.dir, "deny-connector"));
     const second = ensure(f);

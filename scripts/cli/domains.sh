@@ -7,6 +7,6 @@ run_domains() {
   local domain_env domain_local
   domain_env="$(realpath -m -- "$ENVF")"
   domain_local="$(gateway_local_url)"
-  (cd "$ROOT"; MSO_DOMAIN_ENV="$domain_env" MSO_DOMAIN_LOCAL_ORIGIN="$domain_local" \
+  (cd "$ROOT" || exit; MSO_DOMAIN_ENV="$domain_env" MSO_DOMAIN_LOCAL_ORIGIN="$domain_local" \
     bun --no-env-file --conditions=react-server "$ROOT/scripts/mso-domain.ts" "$@")
 }

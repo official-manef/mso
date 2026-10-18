@@ -5,8 +5,10 @@ import { readInfraProvider } from "./store";
 import { ensureManagedDomainGateway, inspectManagedDomainGateway } from "./managed-domain-gateway";
 import { ensureManagedDomainDns, ensureManagedDomainRoute, inspectManagedDomainRoute } from "./managed-domain";
 
+type HttpModule = typeof import("./http");
+
 vi.mock("./store", () => ({ readInfraProvider: vi.fn() }));
-vi.mock("./http", async importOriginal => ({ ...await importOriginal<typeof import("./http")>(), request: vi.fn() }));
+vi.mock("./http", async importOriginal => ({ ...await importOriginal<HttpModule>(), request: vi.fn() }));
 vi.mock("./managed-domain-gateway", () => ({ ensureManagedDomainGateway: vi.fn(), inspectManagedDomainGateway: vi.fn() }));
 
 const input: ManagedDomainRoute = {
