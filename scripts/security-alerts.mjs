@@ -8,13 +8,15 @@ let inventory = false;
 let includeClosed = false;
 let expectedCommit;
 let waitSeconds = 0;
+let selectedTool;
 for (let i = 0; i < args.length; i++) {
   if (args[i] === "--inventory") inventory = true;
   else if (args[i] === "--include-closed") includeClosed = true;
   else if (args[i] === "--ref" && args[i + 1]) selectedRef = args[++i];
   else if (args[i] === "--commit" && args[i + 1]) expectedCommit = args[++i];
+  else if (args[i] === "--tool" && args[i + 1] === "CodeQL") selectedTool = args[++i];
   else if (args[i] === "--wait-seconds" && /^(0|[1-9][0-9]{0,2})$/.test(args[i + 1] ?? "")) waitSeconds = Number(args[++i]);
-  else throw new Error("usage: node scripts/security-alerts.mjs [--inventory] [--ref refs/heads/branch] [--include-closed] [--commit SHA] [--wait-seconds 0..480]");
+  else throw new Error("usage: node scripts/security-alerts.mjs [--inventory] [--ref refs/heads/branch] [--include-closed] [--commit SHA] [--tool CodeQL] [--wait-seconds 0..480]");
 }
 if (waitSeconds > 480) throw new Error("Readiness wait must be bounded to 480 seconds");
 if (expectedCommit && !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(expectedCommit)) throw new Error("An exact commit SHA is required");
@@ -87,24 +89,27 @@ try {
     // Only missing/stale analysis is retryable; API denial and real findings still fail.
     await new Promise((resolve) => setTimeout(resolve, Math.min(10_000, deadline - Date.now())));
   }
-  const alerts = await pages(`/code-scanning/alerts?state=open&ref=${encodeURIComponent(ref)}`);
+  const toolQuery = selectedTool ? `&tool_name=${encodeURIComponent(selectedTool)}` : "";
+  const alerts = await pages(`/code-scanning/alerts?state=open&ref=${encodeURIComponent(ref)}${toolQuery}`);
   const rows = [];
   for (const alert of alerts) {
+    if (selectedTool && alert.tool?.name !== selectedTool) throw new Error("Unexpected tool in filtered security inventory");
     const row = descriptor(alert);
     const instances = await pages(`/code-scanning/alerts/${row.number}/instances?ref=${encodeURIComponent(ref)}`);
     rows.push({ ...row, instances: instances.map(({ ref, analysis_key, category, state, message, location, classifications }) =>
       ({ ref, analysis_key, category, state, message, location, classifications })) });
   }
-  const closed = includeClosed ? (await pages(`/code-scanning/alerts?state=closed&ref=${encodeURIComponent(ref)}`)).map(descriptor) : [];
+  const closed = includeClosed ? (await pages(`/code-scanning/alerts?state=closed&ref=${encodeURIComponent(ref)}${toolQuery}`)).map(descriptor) : [];
   // Detect a concurrent publication before reporting stale findings as current.
   const after = (await get(`/branches/${encodeURIComponent(branchName)}`)).value;
   if (after.commit.sha !== branch.commit.sha) throw new Error("Branch changed during security verification; retry");
   const report = { capturedAt: new Date().toISOString(), repository: GITHUB_REPOSITORY,
-    ref, head: branch.commit.sha, openCount: rows.length, alerts: rows, closed,
+    ref, head: branch.commit.sha, tool: selectedTool ?? "all", openCount: rows.length, alerts: rows, closed,
     recentAnalyses: recent.value.map(({ id, commit_sha, ref, created_at, category, error, tool }) =>
       ({ id, commit_sha, ref, created_at, category, error, tool })), olderAnalysesOmitted: recent.more };
   console.log(`CODE_SCANNING_REF ${ref}`);
   console.log(`CODE_SCANNING_HEAD ${report.head}`);
+  console.log(`CODE_SCANNING_TOOL ${report.tool}`);
   console.log(`CODE_SCANNING_OPEN ${rows.length}`);
   for (const alert of rows) { console.log(`ALERT ${JSON.stringify(alert)}`); emitAnnotation(alert); }
   for (const alert of closed) console.log(`CLOSED_ALERT ${JSON.stringify(alert)}`);

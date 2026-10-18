@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/require-session";
 import { hostCredentialStore, readConfig, safeProviderId } from "@/lib/config/store";
 import { discoverEndpointModels } from "@/lib/models/discover.js";
-import { assertSafeUrl, safeProviderFetch } from "@/lib/host/ssrf";
+import { assertSafeUrl } from "@/lib/host/ssrf";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const models = await discoverEndpointModels({ baseUrl, apiKey, protocol }, { fetchImpl: safeProviderFetch });
+    const models = await discoverEndpointModels({ baseUrl, apiKey, protocol });
     return NextResponse.json({ ok: true, count: models.length, models });
   } catch (e) {
     return NextResponse.json({ ok: false, error: (e as Error).message });
