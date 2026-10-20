@@ -4,6 +4,22 @@
 Newest first. `docs/PROGRESS.md` is the source of truth for *why* a change was made;
 this is the *what*, and it is what Settings → Account → About shows as “What's new”.
 
+## 2026-10-20
+
+**Fixed**
+
+- `assistant` accept OpenAI-shaped {content} messages and harden recall
+- `build` keep convex CLI config path out of asset tracing
+
+## 2026-10-19
+
+**Build**
+
+- `deps` bump the production-minor-patch group across 1 directory with 15 updates
+- `deps-dev` bump the test-toolchain group across 1 directory with 2 updates
+- `deps` bump the actions-minor-patch group with 6 updates
+- `deps-dev` bump the development-minor-patch group with 3 updates
+
 ## 2026-10-18
 
 **Added**
@@ -1521,49 +1537,3 @@ this is the *what*, and it is what Settings → Account → About shows as “Wh
 - `progress` log the three-surface parity audit and what it fixed
 - `progress` log the MCP server and what was verified live
 - cut five finished plans, trim PROGRESS's tail, log the audit follow-up
-
-## 2026-08-04
-
-**Fixed**
-
-- `hydration` render the shell after mount — zero mismatches anywhere
-- `hydration` kill 3 of 4 React #418 sources; mobile contrast + back labels
-- `css` un-break every border-color utility, and make Android's Back visible
-
-## 2026-08-03
-
-**Added**
-
-- `ci` real dependency + build gates, and fix the sharp CVE they caught
-- migrate pnpm -> bun, and fix what the audit actually found
-- `shell` Docs app, a state-aware dock, and quicklinks back to the owner
-- `cli` print a paste-ready command under every device
-- `cli` complete API coverage, doctor, completion, global options
-- `cli` device pending + revoke all, per-command help, version
-- `cli` add `mso` CLI + agent skills so the web UI is one frontend, not the product
-
-**Fixed**
-
-- `a11y` raise 4 mobile touch targets to the WCAG 24x24 floor
-- `security` close 3 of 4 rm -rf bypasses, and stop a corrupt file wiping the device allowlist
-- `cli` name the near-miss flag, and report what's left after a revoke
-- `cli` make `device` a subcommand group and say what an unknown command was
-
-**Faster**
-
-- keep the OS shell out of every route, stop sleeping on every stats poll
-
-**Changed**
-
-- delete 836 net lines of metadata and dead exports nothing reads
-- `quicklinks` owner's links become owner's data, repo keeps a neutral fallback
-- rename os-vps -> mso across code, config and prod wiring
-
-**Docs**
-
-- reconcile every live doc against what the box actually does
-- `progress` record the 2026-08-03 bun migration, audit and gate work
-
-**Chores**
-
-- drop the one-shot contrast tuner nothing invokes
