@@ -8,9 +8,9 @@ import { IntegrationError, type ConnectionSelector } from "./identity";
 const MAX_CLI_CONFIG_BYTES = 64 * 1024;
 
 export async function readConvexCliAccessToken(
-  configPath = path.join(os.homedir(), ".convex", "config.json"),
+  configPath = path.join(/* turbopackIgnore: true */ os.homedir(), ".convex", "config.json"),
 ): Promise<string> {
-  const file = path.resolve(configPath),
+  const file = path.resolve(/* turbopackIgnore: true */ configPath),
     dir = path.dirname(file);
   let dst;
   try {
@@ -27,7 +27,7 @@ export async function readConvexCliAccessToken(
   if ((dst.mode & 0o077) !== 0) await fs.chmod(dir, 0o700);
   let handle;
   try {
-    handle = await fs.open(file, constants.O_RDONLY | constants.O_NOFOLLOW);
+    handle = await fs.open(/* turbopackIgnore: true */ file, constants.O_RDONLY | constants.O_NOFOLLOW);
     const stat = await handle.stat();
     if (
       !stat.isFile() ||
