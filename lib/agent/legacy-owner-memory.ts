@@ -85,7 +85,8 @@ export async function removeMemory(id: string): Promise<void> {
 // Bounded substring recall, not a claim of semantic retrieval or trusted instructions.
 export async function recall(query: string, limit = 8): Promise<Memory[]> {
   const all = await read(), count = Math.max(1, Math.min(100, Math.floor(limit) || 8));
-  const words = query.toLowerCase().match(/[a-z0-9]{3,}/g) ?? [];
+  // Callers may hand over a malformed message body; recall must degrade, never throw.
+  const words = (typeof query === "string" ? query : "").toLowerCase().match(/[a-z0-9]{3,}/g) ?? [];
   if (!words.length) return all.slice(-count);
   return all.map((memory) => ({ memory, hits: words.filter((word) => memory.text.toLowerCase().includes(word)).length }))
     .filter((row) => row.hits > 0).sort((a, b) => b.hits - a.hits).slice(0, count).map((row) => row.memory);

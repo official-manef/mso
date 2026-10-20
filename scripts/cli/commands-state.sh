@@ -8,7 +8,7 @@ mso_cmd_state() {
   local cmd="$1"; shift || true
 case "$cmd" in
   # ── assistant / state ────────────────────────────────────────────────────
-  ai) jpost "/api/assistant" "$(jq -n --arg m "$*" '{messages:[{role:"user",content:$m}]}')" ;;
+  ai) jpost "/api/assistant" "$(jq -n --arg m "$*" '{messages:[{role:"user",text:$m}]}')" ;;
   cockpit)
     case "${1:-show}" in
       show)
