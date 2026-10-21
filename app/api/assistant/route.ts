@@ -88,7 +88,15 @@ export async function POST(req: Request) {
   } catch {
     return Response.json({ error: "bad_request" }, { status: 400 });
   }
-  const rawMessages = (body.messages ?? []).slice(-40);
+  // The HTTP contract is OaMsg ({text}); OpenAI-shaped callers send {content}. Normalize
+  // at the trust boundary so a missing `text` can never reach recall()/the streamer.
+  const rawMessages = (body.messages ?? []).slice(-40).map((message) => {
+    if (!message || typeof message !== "object") return message;
+    const content = (message as { content?: unknown }).content;
+    return message.role === "user" && typeof message.text !== "string" && typeof content === "string"
+      ? { ...message, text: content }
+      : message;
+  });
   if (!rawMessages.length)
     return Response.json({ error: "empty" }, { status: 400 });
   let sys =

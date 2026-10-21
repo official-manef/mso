@@ -21,6 +21,10 @@ describe("owner memory store + recall", () => {
   it("falls back to recent facts when the query has no long words", async () => {
     await addMemory("Keep this user fact as data"); expect(await recall("a b")).toHaveLength(1);
   });
+  it("degrades to recent facts when the query is not a string", async () => {
+    await addMemory("Survives a malformed caller");
+    expect(await recall(undefined as unknown as string)).toHaveLength(1);
+  });
   it("serializes parallel additions without losing a fact", async () => {
     await Promise.all(Array.from({ length: 12 }, (_, i) => addMemory(`Concurrent fact ${i}`)));
     const rows = await listMemories(); expect(rows).toHaveLength(12); expect(new Set(rows.map((x) => x.id)).size).toBe(12);
