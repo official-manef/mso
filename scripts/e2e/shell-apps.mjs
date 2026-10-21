@@ -65,11 +65,7 @@ try {
     await card.getByRole("button", { name: "Edit", exact: true }).click();
     await page.getByRole("dialog").getByLabel("App URL", { exact: true }).fill("http://192.0.2.10:5678/");
     await page.getByRole("button", { name: "Save changes", exact: true }).click();
-    // A save also lands on the domain step; dismiss it, the edit is already stored.
-    const savedDomain = page.getByRole("dialog");
-    await expect(savedDomain.getByRole("heading", { name: "Domain for Fixture tool", exact: true })).toBeVisible();
-    await savedDomain.locator("form").getByRole("button", { name: "Close", exact: true }).click();
-    await expect(savedDomain).toHaveCount(0);
+    await expect(page.getByRole("dialog")).toHaveCount(0);
     await card.getByRole("button", { name: "Open", exact: true }).click();
     await expect(page.getByRole("link", { name: "Open Fixture tool", exact: true })).toHaveAttribute("href", "http://192.0.2.10:5678/");
     await expect(iframe).toHaveCount(0);

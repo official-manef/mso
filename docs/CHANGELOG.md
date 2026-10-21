@@ -11,22 +11,36 @@ this is the *what*, and it is what Settings → Account → About shows as “Wh
 - one-click install and connect converge on a shared shell-app domain step (#136)
 - `settings` explain update refusals, merge Server into Devices (#135)
 
+**Fixed**
+
+- `orca` create temp fixtures privately and pin file reads to one descriptor
+
+**Chores**
+
+- `security` allowlist the reviewed Orca env fixture by exact line
+
 ## 2026-10-21
 
 **Added**
 
 - `cli` print the mso ai reply text instead of SSE frames
+- `shell-apps` provision public domains for shell apps
+- `app-store` converge install and connect on one domain step
+- `infra` add managed domain provider abstraction
 - `infra` add Linear provider and route Composio key kinds by header
 
 **Fixed**
 
-- `proxy` let the owner icon upload reach its own 8 MiB cap
-- `host` make agent worktrees owner-private regardless of umask
+- `managed-apps` make socket-policy import type only for orca readiness
+- `managed-apps` export and use deny in socket-policy fallback
+- `managed-apps` load orca readiness lazily in socket policy
+- `app-domain` wire the real provider module and single-source the domain contract
 - `deps` pin vite 8.2.4 to clear GHSA-587h-7wmj-h5pm
 
-**Build**
+**Tests**
 
-- `deps` make sharp a direct dependency and add @phosphor-icons/react
+- `e2e` target close button inside form to disambiguate drawer close
+- `e2e` align shell-apps E2E with converged domain step
 
 ## 2026-10-20
 
@@ -34,8 +48,65 @@ this is the *what*, and it is what Settings → Account → About shows as “Wh
 
 - `assistant` accept OpenAI-shaped {content} messages and harden recall
 - `build` keep convex CLI config path out of asset tracing
+- `managed-apps` invalidate Orca integrity cache on managed actions
+- `managed-apps` statically scope personal Orca path checks
+- `managed-apps` preserve exact-owned Orca stop containment
+- `managed-apps` authorize unit replacement against caller expected configuration
+- `managed-apps` enforce fresh verification and receipt permissions on Orca mutations
+
+**Tests**
+
+- `managed-apps` finish bounded listener-owned rewrite fixture
+
+**Other**
+
+- `test` preserve bounded rewrite fixture startup cleanup
+- `test` preserve listener-owned Orca rewrite fixture
 
 ## 2026-10-19
+
+**Added**
+
+- `managed-apps` integrate orca web readiness parser, session pairing bridge, and bootstrap VM tests
+- `managed-apps` enforce Orca browser containment, SW rejection, and strict WS origin (checkpoint 2)
+- `managed-apps` integrate Orca web entry and identity contract (checkpoint 1)
+- `orca` add immutable pinned release acquisition for managed runtime
+- `orca` implement node runtime materializer and headless server adapter
+
+**Fixed**
+
+- `managed-apps` reject ambiguous Orca strict quiescence
+- `managed-apps` prove owned Orca unit against recorded launcher config
+- `managed-apps` harden owned Orca unit proof and strict quiescence
+- `managed-apps` align Orca root policy and refuse pairing grant claims by presence
+- `managed-apps` keep the app-host rewrite internal under a loopback hostname
+- `proxy` keep nextUrl's exact origin for the managed-app rewrite
+- `orca` reject a non-absolute argv[0] without cwd resolution
+- `managed-apps` load the server-only Orca bridge lazily in shared health
+- `orca` reject a unit reached through any symlinked ancestor
+- `orca` honor systemctl exit codes in rollback, harden owned-unit proof
+- `orca` owned-unit + verified-receipt manager ownership and install safety
+- `orca` fail-closed installer root, receipts, release containment, unit guard
+- `orca` supervise child exit and retriable teardown
+- `orca` derive slot .version from upstream raw-byte artifact identity
+- `managed-apps` fail-closed orca bridge readiness, identity and pairing
+- `orca` place bundled Node at the upstream sibling runtime path
+- `orca` harden supervised lifecycle and terminal proof
+- `orca` harden runtime paths, deb acquisition, slot validation, and lifecycle teardown
+
+**Changed**
+
+- `managed-apps` reuse orca readiness parser in bridge
+
+**Tests**
+
+- `security` allowlist reviewed historical Orca env test fixture
+- `managed-apps` pin the app-host rewrite to Next's own nextUrl origin
+- `agent` synchronize the concurrent session-turn lease test
+- `host` keep delegated-write positive fixture out of protected TMPDIR
+- `orca` avoid generic calls the pinned scanner cannot parse
+- `config` exempt Orca fixture and private handoff env vars
+- `orca` split oversized acquisition tests into cohesive suites
 
 **Build**
 
@@ -43,6 +114,11 @@ this is the *what*, and it is what Settings → Account → About shows as “Wh
 - `deps-dev` bump the test-toolchain group across 1 directory with 2 updates
 - `deps` bump the actions-minor-patch group with 6 updates
 - `deps-dev` bump the development-minor-patch group with 3 updates
+
+**Other**
+
+- `managed-apps` preserve reviewed Orca runtime binding checkpoint
+- `orca` drop trailing blank line at EOF in managed-rollback test
 
 ## 2026-10-18
 
