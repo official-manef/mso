@@ -8,6 +8,7 @@ this is the *what*, and it is what Settings → Account → About shows as “Wh
 
 **Added**
 
+- `cli` print the mso ai reply text instead of SSE frames
 - `infra` add Linear provider and route Composio key kinds by header
 
 **Fixed**
