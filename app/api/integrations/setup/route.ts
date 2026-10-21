@@ -35,6 +35,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, verified: true, provider: result.provider }, { headers });
   } catch (error) {
     const safe = error instanceof SetupError || error instanceof IntegrationError ? error : new SetupError("setup_unavailable", 503);
-    return NextResponse.json({ error: safe.code }, { status: safe.status, headers });
+    const detail = safe instanceof SetupError ? safe.detail : undefined;
+    return NextResponse.json({ error: safe.code, ...(detail ? { detail } : {}) }, { status: safe.status, headers });
   }
 }

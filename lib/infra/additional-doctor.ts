@@ -155,6 +155,26 @@ export async function doctorAdditionalProvider(id: string, values: Record<string
       const username = typeof body.username === "string" && body.username.length <= 80 ? " as " + body.username : "";
       return "authenticated; bot identity verified" + username;
     }
+    case "linear": {
+      if (!present(values.apiKey)) return null;
+      // Linear personal API keys go in Authorization verbatim (no "Bearer"), and
+      // the viewer query proves the key belongs to a real account. The endpoint
+      // is fixed so an operator-supplied URL can never redirect credentials.
+      let response;
+      try {
+        response = await request("https://api.linear.app/graphql", {
+          method: "POST",
+          headers: { authorization: values.apiKey, "content-type": "application/json", accept: "application/json" },
+          body: JSON.stringify({ query: "query { viewer { id name } }" }),
+        });
+      } catch { throw new Error("Linear request failed"); }
+      if (response.status === 401 || response.status === 403) throw new Error("Linear rejected this API key");
+      if (!response.ok) throw new Error(`Linear HTTP ${response.status}`);
+      const viewer = obj(obj(response.body).data)?.viewer;
+      const name = obj(viewer).name;
+      const label = typeof name === "string" && name.length > 0 && name.length <= 120 && !name.includes(values.apiKey) ? " as " + name : "";
+      return "authenticated; viewer verified" + label;
+    }
     case "doku":
       return doctorDoku(values);
     case "convex-cloud": {

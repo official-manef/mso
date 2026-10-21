@@ -17,7 +17,8 @@ export const SETUP_MAX_BODY = 16 * 1024;
 const ROOT = path.join(path.dirname(INFRA_STORE_PATH), "integration-setup");
 type Grant = { user: string; connection: string; uid: string; revision: number; provider: InfraProviderId; method: SetupMethod; principal: string; expiresAt: number; attempts: number; used: boolean };
 export class SetupError extends Error {
-  constructor(public readonly code: string, public readonly status: number) { super(code); }
+  /** `detail` is a provider-safe status string (never a credential or response body). */
+  constructor(public readonly code: string, public readonly status: number, public readonly detail?: string) { super(code); }
 }
 const invalid = () => new SetupError("setup_expired_or_invalid", 401);
 const hash = (token: string) => createHash("sha256").update(token).digest("hex");
@@ -112,7 +113,7 @@ export async function consumeIntegrationSetup(token: string, raw: unknown) {
     // escape this boundary, never provider response text or credential values.
     const configurationOnly = grant.provider === GOOGLE_APP_PROVIDER;
     const result = configurationOnly ? { ok: true } : await doctorInfraProvider(grant.provider, candidate);
-    if (result.ok !== true) throw new SetupError(result.ok === null ? "live_validation_unavailable" : "credential_validation_failed", 422);
+    if (result.ok !== true) throw new SetupError(result.ok === null ? "live_validation_unavailable" : "credential_validation_failed", 422, result.ok === null ? undefined : "detail" in result ? result.detail : undefined);
     if (grant.expiresAt <= Date.now()) throw invalid();
     grant.used = true;
     await fs.writeFile(file, JSON.stringify(grant), { mode: 0o600 });
