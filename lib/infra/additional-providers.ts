@@ -161,6 +161,15 @@ export const ADDITIONAL_PROVIDERS = {
       links:[{label:"DOKU MCP guide",url:"https://developers.doku.com/accept-payments/doku-mcp-server"}],
     },
   ] },
+  linear: {
+    id: "linear",
+    title: "Linear",
+    description: "Verify a Linear personal API key and read the authenticated viewer.",
+    feature: false,
+    fields: [
+      { key: "apiKey", label: "Personal API key", secret: true, required: true, placeholder: "lin_api_…", description: "Linear personal API key sent only as the raw Authorization header to Linear's fixed GraphQL endpoint. Linear OAuth app secrets and MCP tokens are different credentials and are not accepted here.", links: [{ label: "Linear API keys", url: "https://linear.app/settings/account/security" }] },
+    ],
+  },
   "openai-app": {
     id: "openai-app",
     title: "OpenAI / ChatGPT App",
@@ -188,4 +197,5 @@ export const ADDITIONAL_GUIDANCE = {
   discord: { url: "https://discord.com/developers/applications", reference: "https://discord.com/developers/docs/quick-start/getting-started", steps: ["Open the intended application in the Discord Developer Portal.", "Create/reset the bot token only if needed and enter it in this private Integrations form.", "For inbound interactions also copy the Application ID and Interactions Endpoint public key.", "MSO verifies the bot token through the Discord REST API; signed interactions are verified separately at the public channel endpoint."] },
   doku: { url: "https://developers.doku.com/accept-payments/doku-mcp-server", reference: "https://developers.doku.com/accept-payments/doku-mcp-server", steps: ["Open DOKU's official MCP Server guide and choose Sandbox first unless this project is explicitly approved for production payments.", "Obtain the DOKU Client ID and MCP API Key for that environment.", "Enter them only in this private setup form; do not paste them into chat, Baton notes, RR, Git, or project MCP JSON.", "MSO calls the fixed official DOKU MCP endpoint with a read-only MCP initialize request before saving the connection."] },
   "openai-app": { url: "https://chatgpt.com/", reference: "https://help.openai.com/en/articles/12584461-developer-mode-and-mcp-apps-in-chatgpt", steps: ["Enable ChatGPT developer mode, then create/register the remote MCP app for this MSO installation and complete Scan Tools + OAuth.", "Open the registered app details. Copy the App ID shown there, or copy the technical plugin_asdk_app_… id from the browser URL; do not use the Version ID as the app binding.", "Enter the App ID only in this private Integrations form. MSO normalizes plugin_asdk_app_… to canonical asdk_app_… and never returns the stored value through tool/model responses.", "Use the private plugin staging/link command when packaging. Keep the repository .app.json empty so a maintainer-specific App ID is never committed or distributed to other users."] },
+  linear: { url: "https://linear.app/settings/account/security", reference: "https://linear.app/developers/graphql", steps: ["Open Linear → Settings → Account → Security & login → Personal API keys.", "Create a key for this MSO connection only; a workspace-scoped OAuth app or the Linear MCP OAuth session will not work here.", "Grant only the workspace access this connection needs, and set an expiry if the workspace allows it.", "Paste the key into this private form only. MSO calls the fixed https://api.linear.app/graphql viewer query before saving and never returns the key through tools or model responses."] },
 } as const satisfies Record<AdditionalProviderId, { url: string; reference: string; steps: readonly string[] }>;

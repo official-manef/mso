@@ -1,0 +1,31 @@
+import { afterEach, describe, expect, it, vi } from "vitest";
+vi.mock("server-only", () => ({}));
+import { composioAuthHeader, doctorComposio } from "./composio";
+
+afterEach(() => vi.unstubAllGlobals());
+
+describe("composio credential routing", () => {
+  it("routes each key kind to its own header", () => {
+    expect(composioAuthHeader({ apiKey: "ak_project" })).toEqual({ header: { "x-api-key": "ak_project" }, kind: "project" });
+    expect(composioAuthHeader({ apiKey: "uak_user" })).toEqual({ header: { "x-user-api-key": "uak_user" }, kind: "user" });
+    expect(composioAuthHeader({ orgApiKey: "org_admin", apiKey: "ak_project" })).toEqual({ header: { "x-org-api-key": "org_admin" }, kind: "organization" });
+    expect(composioAuthHeader({})).toBeNull();
+  });
+
+  it("validates a user key at the session endpoint, never as x-api-key", async () => {
+    const mock = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+      const headers = new Headers(init?.headers);
+      expect(headers.get("x-user-api-key")).toBe("uak_synthetic_user_key");
+      expect(headers.has("x-api-key")).toBe(false);
+      return new Response("{}", { status: 200 });
+    });
+    vi.stubGlobal("fetch", mock);
+    await expect(doctorComposio({ apiKey: "uak_synthetic_user_key" })).resolves.toBe("Composio user key accepted");
+    expect(String(mock.mock.calls[0]?.[0])).toBe("https://backend.composio.dev/api/v3.1/auth/session/info");
+  });
+
+  it("reports a rejected key instead of claiming success", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("{}", { status: 401 })));
+    await expect(doctorComposio({ apiKey: "uak_synthetic_user_key" })).rejects.toThrow("Composio rejected this user key (401)");
+  });
+});

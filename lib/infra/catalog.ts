@@ -36,7 +36,7 @@ const definitions: Record<InfraProviderId, InfraProviderDefinition> = {
     description: "Connect a Composio project key or organization key for native MSO automation.",
     feature: false,
     fields: [
-      { key: "apiKey", label: "Project API key", secret: true, required: false, description: "Project key sent only as x-api-key to /api/v3.1/tools?limit=1." },
+      { key: "apiKey", label: "Project or user API key", secret: true, required: false, description: "ak_… project key (or a scoped project key) sent as x-api-key; uak_… user key, written by `composio login`, sent as x-user-api-key. Header chosen automatically from the key prefix." },
       { key: "orgApiKey", label: "Organization API key", secret: true, required: false, description: "Organization key sent only as x-org-api-key to /api/v3.1/org/owner/project/list." },
     ],
   },
@@ -131,6 +131,10 @@ export function normalizeInfraValues(id: InfraProviderId, raw: Record<string, un
     if (out.apiToken && out.apiToken.length < 24) throw new Error("Hostinger API token is too short");
     if (out.mailApiToken && out.mailApiToken.length < 24) throw new Error("Hostinger Mail API token is too short");
     if (out.mailOrderId && !/^[A-Za-z0-9._-]{3,128}$/.test(out.mailOrderId)) throw new Error("Invalid Hostinger Mail order ID");
+  }
+  if (id === "linear") {
+    // Personal API keys are opaque single-line values; the doctor proves the rest.
+    if (out.apiKey && (out.apiKey.length < 20 || out.apiKey.length > 4096 || /[\s\x00-\x1f\x7f]/.test(out.apiKey))) throw new Error("Linear API key must be an opaque single-line value (20–4096 characters)");
   }
   if (id === GOOGLE_APP_PROVIDER || isGoogleProvider(id)) return normalizeGoogleConfig(id, out);
   return out;

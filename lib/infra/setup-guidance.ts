@@ -26,7 +26,7 @@ export function setupFields(provider: InfraProviderId, method: SetupMethod) {
     return getInfraProviderDefinition(provider).fields.filter(f => keys.includes(f.key)).map(f => ({ ...f, required: true }));
   }
   if (provider === "composio") {
-    if (!["project", "organization"].includes(method)) throw new Error("Choose a Composio project or organization key");
+    if (!["project", "organization"].includes(method)) throw new Error("Choose a Composio project/user or organization key");
     return getInfraProviderDefinition(provider).fields.filter(f => f.key === (method === "project" ? "apiKey" : "orgApiKey")).map(f => ({ ...f, required: true }));
   }
   if (method !== "direct") throw new Error("Unsupported authentication method");
@@ -57,7 +57,7 @@ export function setupGuidance(provider: InfraProviderId, method: SetupMethod) {
       reference: "https://docs.composio.dev/reference/authenticating-to-composio",
       steps: method === "organization"
         ? ["Open Composio Settings.", "Choose General Settings → Organization Access Tokens.", "Create a token only when cross-project administration is required.", "Copy the organization token into this form. It uses x-org-api-key, not x-api-key."]
-        : ["Select the intended Composio project.", "Open Settings → Project Settings → API Keys.", "Create a project API key with the least privileges needed.", "Copy the project key into this form. Connected-account OAuth tokens remain in Composio."],
+        : ["Select the intended Composio project.", "Open Settings → Project Settings → API Keys.", "Create a project API key with the least privileges needed. A user key (uak_…) from `composio login` is also accepted and is sent as x-user-api-key automatically.", "Copy the project key into this form. Connected-account OAuth tokens remain in Composio."],
     },
     cloudflare: {
       url: "https://dash.cloudflare.com/profile/api-tokens",

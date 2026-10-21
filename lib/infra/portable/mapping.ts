@@ -13,11 +13,12 @@ export const FIELD_MAP:Record<string,Record<string,string>>={
   vercel:{VERCEL_TOKEN:'apiKey',VERCEL_TEAM_ID:'teamId'},
   stripe:{STRIPE_SECRET_KEY:'apiKey',STRIPE_PUBLISHABLE_KEY:'publishableKey',STRIPE_WEBHOOK_SECRET:'webhookSecret'},
   resend:{RESEND_API_KEY:'apiKey',RESEND_FROM_DOMAIN:'fromDomain'},
+  linear:{LINEAR_API_KEY:'apiKey'},
   clerk:{CLERK_SECRET_KEY:'apiKey',NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:'publishableKey',NEXT_PUBLIC_CLERK_FRONTEND_API_URL:'frontendUrl'},
   supabase:{SUPABASE_ACCESS_TOKEN:'managementToken',SUPABASE_ORG_ID:'organizationId'},
   doku:{DOKU_CLIENT_ID:'paymentClientId',DOKU_SECRET_KEY:'paymentSecretKey',DOKU_ENV:'paymentEnvironment',DOKU_MCP_CLIENT_ID:'mcpClientId',DOKU_MCP_API_KEY:'mcpApiKey',DOKU_MCP_ENV:'environment'},
 };
-const DIRECT:Record<string,string>={github:'classic-pat',dokploy:'admin-api-key',cloudflare:'api-token',hostinger:'api-token',convex:'self-hosted-admin',vercel:'account-token',stripe:'secret-key',resend:'api-key',clerk:'instance-keys',supabase:'personal-access-token',doku:'mcp-api-key'};
+const DIRECT:Record<string,string>={github:'classic-pat',dokploy:'admin-api-key',cloudflare:'api-token',hostinger:'api-token',convex:'self-hosted-admin',vercel:'account-token',stripe:'secret-key',resend:'api-key',linear:'personal-api-key',clerk:'instance-keys',supabase:'personal-access-token',doku:'mcp-api-key'};
 export function wireMethod(provider:string,source:string,method:string){
   if(source!=='direct')return source==='native-mcp'?'provider-oauth':method;
   return provider==='composio'?(method==='organization'?'organization-token':'project-api-key'):provider==='convex-cloud'?(method==='deployment'?'deployment-key':'personal-access-token'):provider==='doku'?(method==='payment'?'payment-hmac':'mcp-api-key'):provider==='hostinger'?(method==='mail'?'mail-api-token':'api-token'):DIRECT[provider]??method;

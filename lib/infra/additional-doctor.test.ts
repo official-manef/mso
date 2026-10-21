@@ -36,6 +36,7 @@ describe("additional native credential providers", () => {
     ["clerk", "https://api.clerk.com/v1/users?limit=1", { apiKey: KEY }],
     ["supabase", "https://api.supabase.com/v1/projects", { managementToken: KEY }],
     ["convex-cloud", "https://api.convex.dev/v1/list_personal_access_tokens?limit=1", { personalToken: KEY }],
+    ["linear", "https://api.linear.app/graphql", { apiKey: KEY }],
   ])("checks %s at a fixed provider-owned endpoint", async (id, endpoint, values) => {
     const mock = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => new Response("[]", { status: 200 })); vi.stubGlobal("fetch", mock);
     const result = await doctorAdditionalProvider(id as string, values as Record<string, string>);

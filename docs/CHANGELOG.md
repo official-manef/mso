@@ -4,6 +4,16 @@
 Newest first. `docs/PROGRESS.md` is the source of truth for *why* a change was made;
 this is the *what*, and it is what Settings → Account → About shows as “What's new”.
 
+## 2026-10-21
+
+**Added**
+
+- `infra` add Linear provider and route Composio key kinds by header
+
+**Fixed**
+
+- `deps` pin vite 8.2.4 to clear GHSA-587h-7wmj-h5pm
+
 ## 2026-10-20
 
 **Fixed**
@@ -1505,35 +1515,3 @@ this is the *what*, and it is what Settings → Account → About shows as “Wh
 **Docs**
 
 - `progress` log the shell-spec pass, the springs, and the backup
-
-## 2026-08-10
-
-**Added**
-
-- give Alfa the reach MCP has, and a gate so they cannot drift apart again
-- `mcp` managed-app logs and lifecycle, tiered by blast radius not by layer
-- `mcp` an MCP server so ChatGPT, Claude.ai or Cursor can drive this VPS
-
-**Fixed**
-
-- `cli` four missing verbs, a prod-breaking build, and a silently-wrong --base
-- close the four cheap findings from the tool-surface parity audit
-- `mcp` the audit trail was recording refused commands as successes
-- `audit` stop a test run appending to the owner's forensic trail
-- `mcp` record what an MCP token did — the trail it was bypassing
-- `a11y,perf` name the dock icons, announce login errors, stop the resize storm
-- `perf,ux` halve the boot API calls, unstick the dead chunk spinner, cut 9 orphans
-
-**Faster**
-
-- get the shell chrome and the Alfa catalog out of first load
-
-**Changed**
-
-- delete five retired subsystems nothing could reach
-
-**Docs**
-
-- `progress` log the three-surface parity audit and what it fixed
-- `progress` log the MCP server and what was verified live
-- cut five finished plans, trim PROGRESS's tail, log the audit follow-up
