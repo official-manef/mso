@@ -31,6 +31,9 @@ const NOT_A_KNOB: Record<string, string> = {
   MSO_AGENT_ORIGIN: "internal mso-cli-agent launcher handoff for the request Origin header",
   MSO_MAINTENANCE_LOCKED: "internal maintenance-lock.sh child handoff; never persist or set this as user configuration",
   MSO_AGENT_VERSION: "internal mso-cli-agent launcher handoff for banner metadata",
+  // Read by bin/orca-mcp.mjs, an MCP stdio bridge a client spawns locally. It
+  // points at the Orca CLI binary; the app itself never reads it.
+  ORCA_BIN: "override for the Orca CLI path used by the bin/orca-mcp.mjs stdio bridge, not by the MSO app",
   // Standard terminal convention inherited from the invoking shell, not MSO config.
   NO_COLOR: "standard terminal color convention inherited from the caller",
   VITEST: "set by the test runner",
