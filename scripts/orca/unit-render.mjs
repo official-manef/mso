@@ -23,6 +23,21 @@ export function systemdQuote(value) {
 }
 
 /**
+ * Render an absolute path for a systemd path directive (`WorkingDirectory=`).
+ * Quotes are WRONG here: systemd does not strip them for these directives, so
+ * `WorkingDirectory="/home/x"` fails with `path is not absolute` and the unit
+ * never starts. Only the specifier escape and whitespace escaping apply.
+ * @param {string} value
+ */
+export function systemdPath(value) {
+  if (typeof value !== 'string' || value.length === 0 || CONTROL.test(value)) {
+    throw new Error('unit path must be a non-empty string without control characters')
+  }
+  if (!value.startsWith('/')) throw new Error(`unit path must be absolute, got: ${value}`)
+  return value.replace(/%/g, '%%').replace(/ /g, '\\x20')
+}
+
+/**
  * @typedef {object} UnitRenderInput
  * @property {string} marker
  * @property {string} serviceName
@@ -62,7 +77,7 @@ StartLimitBurst=3
 
 [Service]
 Type=simple
-WorkingDirectory=${systemdQuote(managedRoot)}
+WorkingDirectory=${systemdPath(managedRoot)}
 ExecStart=${argv.map(systemdQuote).join(' ')}
 Environment="NODE_ENV=production"
 Restart=on-failure

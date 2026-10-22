@@ -17,10 +17,10 @@ import { dirname, isAbsolute } from 'node:path'
 import { DEFAULT_PORT } from './constants.mjs'
 import { SERVICE_NAME, UNIT_IDENTITY_MARKER } from './managed-paths.mjs'
 import { assertConfiguredAdvertisedEndpoint, assertPersistentPort } from './supervision.mjs'
-import { renderUnitText, systemdQuote } from './unit-render.mjs'
+import { renderUnitText, systemdPath, systemdQuote } from './unit-render.mjs'
 import { readOwnedUnitFile } from './unit-read.mjs'
 
-export { systemdQuote }
+export { systemdPath, systemdQuote }
 
 const CONTROL = /[\0\r\n]/
 

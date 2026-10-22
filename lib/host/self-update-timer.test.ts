@@ -24,16 +24,21 @@ describe("nightly update timer units", () => {
     expect(files.timer).toContain("Persistent=true");
     expect(files.timer).toContain("Unit=mso-auto-update.service");
     expect(files.service).toContain("Type=oneshot");
-    expect(files.service).toContain('WorkingDirectory="/srv/mso"');
+    // WorkingDirectory is a PATH directive: systemd does not strip quotes there,
+    // so a quoted value fails with "path is not absolute" and the unit never runs.
+    expect(files.service).toContain("WorkingDirectory=/srv/mso");
+    expect(files.service).not.toContain('WorkingDirectory="');
     expect(files.service).toContain('/srv/mso/scripts/mso-auto-update');
     // No unit argument: the channel comes from prefs at run time, not from a file a
     // client could have influenced.
     expect(files.service).not.toContain("--channel");
   });
 
-  it("quotes a checkout path with spaces instead of splitting it into two argv", () => {
+  it("escapes a checkout path with spaces instead of quoting it or splitting argv", () => {
     const files = unitFiles("/srv/my mso", "/tmp/a b.log");
-    expect(files.service).toContain('WorkingDirectory="/srv/my mso"');
+    // \x20 is systemd's own whitespace escape for path directives, where quotes
+    // would be taken literally and the path would be rejected as non-absolute.
+    expect(files.service).toContain("WorkingDirectory=/srv/my\\x20mso");
     expect(files.service).toContain('MSO_UPDATE_LOG="/tmp/a b.log"');
   });
 

@@ -7,6 +7,7 @@ import {
   inspectExistingUnit,
   isManagedOrcaUnit,
   renderOrcaServiceUnit,
+  systemdPath,
   systemdQuote
 } from './systemd-unit.mjs'
 
@@ -45,6 +46,22 @@ describe('Orca user unit rendering', () => {
     // The specifier/env syntaxes the unit must never expand are escaped.
     assert.ok(unit.includes('%%h'))
     assert.ok(unit.includes('$$HOME'))
+  })
+
+  it('renders WorkingDirectory as an unquoted path directive', () => {
+    // Regression: systemd does not strip quotes for path directives. A quoted
+    // WorkingDirectory fails unit load with "path is not absolute", so the
+    // managed runtime could never start (observed on the VPS install).
+    const unit = renderOrcaServiceUnit(BASE)
+    assert.ok(unit.includes('WorkingDirectory=/home/operator/.local/share/mso/orca'))
+    assert.ok(!unit.includes('WorkingDirectory="'))
+  })
+
+  it('escapes spaces in a path directive instead of quoting it', () => {
+    assert.equal(systemdPath('/srv/my mso'), '/srv/my\\x20mso')
+    assert.equal(systemdPath('/srv/100%'), '/srv/100%%')
+    assert.throws(() => systemdPath('relative'), /absolute/)
+    assert.throws(() => systemdPath(''), /non-empty/)
   })
 
   it('quotes a single argument as one systemd token', () => {

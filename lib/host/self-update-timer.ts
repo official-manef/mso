@@ -34,6 +34,8 @@ export const unitPaths = (): { service: string; timer: string } => {
 /** systemd exec arguments are space-split with quote support; a checkout path with
  *  a space must survive as ONE argument, so quote and escape rather than join raw. */
 const exec = (value: string): string => `"${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+/** Path directives take NO quotes; systemd rejects `WorkingDirectory="/x"`. */
+const pathDirective = (value: string): string => value.replace(/ /g, "\\x20");
 
 /** Pure: unit text for a given checkout. No request value reaches this string. */
 export function unitFiles(root: string, logPath: string): { service: string; timer: string } {
@@ -42,7 +44,7 @@ Description=MSO unattended self-update (the pre-flight decides whether anything 
 
 [Service]
 Type=oneshot
-WorkingDirectory=${exec(root)}
+WorkingDirectory=${pathDirective(root)}
 Environment=MSO_UPDATE_LOG=${exec(logPath)}
 # A build on a small VPS is minutes. The transient update unit already has its own
 # 1h start timeout; this is the outer bound for pre-flight + that wait.
