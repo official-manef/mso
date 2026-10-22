@@ -60,7 +60,8 @@
     "test:ci": "node --test scripts/ci/contract.node.mjs",
     "parity:nakama": "node scripts/check-nakama-parity.mjs && node scripts/gen-nakama-parity.mjs --check",
     "parity:nakama:release": "node scripts/check-nakama-parity.mjs --release",
-    "test:parity": "node --test scripts/parity/inventory.node.mjs"
+    "test:parity": "node --test scripts/parity/inventory.node.mjs",
+    "mcp:orca": "node bin/orca-mcp.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.133.0",
