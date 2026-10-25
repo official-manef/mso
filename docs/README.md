@@ -123,6 +123,7 @@ These files are copy/script drafts, not technical authority:
 
 - [`PRODUCT_HUNT.md`](./PRODUCT_HUNT.md)
 - [`DEMO-SCRIPT.md`](./DEMO-SCRIPT.md)
+- [`DEMO-FORK.md`](./DEMO-FORK.md)
 
 When a current-reference doc and one of these drafts disagree, update the draft or follow
 the current-reference doc.
